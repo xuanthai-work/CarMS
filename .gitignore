@@ -1,0 +1,13 @@
+# Dữ liệu nguồn Excel (dữ liệu kinh doanh nội bộ — KHÔNG commit)
+*.xlsx
+*.xls
+*.xlsm
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# App nằm trong web/ và có .gitignore riêng (node_modules, .next, .env, data/db.json, prisma generated)

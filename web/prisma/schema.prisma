@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Vehicle {
+  id            String  @id
+  plate         String  @unique
+  seats         Int?
+  status        String  @default("active")
+  inspectionDue String?
+  insuranceDue  String?
+  note          String?
+
+  outboundTrips Trip[]  @relation("OutboundVehicle")
+  returnTrips   Trip[]  @relation("ReturnVehicle")
+}
+
+model Driver {
+  id           String  @id
+  name         String
+  phone        String?
+  zalo         String?
+  licenseClass String?
+  type         String  @default("own")
+  note         String?
+
+  outboundTrips Trip[]  @relation("OutboundDriver")
+  returnTrips   Trip[]  @relation("ReturnDriver")
+}
+
+model Trip {
+  id              String  @id
+  customerName    String
+  customerPhone   String?
+  tourType        String  @default("1d")
+  price           Float?
+  deposit         Float?
+  status          String  @default("pending")
+  heldThroughTour Boolean @default(false)
+  note            String?
+
+  // ----- Lượt đi (Outbound) -----
+  outboundDate      String
+  outboundTime      String?
+  outboundFrom      String
+  outboundTo        String
+  outboundVehicleId String
+  outboundDriverId  String
+  
+  outboundVehicle   Vehicle @relation("OutboundVehicle", fields: [outboundVehicleId], references: [id])
+  outboundDriver    Driver  @relation("OutboundDriver", fields: [outboundDriverId], references: [id])
+
+  // ----- Lượt về (Return) -----
+  hasReturn         Boolean @default(false)
+  returnDate        String?
+  returnTime        String?
+  returnFrom        String?
+  returnTo          String?
+  returnVehicleId   String?
+  returnDriverId    String?
+
+  returnVehicle     Vehicle? @relation("ReturnVehicle", fields: [returnVehicleId], references: [id])
+  returnDriver      Driver?  @relation("ReturnDriver", fields: [returnDriverId], references: [id])
+}

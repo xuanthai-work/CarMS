@@ -1,0 +1,16 @@
+/node_modules
+/.next
+/out
+/build
+next-env.d.ts
+*.tsbuildinfo
+.DS_Store
+
+# biến môi trường (bí mật) — chỉ commit .env.example
+.env*
+!.env.example
+
+# runtime data store (giữ seed.json; bỏ db.json thực thi + các bản backup)
+/data/db*.json
+
+/lib/generated/prisma
