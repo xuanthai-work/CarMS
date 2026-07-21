@@ -23,7 +23,6 @@ model Driver {
   id           String  @id
   name         String
   phone        String?
-  zalo         String?
   licenseClass String?
   type         String  @default("own")
   note         String?
@@ -48,11 +47,11 @@ model Trip {
   outboundTime      String?
   outboundFrom      String
   outboundTo        String
-  outboundVehicleId String
-  outboundDriverId  String
-  
-  outboundVehicle   Vehicle @relation("OutboundVehicle", fields: [outboundVehicleId], references: [id])
-  outboundDriver    Driver  @relation("OutboundDriver", fields: [outboundDriverId], references: [id])
+  outboundVehicleId String?
+  outboundDriverId  String?
+
+  outboundVehicle   Vehicle? @relation("OutboundVehicle", fields: [outboundVehicleId], references: [id])
+  outboundDriver    Driver?  @relation("OutboundDriver", fields: [outboundDriverId], references: [id])
 
   // ----- Lượt về (Return) -----
   hasReturn         Boolean @default(false)

@@ -30,7 +30,6 @@ export default function VehicleSchedule({
   days,
   today,
   onOpen,
-  onAdd,
 }: {
   vehicles: Vehicle[];
   drivers: Driver[];
@@ -38,7 +37,6 @@ export default function VehicleSchedule({
   days: string[];
   today: string;
   onOpen: (trip: Trip) => void;
-  onAdd: (prefill: { vehicleId?: string; date?: string }) => void;
 }) {
   const [vid, setVid] = useState(vehicles[0]?.id ?? "");
   const selected = vehicles.find((v) => v.id === vid);
@@ -152,12 +150,9 @@ export default function VehicleSchedule({
                       style={{ width: DAY_W }}
                     >
                       {HOURS.map((h) => (
-                        <button
+                        <div
                           key={h}
-                          type="button"
-                          onClick={() => onAdd({ vehicleId: vid, date: m.d })}
-                          title={`Thêm chuyến · ${selected.plate} · ${m.d} ${h}h`}
-                          className="block w-full border-b border-slate-100 transition hover:bg-brand-100/40 last:border-b-0"
+                          className="w-full border-b border-slate-100 last:border-b-0"
                           style={{ height: HOUR_H }}
                         />
                       ))}
@@ -170,7 +165,7 @@ export default function VehicleSchedule({
                   const laneCount = lanesByDay[b.di];
                   const colLeft = b.di * DAY_W;
                   const laneW = (DAY_W - 6) / laneCount;
-                  const d2 = driverMap.get(b.leg.driverId);
+                  const d2 = b.leg.driverId ? driverMap.get(b.leg.driverId) : undefined;
                   const meta = legMeta(b.trip, b.kind);
                   const badgeBg = meta.tone === "round" ? "bg-emerald-500" : meta.tone === "go" ? "bg-blue-500" : "bg-amber-500";
                   return (

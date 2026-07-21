@@ -6,8 +6,8 @@ CarMS is a lightweight fleet-dispatch application for a chauffeured car-rental b
 
 - Next.js 15 (App Router) · React 19 · TypeScript
 - Tailwind CSS
-- Supabase (authentication)
-- Prisma / PostgreSQL (planned persistence layer)
+- Supabase (authentication + Postgres)
+- Prisma 7 (data layer)
 
 ## Getting started
 
@@ -16,10 +16,11 @@ The application lives in [`web/`](web/):
 ```bash
 cd web
 npm install
-cp .env.example .env     # add your Supabase credentials
+cp .env.example .env     # add your Supabase credentials + database URLs
+npm run db:push          # create the schema in Supabase Postgres
+npm run db:seed          # load sample data
+npm run db:realtime      # enable RLS + policies + realtime (one-time)
 npm run dev              # http://localhost:3000
 ```
 
-See [`web/README.md`](web/README.md) for details.
-
-> Prototype — data currently runs on a local JSON store; migration to PostgreSQL is planned.
+See [`web/README.md`](web/README.md) for details, including deployment to Vercel.

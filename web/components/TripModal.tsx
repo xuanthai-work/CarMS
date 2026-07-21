@@ -24,8 +24,8 @@ function LegView({
   vmap: Map<string, Vehicle>;
   dmap: Map<string, Driver>;
 }) {
-  const v = vmap.get(leg.vehicleId);
-  const d = dmap.get(leg.driverId);
+  const v = leg.vehicleId ? vmap.get(leg.vehicleId) : undefined;
+  const d = leg.driverId ? dmap.get(leg.driverId) : undefined;
   return (
     <div className={`rounded-lg border p-3 ${tone}`}>
       <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
@@ -38,7 +38,7 @@ function LegView({
       <div className="grid grid-cols-2 gap-x-6 gap-y-2">
         <Info label="Lộ trình" value={`${leg.from || "—"} → ${leg.to || "—"}`} className="col-span-2" />
         <Info label="Xe" value={v ? `${v.plate} · ${seatLabel(v.seats)}` : "—"} />
-        <Info label="Lái xe" value={d ? d.name + (d.zalo || d.phone ? ` (${d.zalo || d.phone})` : "") : "—"} />
+        <Info label="Lái xe" value={d ? d.name + (d.phone ? ` (${d.phone})` : "") : "—"} />
       </div>
     </div>
   );

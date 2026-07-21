@@ -9,6 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Migrations / `prisma db push` chạy trên kết nối trực tiếp (DIRECT_URL);
+    // fallback về DATABASE_URL nếu chỉ khai báo một URL.
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });

@@ -31,11 +31,8 @@ export default function AddDriverButton() {
               <Field label="Họ tên *">
                 <input name="name" required placeholder="VD: Nguyễn Văn A" className={inputCls} />
               </Field>
-              <Field label="Số điện thoại">
+              <Field label="SĐT / Zalo">
                 <input name="phone" placeholder="VD: 0912xxxxxx" className={inputCls} />
-              </Field>
-              <Field label="Zalo">
-                <input name="zalo" placeholder="Tên/SĐT Zalo" className={inputCls} />
               </Field>
               <Field label="Hạng bằng">
                 <select name="licenseClass" defaultValue="" className={inputCls}>

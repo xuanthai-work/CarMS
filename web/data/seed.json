@@ -8,6 +8,7 @@
       "id": "v-29B30148",
       "plate": "29B30148",
       "seats": 29,
+      "model": "Xe 29 chỗ",
       "status": "active",
       "inspectionDue": "2026-07-24",
       "insuranceDue": "2026-08-15",
@@ -17,6 +18,7 @@
       "id": "v-29B15621",
       "plate": "29B15621",
       "seats": 16,
+      "model": "Ford Transit 16",
       "status": "active",
       "inspectionDue": "2026-08-12",
       "insuranceDue": "2026-07-28",
@@ -26,6 +28,7 @@
       "id": "v-29B08972",
       "plate": "29B08972",
       "seats": 16,
+      "model": "Ford Transit 16",
       "status": "active",
       "inspectionDue": "2026-09-05",
       "insuranceDue": "2026-11-02",
@@ -35,6 +38,7 @@
       "id": "v-29B15728",
       "plate": "29B15728",
       "seats": 35,
+      "model": "Xe 35 chỗ",
       "status": "active",
       "inspectionDue": "2026-07-31",
       "insuranceDue": "2026-09-20",
@@ -44,6 +48,7 @@
       "id": "v-29B30917",
       "plate": "29B30917",
       "seats": 16,
+      "model": "Ford Transit 16",
       "status": "active",
       "inspectionDue": "2026-10-18",
       "insuranceDue": "2026-07-22",
@@ -53,6 +58,7 @@
       "id": "v-30A67029",
       "plate": "30A67029",
       "seats": 7,
+      "model": "Xe 7 chỗ",
       "status": "active",
       "inspectionDue": "2026-08-28",
       "insuranceDue": "2026-12-01",
@@ -66,8 +72,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-ha",
@@ -75,8 +80,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-leviettuan",
@@ -84,8 +88,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-nguyen-chi-bac",
@@ -93,8 +96,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-ninh-hoan",
@@ -102,8 +104,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-nguyen-xuan-hieu",
@@ -111,8 +112,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-hoang-manh-hung",
@@ -120,8 +120,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-lxe-a-tien",
@@ -129,8 +128,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-nhat-quang-land",
@@ -138,8 +136,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-giao-trieu-xe7",
@@ -147,8 +144,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-tran-quoc-bao-lam",
@@ -156,8 +152,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-dang-tuan-anh",
@@ -165,8 +160,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-dung-ba-mien",
@@ -174,8 +168,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-tuan-lxe-35",
@@ -183,8 +176,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-lai-xe-bang-d",
@@ -192,8 +184,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-ha-29b15728",
@@ -201,8 +192,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     },
     {
       "id": "d-hung-lxe-bang-d-zalo-linh",
@@ -210,8 +200,7 @@
       "phone": null,
       "licenseClass": "",
       "type": "own",
-      "note": "",
-      "zalo": null
+      "note": ""
     }
   ],
   "customers": [
@@ -1859,131 +1848,6 @@
       "customerId": "c-031",
       "leg": "round",
       "id": "b-049"
-    }
-  ],
-  "trips": [
-    {
-      "id": "t-sample-1",
-      "customerName": "Chị Lan",
-      "customerPhone": "0987000111",
-      "tourType": "3n2d",
-      "price": 9500000,
-      "deposit": 3000000,
-      "heldThroughTour": true,
-      "note": "Xe đi cùng đoàn suốt tour",
-      "outbound": {
-        "date": "2026-07-14",
-        "time": "05:00",
-        "from": "Hà Nội",
-        "to": "Sapa",
-        "vehicleId": "v-29B15621",
-        "driverId": "d-thuy"
-      },
-      "return": {
-        "date": "2026-07-16",
-        "time": "08:00",
-        "from": "Sapa",
-        "to": "Hà Nội",
-        "vehicleId": "v-29B15621",
-        "driverId": "d-thuy"
-      }
-    },
-    {
-      "id": "t-sample-2",
-      "customerName": "Anh Minh",
-      "customerPhone": "0912345678",
-      "tourType": "2n1d",
-      "price": 6000000,
-      "deposit": 2000000,
-      "heldThroughTour": false,
-      "note": "Xe A đón đi, xe B đón về",
-      "outbound": {
-        "date": "2026-07-18",
-        "time": "06:00",
-        "from": "Hà Nội",
-        "to": "Hạ Long",
-        "vehicleId": "v-29B08972",
-        "driverId": "d-ha"
-      },
-      "return": {
-        "date": "2026-07-19",
-        "time": "14:00",
-        "from": "Hạ Long",
-        "to": "Hà Nội",
-        "vehicleId": "v-30A67029",
-        "driverId": "d-leviettuan"
-      }
-    },
-    {
-      "id": "t-sample-3",
-      "customerName": "Cô Hoa",
-      "customerPhone": "0933222111",
-      "tourType": "2n1d",
-      "price": 5000000,
-      "deposit": 1500000,
-      "heldThroughTour": false,
-      "note": "Thả khách rồi về, hôm sau đón về",
-      "outbound": {
-        "date": "2026-07-19",
-        "time": "07:30",
-        "from": "Hà Nội",
-        "to": "Ninh Bình",
-        "vehicleId": "v-29B30917",
-        "driverId": "d-nguyen-chi-bac"
-      },
-      "return": {
-        "date": "2026-07-20",
-        "time": "09:00",
-        "from": "Ninh Bình",
-        "to": "Hà Nội",
-        "vehicleId": "v-29B30917",
-        "driverId": "d-nguyen-chi-bac"
-      }
-    },
-    {
-      "id": "t-sample-4",
-      "customerName": "Anh Tú",
-      "customerPhone": "0977888999",
-      "tourType": "oneway",
-      "price": 1200000,
-      "deposit": null,
-      "heldThroughTour": false,
-      "note": "Tiễn sân bay",
-      "outbound": {
-        "date": "2026-07-20",
-        "time": "15:00",
-        "from": "Hà Nội",
-        "to": "Sân bay Nội Bài",
-        "vehicleId": "v-29B30917",
-        "driverId": "d-ha"
-      },
-      "return": null
-    },
-    {
-      "id": "t-sample-5",
-      "customerName": "Chị Mai",
-      "customerPhone": "0966111222",
-      "tourType": "1d",
-      "price": 1800000,
-      "deposit": null,
-      "heldThroughTour": false,
-      "note": "",
-      "outbound": {
-        "date": "2026-07-15",
-        "time": "07:00",
-        "from": "Hà Nội",
-        "to": "Bắc Ninh",
-        "vehicleId": "v-30A67029",
-        "driverId": "d-leviettuan"
-      },
-      "return": {
-        "date": "2026-07-15",
-        "time": "17:00",
-        "from": "Bắc Ninh",
-        "to": "Hà Nội",
-        "vehicleId": "v-30A67029",
-        "driverId": "d-leviettuan"
-      }
     }
   ]
 }

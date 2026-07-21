@@ -110,7 +110,6 @@ export default function ScheduleGrid({
           days={days}
           today={today}
           onOpen={(t) => setModal({ trip: t })}
-          onAdd={(prefill) => setModal({ trip: null, prefill })}
         />
       )}
 
@@ -152,12 +151,9 @@ export default function ScheduleGrid({
               {/* underlay cột ngày (nền + bấm để thêm theo ngày) */}
               <div className="absolute inset-0 flex">
                 {dayMeta.map((m, di) => (
-                  <button
+                  <div
                     key={m.d}
-                    type="button"
-                    onClick={() => setModal({ trip: null, prefill: { date: m.d } })}
-                    title={`Thêm chuyến · ${m.d}`}
-                    className={`shrink-0 border-r border-slate-200 transition hover:bg-brand-100/40 ${
+                    className={`shrink-0 border-r border-slate-200 ${
                       m.isToday ? "bg-brand-50" : m.weekend ? "bg-slate-100/70" : di % 2 ? "bg-slate-50/60" : "bg-white"
                     }`}
                     style={{ width: W }}
@@ -168,8 +164,8 @@ export default function ScheduleGrid({
               {/* thẻ tour: kéo dài theo span ngày, tóm tắt gọn */}
               {tour.items.map((it) => {
                 const trip = it.trip;
-                const vOut = vehicleMap.get(trip.outbound.vehicleId);
-                const vRet = trip.return ? vehicleMap.get(trip.return.vehicleId) : undefined;
+                const vOut = trip.outbound.vehicleId ? vehicleMap.get(trip.outbound.vehicleId) : undefined;
+                const vRet = trip.return?.vehicleId ? vehicleMap.get(trip.return.vehicleId) : undefined;
                 const sameVeh = sameVehicleBothLegs(trip);
                 return (
                   <button

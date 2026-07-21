@@ -47,8 +47,7 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
           </button>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-          <Info label="Số điện thoại" value={d.phone || "—"} />
-          <Info label="Zalo" value={d.zalo || "—"} />
+          <Info label="SĐT / Zalo" value={d.phone || "—"} />
           <Info label="Ghi chú" value={d.note || "—"} className="col-span-2 sm:col-span-1" />
         </div>
       </div>
@@ -64,11 +63,8 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
           <Field label="Họ tên">
             <input name="name" defaultValue={d.name} className={inputCls} />
           </Field>
-          <Field label="Số điện thoại">
+          <Field label="SĐT / Zalo">
             <input name="phone" defaultValue={d.phone ?? ""} className={inputCls} />
-          </Field>
-          <Field label="Zalo">
-            <input name="zalo" defaultValue={d.zalo ?? ""} className={inputCls} />
           </Field>
           <Field label="Hạng bằng">
             <select name="licenseClass" defaultValue={d.licenseClass} className={inputCls}>

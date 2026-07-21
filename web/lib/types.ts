@@ -11,8 +11,7 @@ export type Vehicle = {
 export type Driver = {
   id: string;
   name: string;
-  phone: string | null;
-  zalo: string | null; // tên/sđt Zalo liên hệ (thường trùng phone)
+  phone: string | null; // SĐT = Zalo (dùng chung một số)
   licenseClass: string; // hạng bằng: B2, C, D, E, F
   type: string; // own | partner
   note: string;
@@ -27,8 +26,8 @@ export type Leg = {
   time: string | null; // HH:mm - thời gian đón
   from: string; // điểm đón
   to: string; // điểm đến
-  vehicleId: string; // ⇒ suy ra loại xe + biển số
-  driverId: string; // ⇒ suy ra tên + zalo lái xe
+  vehicleId: string | null; // ⇒ suy ra loại xe + biển số (null = chưa gán / giao đối tác)
+  driverId: string | null; // ⇒ suy ra tên + sđt lái xe (null = chưa gán)
 };
 
 /**
