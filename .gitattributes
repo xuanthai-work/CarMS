@@ -1,0 +1,16 @@
+# Chuẩn hoá xuống dòng: mọi file text dùng LF cả trong repo lẫn khi checkout
+# (hết cảnh báo "LF will be replaced by CRLF" trên Windows, đồng nhất giữa các máy)
+* text=auto eol=lf
+
+# File nhị phân — Git không đụng vào line ending / không diff
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.woff  binary
+*.woff2 binary
+*.xlsx  binary
+*.xls   binary
+*.xlsm  binary
