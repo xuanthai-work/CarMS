@@ -45,6 +45,7 @@ model Trip {
   // ----- Lượt đi (Outbound) -----
   outboundDate      String
   outboundTime      String?
+  outboundEndTime   String?
   outboundFrom      String
   outboundTo        String
   outboundVehicleId String?
@@ -57,6 +58,7 @@ model Trip {
   hasReturn         Boolean @default(false)
   returnDate        String?
   returnTime        String?
+  returnEndTime     String?
   returnFrom        String?
   returnTo          String?
   returnVehicleId   String?

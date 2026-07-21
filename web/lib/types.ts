@@ -24,6 +24,7 @@ export type TourType = "1d" | "2n1d" | "3n2d" | "4n3d" | "oneway";
 export type Leg = {
   date: string; // YYYY-MM-DD
   time: string | null; // HH:mm - thời gian đón
+  endTime: string | null; // HH:mm - giờ đến (dự kiến) → suy ra thời lượng trên lịch theo xe
   from: string; // điểm đón
   to: string; // điểm đến
   vehicleId: string | null; // ⇒ suy ra loại xe + biển số (null = chưa gán / giao đối tác)

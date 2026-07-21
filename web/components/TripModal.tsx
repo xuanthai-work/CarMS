@@ -32,7 +32,7 @@ function LegView({
         <span>{title}</span>
         <span className="text-xs font-normal text-slate-500">
           {weekdayVn(leg.date)} {fmtDate(leg.date)}
-          {leg.time ? ` · ${leg.time}` : ""}
+          {leg.time ? ` · ${leg.time}${leg.endTime ? `–${leg.endTime}` : ""}` : ""}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-2">

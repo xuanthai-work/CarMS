@@ -66,7 +66,7 @@ export default function ScheduleGrid({
   }, [trips, days, first, last]);
 
   return (
-    <div className="space-y-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       {/* Thanh công cụ: chú giải + chuyển view + thêm */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
@@ -115,12 +115,12 @@ export default function ScheduleGrid({
 
       {view === "tour" && (
         <DragScroll
-          className="thin-scroll overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
+          className="thin-scroll min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
           initialLeft={todayScrollLeft}
         >
           <div style={{ width: trackWidth }}>
-            {/* header ngày */}
-            <div className="flex border-b-2 border-slate-300" style={{ height: HEADER_H }}>
+            {/* header ngày — ghim trên khi cuộn dọc */}
+            <div className="sticky top-0 z-30 flex border-b-2 border-slate-300" style={{ height: HEADER_H }}>
               {dayMeta.map((m) => (
                 <div
                   key={m.d}

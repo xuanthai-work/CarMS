@@ -49,6 +49,7 @@ function toTrip(r: TripRow): Trip {
     outbound: {
       date: r.outboundDate,
       time: r.outboundTime,
+      endTime: r.outboundEndTime,
       from: r.outboundFrom,
       to: r.outboundTo,
       vehicleId: r.outboundVehicleId,
@@ -58,6 +59,7 @@ function toTrip(r: TripRow): Trip {
       ? {
           date: r.returnDate ?? "",
           time: r.returnTime,
+          endTime: r.returnEndTime,
           from: r.returnFrom ?? "",
           to: r.returnTo ?? "",
           vehicleId: r.returnVehicleId,

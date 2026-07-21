@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import DragScroll from "@/components/DragScroll";
+import Modal from "@/components/Modal";
 import { buildDayMeta } from "@/lib/format";
 import { legMeta, statusBg, assignLanes } from "@/lib/trips";
+import { setLegEndTime } from "@/lib/actions";
 import { seatLabel } from "@/lib/vehicles";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
@@ -11,17 +13,45 @@ const HOUR_H = 48; // chiều cao 1 giờ (trục Y)
 const HOUR_GUTTER_W = 54; // bề rộng cột nhãn giờ
 const DAY_W = 150; // bề rộng 1 ngày (trục X)
 const HEADER_H = 46;
-const BLOCK_H = 44; // chiều cao 1 block chuyến
+const BLOCK_MIN_H = 28; // chiều cao tối thiểu 1 block
+const DEFAULT_H = 44; // chiều cao khi chưa đặt giờ đến (~1 giờ)
+const SNAP_MIN = 30; // kéo bám mốc 30 phút
+const SNAP_PX = (HOUR_H * SNAP_MIN) / 60; // px mỗi bước snap
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const BODY_H = HOURS.length * HOUR_H;
 
-type Block = { trip: Trip; kind: "out" | "ret"; leg: Leg; di: number; top: number; lane: number };
+type Block = { id: string; trip: Trip; kind: "out" | "ret"; leg: Leg; di: number; top: number; height: number; lane: number };
 
-/** Vị trí Y (px) theo giờ đón; chưa có giờ -> mặc định 8h. */
-function hourTop(time: string | null): number {
-  const base = time ? (() => { const [h, m] = time.split(":").map(Number); return h + (m || 0) / 60; })() : 8;
-  return Math.max(0, Math.min(base * HOUR_H, BODY_H - BLOCK_H));
+/** Chuyển "HH:mm" -> số giờ thập phân. */
+function parseHM(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h + (m || 0) / 60;
 }
+/** Vị trí Y (px) của một mốc giờ; chưa có giờ -> mặc định 8h. */
+function yOf(time: string | null, fallback = 8): number {
+  const h = time ? parseHM(time) : fallback;
+  return Math.max(0, Math.min(h * HOUR_H, BODY_H));
+}
+/** Y (px) -> "HH:mm" bám mốc 30 phút. */
+function yToTime(y: number): string {
+  let min = Math.round((y / HOUR_H) * 60 / SNAP_MIN) * SNAP_MIN;
+  min = Math.max(0, Math.min(min, 24 * 60));
+  const hh = Math.floor(min / 60);
+  const mm = min % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
+type Pending = {
+  id: string;
+  tripId: string;
+  kind: "out" | "ret";
+  customerName: string;
+  top: number;
+  endY: number;
+  phase: "drag" | "confirm";
+  oldEnd?: string | null;
+  newEnd?: string;
+};
 
 export default function VehicleSchedule({
   vehicles,
@@ -43,19 +73,30 @@ export default function VehicleSchedule({
   const driverMap = useMemo(() => new Map(drivers.map((d) => [d.id, d])), [drivers]);
   const dayMeta = useMemo(() => buildDayMeta(days, today), [days, today]);
 
-  // Các lượt của xe đang chọn, xếp theo ngày (cột) + giờ (dọc), lane chống chồng trong ngày.
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [saving, setSaving] = useState(false);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const drag = useRef<{ top: number; pointerId: number } | null>(null);
+
+  // Các lượt của xe đang chọn, đặt theo ngày (cột) + giờ (dọc); chiều cao = thời lượng (giờ đón→giờ đến).
   const { blocks, lanesByDay } = useMemo(() => {
+    const mk = (trip: Trip, kind: "out" | "ret", leg: Leg, di: number): Block => {
+      const top = Math.min(yOf(leg.time), BODY_H - BLOCK_MIN_H);
+      const endY = leg.endTime ? yOf(leg.endTime) : top + DEFAULT_H;
+      const height = Math.max(BLOCK_MIN_H, Math.min(endY, BODY_H) - top);
+      return { id: `${trip.id}:${kind}`, trip, kind, leg, di, top, height, lane: 0 };
+    };
     const blocks: Block[] = [];
     const lanesByDay: number[] = days.map(() => 1);
     days.forEach((day, di) => {
       const dayBlocks: Block[] = [];
       for (const t of trips) {
         if (t.outbound.vehicleId === vid && t.outbound.date === day)
-          dayBlocks.push({ trip: t, kind: "out", leg: t.outbound, di, top: hourTop(t.outbound.time), lane: 0 });
+          dayBlocks.push(mk(t, "out", t.outbound, di));
         if (t.return && t.return.vehicleId === vid && t.return.date === day)
-          dayBlocks.push({ trip: t, kind: "ret", leg: t.return, di, top: hourTop(t.return.time), lane: 0 });
+          dayBlocks.push(mk(t, "ret", t.return, di));
       }
-      lanesByDay[di] = Math.max(1, assignLanes(dayBlocks, (b) => b.top, (b) => b.top + BLOCK_H));
+      lanesByDay[di] = Math.max(1, assignLanes(dayBlocks, (b) => b.top, (b) => b.top + b.height));
       blocks.push(...dayBlocks);
     });
     return { blocks, lanesByDay };
@@ -63,9 +104,64 @@ export default function VehicleSchedule({
 
   const todayIdx = days.indexOf(today);
   const initialLeft = todayIdx >= 0 ? Math.max(0, todayIdx * DAY_W - DAY_W) : 0;
+  const initialTop = 3 * HOUR_H; // mở sẵn quanh sáng sớm (các chuyến hay bắt đầu 4–6h)
+
+  // ----- Kéo mép dưới để đặt giờ đến -----
+  function startResize(e: React.PointerEvent, b: Block) {
+    e.stopPropagation();
+    e.preventDefault();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      /* noop */
+    }
+    drag.current = { top: b.top, pointerId: e.pointerId };
+    setPending({
+      id: b.id,
+      tripId: b.trip.id,
+      kind: b.kind,
+      customerName: b.trip.customerName,
+      top: b.top,
+      endY: b.top + b.height,
+      phase: "drag",
+    });
+  }
+  function moveResize(e: React.PointerEvent) {
+    const d = drag.current;
+    const rect = bodyRef.current?.getBoundingClientRect();
+    if (!d || !rect) return;
+    let y = e.clientY - rect.top;
+    y = Math.round(y / SNAP_PX) * SNAP_PX; // bám mốc 30'
+    y = Math.max(d.top + SNAP_PX, Math.min(y, BODY_H)); // tối thiểu 30' sau giờ đón
+    setPending((p) => (p ? { ...p, endY: y } : p));
+  }
+  function endResize() {
+    const d = drag.current;
+    if (!d) return;
+    drag.current = null;
+    setPending((p) => {
+      if (!p) return p;
+      const newEnd = yToTime(p.endY);
+      const block = blocks.find((b) => b.id === p.id);
+      const oldEnd = block?.leg.endTime ?? null;
+      if (newEnd === oldEnd) return null; // không đổi -> bỏ qua
+      return { ...p, phase: "confirm", newEnd, oldEnd };
+    });
+  }
+
+  async function confirmChange() {
+    if (!pending?.newEnd) return;
+    setSaving(true);
+    try {
+      await setLegEndTime(pending.tripId, pending.kind, pending.newEnd);
+    } finally {
+      setSaving(false);
+      setPending(null);
+    }
+  }
 
   return (
-    <div className="space-y-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
       {/* Bộ lọc chọn xe */}
       <div className="flex flex-wrap items-center gap-2">
         <label className="text-sm font-medium text-slate-600">Xem xe:</label>
@@ -80,6 +176,7 @@ export default function VehicleSchedule({
             </option>
           ))}
         </select>
+        <span className="text-xs text-slate-400">· Di chuột lên thẻ rồi kéo mép dưới để đặt giờ đến</span>
       </div>
 
       {!selected ? (
@@ -87,59 +184,62 @@ export default function VehicleSchedule({
           Chưa có xe nào.
         </div>
       ) : (
-        <div className="flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          {/* Cột nhãn giờ cố định (trục Y) */}
-          <div
-            className="relative z-10 shrink-0 bg-white shadow-[6px_0_12px_-8px_rgba(15,23,42,0.18)]"
-            style={{ width: HOUR_GUTTER_W }}
-          >
-            <div
-              className="flex items-center justify-center border-b-2 border-slate-300 bg-slate-50 text-[10px] font-semibold uppercase text-slate-400"
-              style={{ height: HEADER_H }}
-            >
-              Giờ
-            </div>
-            {HOURS.map((h) => (
+        <DragScroll
+          className="thin-scroll min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
+          initialLeft={initialLeft}
+          initialTop={initialTop}
+        >
+          <div style={{ width: HOUR_GUTTER_W + days.length * DAY_W }}>
+            {/* Hàng header: góc "Giờ" + thứ/ngày — ghim trên khi cuộn dọc */}
+            <div className="sticky top-0 z-40 flex" style={{ height: HEADER_H }}>
               <div
-                key={h}
-                className="flex items-start justify-end border-b border-slate-200 pr-2 pt-0.5 text-[11px] font-medium text-slate-400 last:border-b-0"
-                style={{ height: HOUR_H }}
+                className="sticky left-0 z-50 flex items-center justify-center border-b-2 border-r border-slate-300 bg-slate-50 text-[10px] font-semibold uppercase text-slate-400"
+                style={{ width: HOUR_GUTTER_W }}
               >
-                {h}h
+                Giờ
               </div>
-            ))}
-          </div>
+              {dayMeta.map((m) => (
+                <div
+                  key={m.d}
+                  className={`flex shrink-0 items-center justify-center gap-1.5 border-b-2 border-r border-slate-300 ${
+                    m.isToday ? "bg-brand-100" : m.weekend ? "bg-slate-100" : "bg-slate-50"
+                  }`}
+                  style={{ width: DAY_W }}
+                >
+                  {m.isToday ? (
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-brand-600 text-[12px] font-bold text-white">
+                      {m.num}
+                    </span>
+                  ) : (
+                    <span className={`text-[15px] font-bold ${m.weekend ? "text-rose-500" : "text-slate-800"}`}>
+                      {m.num}
+                    </span>
+                  )}
+                  <span className={`text-[11px] ${m.weekend ? "text-rose-400" : "text-slate-400"}`}>{m.wd}</span>
+                </div>
+              ))}
+            </div>
 
-          {/* Vùng ngày (trục X) — cầm & kéo */}
-          <DragScroll className="thin-scroll flex-1 overflow-x-auto" initialLeft={initialLeft}>
-            <div style={{ width: days.length * DAY_W }}>
-              {/* header ngày */}
-              <div className="flex border-b-2 border-slate-300" style={{ height: HEADER_H }}>
-                {dayMeta.map((m) => (
+            {/* Hàng thân: cột giờ (ghim trái) + lưới ngày×giờ */}
+            <div className="flex">
+              <div
+                className="sticky left-0 z-30 shrink-0 bg-white shadow-[6px_0_12px_-8px_rgba(15,23,42,0.18)]"
+                style={{ width: HOUR_GUTTER_W }}
+              >
+                {HOURS.map((h) => (
                   <div
-                    key={m.d}
-                    className={`flex shrink-0 items-center justify-center gap-1.5 border-r border-slate-200 ${
-                      m.isToday ? "bg-brand-100" : m.weekend ? "bg-slate-100" : "bg-slate-50"
-                    }`}
-                    style={{ width: DAY_W }}
+                    key={h}
+                    className="flex items-start justify-end border-b border-slate-200 pr-2 pt-0.5 text-[11px] font-medium text-slate-400 last:border-b-0"
+                    style={{ height: HOUR_H }}
                   >
-                    {m.isToday ? (
-                      <span className="grid h-6 w-6 place-items-center rounded-full bg-brand-600 text-[12px] font-bold text-white">
-                        {m.num}
-                      </span>
-                    ) : (
-                      <span className={`text-[15px] font-bold ${m.weekend ? "text-rose-500" : "text-slate-800"}`}>
-                        {m.num}
-                      </span>
-                    )}
-                    <span className={`text-[11px] ${m.weekend ? "text-rose-400" : "text-slate-400"}`}>{m.wd}</span>
+                    {h}h
                   </div>
                 ))}
               </div>
 
               {/* thân lịch: lưới ngày × giờ + các block */}
-              <div className="relative" style={{ height: BODY_H, width: days.length * DAY_W }}>
-                {/* underlay: cột ngày, mỗi cột 24 ô giờ (bấm để thêm) */}
+              <div ref={bodyRef} className="relative" style={{ height: BODY_H, width: days.length * DAY_W }}>
+                {/* underlay: cột ngày, mỗi cột 24 ô giờ */}
                 <div className="absolute inset-0 flex">
                   {dayMeta.map((m, di) => (
                     <div
@@ -161,49 +261,101 @@ export default function VehicleSchedule({
                 </div>
 
                 {/* các chuyến */}
-                {blocks.map((b, k) => {
+                {blocks.map((b) => {
                   const laneCount = lanesByDay[b.di];
                   const colLeft = b.di * DAY_W;
                   const laneW = (DAY_W - 6) / laneCount;
                   const d2 = b.leg.driverId ? driverMap.get(b.leg.driverId) : undefined;
                   const meta = legMeta(b.trip, b.kind);
-                  const badgeBg = meta.tone === "round" ? "bg-emerald-500" : meta.tone === "go" ? "bg-blue-500" : "bg-amber-500";
+                  const toneBorder =
+                    meta.tone === "round" ? "border-l-emerald-500" : meta.tone === "go" ? "border-l-blue-500" : "border-l-amber-500";
+                  const active = pending?.id === b.id;
+                  const height = active ? Math.max(BLOCK_MIN_H, pending!.endY - b.top) : b.height;
+                  const liveEnd = active ? yToTime(pending!.endY) : b.leg.endTime;
+                  const route = [b.leg.from, b.leg.to].map((x) => x?.trim()).filter(Boolean).join(" → ") || "—";
                   return (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => onOpen(b.trip)}
-                      title={`${b.kind === "out" ? "Đi" : "Về"} ${b.leg.time ?? ""} · ${b.trip.customerName} · ${
-                        b.leg.from || "?"
-                      } → ${b.leg.to || "?"}`}
-                      className={`absolute overflow-hidden rounded-md border border-slate-300 px-1.5 py-1 text-left shadow-sm ${statusBg(
-                        b.trip.status
-                      )}`}
-                      style={{
-                        left: colLeft + 3 + b.lane * laneW,
-                        width: laneW - 3,
-                        top: b.top + 1,
-                        height: BLOCK_H,
-                      }}
+                    <div
+                      key={b.id}
+                      className={`group absolute ${active ? "z-20" : "hover:z-20"}`}
+                      style={{ left: colLeft + 3 + b.lane * laneW, width: laneW - 3, top: b.top + 1, height }}
                     >
-                      <div className="flex items-center gap-1 truncate text-[11px] font-bold leading-tight">
-                        <span className={`shrink-0 rounded px-1 text-[9px] leading-none text-white ${badgeBg}`}>
+                      <button
+                        type="button"
+                        onClick={() => onOpen(b.trip)}
+                        title={`${meta.label} · ${b.leg.time ?? ""}${liveEnd ? `–${liveEnd}` : ""} · ${b.trip.customerName} · ${route}`}
+                        className={`h-full w-full overflow-hidden rounded-md border border-l-4 px-2 py-1 text-left shadow-sm transition-all duration-150 group-hover:-translate-y-0.5 group-hover:shadow-lg ${toneBorder} ${statusBg(
+                          b.trip.status
+                        )} ${active ? "border-brand-400 shadow-xl ring-2 ring-brand-400" : "border-slate-300 group-hover:ring-2 group-hover:ring-brand-300"}`}
+                      >
+                        {/* Tên khách — nổi bật nhất */}
+                        <div className="truncate text-[13px] font-bold leading-tight">{b.trip.customerName}</div>
+                        {/* Loại lượt + giờ đón→đến */}
+                        <div className="mt-0.5 truncate text-[10.5px] font-semibold leading-tight opacity-80">
                           {meta.label}
-                        </span>
-                        {b.leg.time && <span className="shrink-0">{b.leg.time}</span>}
-                        <span className="truncate">{b.trip.customerName}</span>
+                          {b.leg.time ? ` · ${b.leg.time}${liveEnd ? `–${liveEnd}` : ""}` : ""}
+                        </div>
+                        {/* Lộ trình + lái xe */}
+                        <div className="mt-0.5 truncate text-[10px] leading-tight opacity-60">
+                          {route}
+                          {d2 ? ` · ${d2.name}` : ""}
+                        </div>
+                      </button>
+
+                      {/* tay kéo mép dưới — đặt giờ đến */}
+                      <div
+                        onPointerDown={(e) => startResize(e, b)}
+                        onPointerMove={moveResize}
+                        onPointerUp={endResize}
+                        onPointerCancel={endResize}
+                        title="Kéo để đặt giờ đến"
+                        className={`absolute inset-x-0 bottom-0 flex h-3 cursor-ns-resize touch-none items-center justify-center rounded-b-md transition-opacity ${
+                          active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                      >
+                        <span className="h-1 w-6 rounded-full bg-slate-600/50" />
                       </div>
-                      <div className="truncate text-[10.5px] leading-tight opacity-80">
-                        {b.leg.from || "?"} → {b.leg.to || "?"}
-                        {d2 ? ` · ${d2.name}` : ""}
-                      </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
             </div>
-          </DragScroll>
-        </div>
+          </div>
+        </DragScroll>
+      )}
+
+      {/* Xác nhận đổi giờ đến */}
+      {pending?.phase === "confirm" && (
+        <Modal title="Đổi giờ đến" onClose={() => !saving && setPending(null)} maxWidthClass="max-w-sm">
+          <div className="space-y-3 text-sm text-slate-700">
+            <p>
+              Chuyến <b>{pending.customerName}</b> ({pending.kind === "out" ? "lượt đi" : "lượt về"})
+            </p>
+            <p className="rounded-lg bg-slate-50 px-3 py-2">
+              Giờ đến:{" "}
+              <span className="text-slate-500">{pending.oldEnd ?? "(chưa đặt)"}</span>{" "}
+              <span className="text-slate-400">→</span>{" "}
+              <b className="text-brand-700">{pending.newEnd}</b>
+            </p>
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => setPending(null)}
+              className="rounded-md border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={confirmChange}
+              className="rounded-md bg-brand-600 px-5 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+            >
+              {saving ? "Đang lưu…" : "Xác nhận"}
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

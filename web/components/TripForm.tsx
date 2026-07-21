@@ -4,6 +4,8 @@ import { useState } from "react";
 import { saveTrip, deleteTrip } from "@/lib/actions";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { Field, inputCls } from "@/components/ui";
+import DatePicker from "@/components/DatePicker";
+import TimePicker from "@/components/TimePicker";
 import { TOUR_TYPES, defaultReturnDate } from "@/lib/trips";
 import { seatLabel } from "@/lib/vehicles";
 import { fmtDateFull } from "@/lib/format";
@@ -11,8 +13,6 @@ import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
 type Prefill = { vehicleId?: string; date?: string };
 
-const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
-const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0")); // cách 5 phút
 
 /** Nhóm ô nhập cho một lượt (đi/về), tiền tố "o" hoặc "r". */
 function LegFields({
@@ -32,41 +32,16 @@ function LegFields({
   onDateChange?: (v: string) => void;
   vehicleId?: string;
 }) {
-  const [hh, setHh] = useState(leg?.time?.split(":")[0] ?? "");
-  const [mm, setMm] = useState(leg?.time?.split(":")[1] ?? "00");
-  const time = hh ? `${hh}:${mm}` : ""; // gộp thành "HH:mm" cho form
-
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <Field label="Ngày">
-        <input
-          name={`${prefix}_date`}
-          type="date"
-          value={date}
-          onChange={(e) => onDateChange?.(e.target.value)}
-          readOnly={!onDateChange}
-          className={inputCls}
-        />
+        <DatePicker name={`${prefix}_date`} value={date} onChange={(v) => onDateChange?.(v)} disabled={!onDateChange} />
         {date && (
           <p className="mt-1 text-xs font-semibold text-brand-600">📅 {fmtDateFull(date)}</p>
         )}
       </Field>
       <Field label="Giờ đón">
-        <div className="flex items-center gap-1.5">
-          <select value={hh} onChange={(e) => setHh(e.target.value)} className={inputCls} aria-label="Giờ">
-            <option value="">-- giờ --</option>
-            {HOURS.map((h) => (
-              <option key={h} value={h}>{h}h</option>
-            ))}
-          </select>
-          <span className="font-semibold text-slate-400">:</span>
-          <select value={mm} onChange={(e) => setMm(e.target.value)} className={inputCls} aria-label="Phút">
-            {MINUTES.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        </div>
-        <input type="hidden" name={`${prefix}_time`} value={time} />
+        <TimePicker name={`${prefix}_time`} defaultValue={leg?.time ?? ""} />
       </Field>
       <Field label="Điểm đón">
         <input name={`${prefix}_from`} defaultValue={leg?.from ?? ""} placeholder="VD: Hà Nội" className={inputCls} />
