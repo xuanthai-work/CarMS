@@ -60,8 +60,9 @@ export function fmtMoney(n: number | null | undefined): string {
 
 /** Nền thẻ chuyến theo trạng thái (dùng chung cho các view lịch). */
 export function statusBg(status?: string): string {
-  if (status === "completed_paid") return "bg-rose-200 text-rose-900 hover:bg-rose-300";
-  if (status === "info_sent") return "bg-green-200 text-green-900 hover:bg-green-300";
+  // 👉 Muốn đổi màu nền "Đã thanh toán" thì sửa dòng ngay dưới đây.
+  if (status === "completed_paid") return "bg-green-200 text-green-900 hover:bg-green-300";
+  if (status === "info_sent") return "bg-cyan-100 text-green-900 hover:bg-cyan-200";
   return "bg-white text-slate-700 hover:bg-slate-50";
 }
 

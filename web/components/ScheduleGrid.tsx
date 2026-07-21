@@ -75,7 +75,7 @@ export default function ScheduleGrid({
   const ROLE_BORDER = {
     out: "border-l-blue-500", // lượt đi (tách)
     ret: "border-l-amber-500", // lượt về (tách)
-    round: "border-l-emerald-500", // theo đoàn (nhiều ngày, cùng xe)
+    round: "border-l-violet-400", // theo đoàn (nhiều ngày, cùng xe)
     both: "border-l-slate-400", // khứ hồi khác xe
     one: "border-l-slate-400", // một chiều → xám
     day: "border-l-yellow-400", // trong ngày → vàng
@@ -137,13 +137,13 @@ export default function ScheduleGrid({
           <span className="font-semibold text-slate-600">Trạng thái:</span>
           <span className="flex items-center gap-1"><i className="h-3 w-3 rounded border border-slate-300 bg-white" /> Mới/Chưa xử lý</span>
           <span className="flex items-center gap-1"><i className="h-3 w-3 rounded bg-green-200" /> Đã nhắn khách</span>
-          <span className="flex items-center gap-1"><i className="h-3 w-3 rounded bg-rose-200" /> Đã thanh toán</span>
+          <span className="flex items-center gap-1"><i className="h-3 w-3 rounded bg-green-400" /> Đã thanh toán</span>
           <span aria-hidden className="mx-1 h-3.5 w-px bg-slate-200" />
           <span className="font-semibold text-slate-600">Viền:</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-yellow-400" /> Trong ngày</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-blue-500" /> Lượt đi</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-amber-500" /> Lượt về</span>
-          <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-emerald-500" /> Theo đoàn</span>
+          <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-violet-400" /> Theo đoàn</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-slate-400" /> Một chiều</span>
         </div>
         <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ export default function ScheduleGrid({
                 }
 
                 // Nguyên thẻ (trong ngày / giữ xe suốt tour) — kéo dài theo span ngày.
-                // Viền: trong ngày = vàng · một chiều = xám · theo đoàn = xanh lá · khứ hồi khác xe = xám.
+                // Viền: trong ngày = vàng · một chiều = xám · theo đoàn = tím · khứ hồi khác xe = xám.
                 const role =
                   trip.tourType === "oneway"
                     ? "one"
