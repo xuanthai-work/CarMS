@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { saveVehicle, deleteVehicle } from "@/lib/actions";
-import { VEHICLE_TYPES, VEHICLE_STATUS, seatLabel, statusLabel } from "@/lib/vehicles";
+import { VEHICLE_TYPES, VEHICLE_STATUS, OWNER_TYPES, seatLabel, statusLabel, ownerLabel } from "@/lib/vehicles";
 import { Field, Info, inputCls } from "@/components/ui";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { fmtDate } from "@/lib/format";
@@ -40,6 +40,9 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
               </span>
               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_TONE[v.status] ?? STATUS_TONE.inactive}`}>
                 {statusLabel(v.status)}
+              </span>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                {ownerLabel(v.type)}
               </span>
             </div>
           
@@ -89,6 +92,15 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
               {VEHICLE_STATUS.map((s) => (
                 <option key={s.value} value={s.value}>
                   {s.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Sở hữu">
+            <select name="type" defaultValue={v.type} className={inputCls}>
+              {OWNER_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
                 </option>
               ))}
             </select>

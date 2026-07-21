@@ -18,3 +18,12 @@ body {
 .thin-scroll::-webkit-scrollbar-thumb {
   @apply bg-slate-300 rounded-full;
 }
+
+/* ẩn hẳn thanh cuộn (vùng lịch cầm-kéo) — vẫn cuộn được bằng kéo/lăn chuột */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge cũ */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}

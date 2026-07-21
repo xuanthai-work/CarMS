@@ -8,6 +8,11 @@ function parseDate(s: string): Date {
   return new Date(y, m - 1, d);
 }
 
+/** Đệm số 0 về 2 chữ số: 7 -> "07". */
+export function pad(n: number): string {
+  return n.toString().padStart(2, "0");
+}
+
 /** "2026-07-15" -> "T3" */
 export function weekdayVn(s: string): string {
   return WEEKDAYS[parseDate(s).getDay()];
@@ -44,8 +49,7 @@ export function fmtDate(s: string | null | undefined): string {
 /** Ngày hôm nay dạng YYYY-MM-DD (theo giờ máy). */
 export function todayStr(): string {
   const d = new Date();
-  const p = (n: number) => n.toString().padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 /** "2026-07-15" -> "2026-07" */
@@ -63,13 +67,12 @@ export function monthLabel(monthKey: string): string {
 export function daysInMonth(monthKey: string): string[] {
   const [y, m] = monthKey.split("-").map(Number);
   const n = new Date(y, m, 0).getDate();
-  const p = (x: number) => x.toString().padStart(2, "0");
-  return Array.from({ length: n }, (_, i) => `${y}-${p(m)}-${p(i + 1)}`);
+  return Array.from({ length: n }, (_, i) => `${y}-${pad(m)}-${pad(i + 1)}`);
 }
 
 /** "2026-07" + delta tháng -> "2026-08". */
 export function addMonth(monthKey: string, delta: number): string {
   const [y, m] = monthKey.split("-").map(Number);
   const d = new Date(y, m - 1 + delta, 1);
-  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }

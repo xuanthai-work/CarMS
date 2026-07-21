@@ -4,12 +4,15 @@ import { useState } from "react";
 import type { Driver } from "@/lib/types";
 import DriverCard from "@/components/DriverCard";
 import AddDriverButton from "@/components/AddDriverButton";
+import GroupColumn from "@/components/GroupColumn";
 import { normalizeVn } from "@/lib/search";
 
 export default function DriverList({ drivers }: { drivers: Driver[] }) {
   const [q, setQ] = useState("");
   const nq = normalizeVn(q);
   const filtered = nq ? drivers.filter((d) => normalizeVn(d.name).includes(nq)) : drivers;
+  const own = filtered.filter((d) => d.type !== "partner");
+  const partner = filtered.filter((d) => d.type === "partner");
 
   return (
     <div className="space-y-4">
@@ -26,21 +29,32 @@ export default function DriverList({ drivers }: { drivers: Driver[] }) {
         <AddDriverButton />
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((d) => (
-          <DriverCard key={d.id} driver={d} />
-        ))}
-        {drivers.length === 0 && (
-          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-400">
-            Chưa có lái xe nào — bấm “+ Thêm lái xe”.
-          </div>
-        )}
-        {drivers.length > 0 && filtered.length === 0 && (
-          <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-400">
-            Không tìm thấy lái xe khớp “{q}”.
-          </div>
-        )}
-      </div>
+      {drivers.length === 0 ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-400">
+          Chưa có lái xe nào — bấm “+ Thêm lái xe”.
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-400">
+          Không tìm thấy lái xe khớp “{q}”.
+        </div>
+      ) : (
+        <div className="grid items-start gap-x-6 gap-y-4 lg:grid-cols-2">
+          <GroupColumn
+            title="Của công ty"
+            emoji="🏢"
+            items={own}
+            empty="Không có lái xe của công ty."
+            renderItem={(d) => <DriverCard key={d.id} driver={d} />}
+          />
+          <GroupColumn
+            title="Cộng tác / thuê ngoài"
+            emoji="🤝"
+            items={partner}
+            empty="Không có lái xe cộng tác ngoài."
+            renderItem={(d) => <DriverCard key={d.id} driver={d} />}
+          />
+        </div>
+      )}
     </div>
   );
 }

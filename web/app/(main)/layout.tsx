@@ -16,7 +16,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     <>
       <RealtimeRefresh />
       <Nav />
-      <main className="mx-auto max-w-[1400px] px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-[1720px] px-3 py-6">{children}</main>
     </>
   );
 }

@@ -26,6 +26,7 @@ function vehicleRow(v) {
     plate: v.plate,
     seats: v.seats ?? null,
     status: v.status ?? "active",
+    type: v.type ?? "own",
     inspectionDue: v.inspectionDue ?? null,
     insuranceDue: v.insuranceDue ?? null,
     note: v.note ?? null,
@@ -96,22 +97,24 @@ function bookingToTrip(b) {
 }
 
 async function main() {
-  // Xe & lái xe trước (chuyến tham chiếu tới id của chúng).
-  for (const v of seed.vehicles ?? []) {
-    const row = vehicleRow(v);
-    await prisma.vehicle.upsert({ where: { id: row.id }, create: row, update: row });
-  }
-  for (const d of seed.drivers ?? []) {
-    const row = driverRow(d);
-    await prisma.driver.upsert({ where: { id: row.id }, create: row, update: row });
-  }
+  // Xe & lái xe trước (chuyến tham chiếu tới id của chúng); song song trong mỗi nhóm.
+  await Promise.all(
+    (seed.vehicles ?? []).map((v) => {
+      const row = vehicleRow(v);
+      return prisma.vehicle.upsert({ where: { id: row.id }, create: row, update: row });
+    })
+  );
+  await Promise.all(
+    (seed.drivers ?? []).map((d) => {
+      const row = driverRow(d);
+      return prisma.driver.upsert({ where: { id: row.id }, create: row, update: row });
+    })
+  );
 
-  // Chuyến: dựng từ bookings rồi thay toàn bộ.
+  // Chuyến: dựng từ bookings rồi thay toàn bộ (1 lần createMany thay vì N create).
   const trips = (seed.bookings ?? []).map(bookingToTrip);
   await prisma.trip.deleteMany({});
-  for (const t of trips) {
-    await prisma.trip.create({ data: t });
-  }
+  await prisma.trip.createMany({ data: trips });
 
   const [v, d, t] = await Promise.all([
     prisma.vehicle.count(),

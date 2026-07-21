@@ -15,7 +15,7 @@ export default function Nav() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3">
+      <div className="mx-auto flex max-w-[1720px] items-center gap-3 px-3 py-3">
         <Link href="/" className="flex items-center gap-2 font-bold text-brand-700">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">🚐</span>
           CarMS

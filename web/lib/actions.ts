@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "./prisma";
 import { newId } from "./db";
-import type { TourType } from "./types";
+import { tourTypeFromDates } from "./trips";
 
 function s(fd: FormData, key: string): string {
   const v = fd.get(key);
@@ -32,6 +32,7 @@ export async function saveVehicle(fd: FormData): Promise<void> {
     plate: s(fd, "plate"),
     seats: Number(s(fd, "seats")) || null,
     status: s(fd, "status") || "active",
+    type: s(fd, "type") || "own",
     inspectionDue: optStr(fd, "inspectionDue"),
     insuranceDue: optStr(fd, "insuranceDue"),
     note: s(fd, "note"),
@@ -48,6 +49,24 @@ export async function deleteVehicle(fd: FormData): Promise<void> {
   const id = s(fd, "id");
   await prisma.vehicle.delete({ where: { id } });
   revalidateAll();
+}
+
+/** Tạo nhanh 1 xe (chỉ biển số) từ combobox trong form chuyến — mặc định "cộng tác ngoài"; sửa sau ở trang Xe. */
+export async function quickCreateVehicle(plate: string): Promise<{ id: string; label: string }> {
+  const p = plate.trim();
+  const id = newId("v");
+  await prisma.vehicle.create({ data: { id, plate: p, status: "active", type: "partner" } });
+  revalidateAll();
+  return { id, label: p };
+}
+
+/** Tạo nhanh 1 lái xe (chỉ tên) từ combobox trong form chuyến — mặc định "cộng tác ngoài". */
+export async function quickCreateDriver(name: string): Promise<{ id: string; label: string }> {
+  const n = name.trim();
+  const id = newId("d");
+  await prisma.driver.create({ data: { id, name: n, type: "partner" } });
+  revalidateAll();
+  return { id, label: n };
 }
 
 export async function saveDriver(fd: FormData): Promise<void> {
@@ -93,7 +112,7 @@ export async function saveTrip(fd: FormData): Promise<void> {
   const data = {
     customerName: s(fd, "customerName"),
     customerPhone: optStr(fd, "customerPhone"),
-    tourType: (s(fd, "tourType") || "1d") as TourType,
+    tourType: tourTypeFromDates(o.date, r?.date ?? null),
     price: optNum(fd, "price"),
     deposit: optNum(fd, "deposit"),
     status: (s(fd, "status") || "pending") as "pending" | "info_sent" | "completed_paid",

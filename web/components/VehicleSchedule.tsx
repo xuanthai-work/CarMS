@@ -3,10 +3,11 @@
 import { useMemo, useRef, useState } from "react";
 import DragScroll from "@/components/DragScroll";
 import Modal from "@/components/Modal";
-import { buildDayMeta } from "@/lib/format";
-import { legMeta, statusBg, assignLanes } from "@/lib/trips";
+import { buildDayMeta, pad } from "@/lib/format";
+import { legMeta, statusBg, assignLanes, fmtMoney, legRoute, toneBorderClass } from "@/lib/trips";
 import { setLegEndTime } from "@/lib/actions";
 import { seatLabel } from "@/lib/vehicles";
+import { CARD_HOVER_GROUP } from "@/components/ui";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
 const HOUR_H = 48; // chiều cao 1 giờ (trục Y)
@@ -38,7 +39,7 @@ function yToTime(y: number): string {
   min = Math.max(0, Math.min(min, 24 * 60));
   const hh = Math.floor(min / 60);
   const mm = min % 60;
-  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  return `${pad(hh)}:${pad(mm)}`;
 }
 
 type Pending = {
@@ -46,7 +47,6 @@ type Pending = {
   tripId: string;
   kind: "out" | "ret";
   customerName: string;
-  top: number;
   endY: number;
   phase: "drag" | "confirm";
   oldEnd?: string | null;
@@ -121,7 +121,6 @@ export default function VehicleSchedule({
       tripId: b.trip.id,
       kind: b.kind,
       customerName: b.trip.customerName,
-      top: b.top,
       endY: b.top + b.height,
       phase: "drag",
     });
@@ -176,7 +175,6 @@ export default function VehicleSchedule({
             </option>
           ))}
         </select>
-        <span className="text-xs text-slate-400">· Di chuột lên thẻ rồi kéo mép dưới để đặt giờ đến</span>
       </div>
 
       {!selected ? (
@@ -185,7 +183,7 @@ export default function VehicleSchedule({
         </div>
       ) : (
         <DragScroll
-          className="thin-scroll min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
+          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
           initialLeft={initialLeft}
           initialTop={initialTop}
         >
@@ -267,12 +265,11 @@ export default function VehicleSchedule({
                   const laneW = (DAY_W - 6) / laneCount;
                   const d2 = b.leg.driverId ? driverMap.get(b.leg.driverId) : undefined;
                   const meta = legMeta(b.trip, b.kind);
-                  const toneBorder =
-                    meta.tone === "round" ? "border-l-emerald-500" : meta.tone === "go" ? "border-l-blue-500" : "border-l-amber-500";
+                  const toneBorder = toneBorderClass(meta.tone);
                   const active = pending?.id === b.id;
                   const height = active ? Math.max(BLOCK_MIN_H, pending!.endY - b.top) : b.height;
                   const liveEnd = active ? yToTime(pending!.endY) : b.leg.endTime;
-                  const route = [b.leg.from, b.leg.to].map((x) => x?.trim()).filter(Boolean).join(" → ") || "—";
+                  const route = legRoute(b.leg);
                   return (
                     <div
                       key={b.id}
@@ -282,23 +279,19 @@ export default function VehicleSchedule({
                       <button
                         type="button"
                         onClick={() => onOpen(b.trip)}
-                        title={`${meta.label} · ${b.leg.time ?? ""}${liveEnd ? `–${liveEnd}` : ""} · ${b.trip.customerName} · ${route}`}
-                        className={`h-full w-full overflow-hidden rounded-md border border-l-4 px-2 py-1 text-left shadow-sm transition-all duration-150 group-hover:-translate-y-0.5 group-hover:shadow-lg ${toneBorder} ${statusBg(
+                        title={`${meta.label} · ${b.leg.time ?? ""}${liveEnd ? `–${liveEnd}` : ""} · ${b.trip.customerName} · ${route}${d2 ? ` · ${d2.name}` : ""}`}
+                        className={`h-full w-full overflow-hidden rounded-lg border border-l-4 px-2 py-1 text-left shadow-sm transition-all duration-150 ${CARD_HOVER_GROUP} ${toneBorder} ${statusBg(
                           b.trip.status
-                        )} ${active ? "border-brand-400 shadow-xl ring-2 ring-brand-400" : "border-slate-300 group-hover:ring-2 group-hover:ring-brand-300"}`}
+                        )} ${active ? "border-brand-400 shadow-xl ring-2 ring-brand-400" : "border-slate-300"}`}
                       >
-                        {/* Tên khách — nổi bật nhất */}
+                        {/* Tên khách */}
                         <div className="truncate text-[13px] font-bold leading-tight">{b.trip.customerName}</div>
-                        {/* Loại lượt + giờ đón→đến */}
-                        <div className="mt-0.5 truncate text-[10.5px] font-semibold leading-tight opacity-80">
-                          {meta.label}
-                          {b.leg.time ? ` · ${b.leg.time}${liveEnd ? `–${liveEnd}` : ""}` : ""}
-                        </div>
-                        {/* Lộ trình + lái xe */}
-                        <div className="mt-0.5 truncate text-[10px] leading-tight opacity-60">
-                          {route}
-                          {d2 ? ` · ${d2.name}` : ""}
-                        </div>
+                        {/* Biển số xe — in đậm như dòng tiền */}
+                        <div className="mt-0.5 truncate text-[12px] font-bold leading-tight">🚐 {selected?.plate ?? "?"}</div>
+                        {/* Tiền */}
+                        {b.trip.price != null && (
+                          <div className="mt-0.5 text-[12px] font-bold leading-tight">💵 {fmtMoney(b.trip.price)}</div>
+                        )}
                       </button>
 
                       {/* tay kéo mép dưới — đặt giờ đến */}

@@ -7,6 +7,16 @@ export const VEHICLE_STATUS = [
   { value: "inactive", label: "Ngưng" },
 ] as const;
 
+// Sở hữu xe: của công ty hay cộng tác/thuê ngoài.
+export const OWNER_TYPES = [
+  { value: "own", label: "Của công ty" },
+  { value: "partner", label: "Cộng tác / thuê ngoài" },
+] as const;
+
+export function ownerLabel(type: string): string {
+  return OWNER_TYPES.find((t) => t.value === type)?.label ?? type;
+}
+
 export function seatLabel(seats: number | null | undefined): string {
   return seats ? `${seats} chỗ` : "—";
 }

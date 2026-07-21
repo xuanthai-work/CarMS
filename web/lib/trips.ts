@@ -1,4 +1,4 @@
-import type { Trip } from "./types";
+import type { Trip, TourType } from "./types";
 
 /** Loại tour + số ngày (calendar day) tour trải qua. */
 export const TOUR_TYPES = [
@@ -13,18 +13,22 @@ export function tourTypeLabel(t: string): string {
   return TOUR_TYPES.find((x) => x.value === t)?.label ?? t;
 }
 
-/** Số ngày tour trải qua (mặc định 1 nếu không rõ). */
-function tourSpanDays(t: string): number {
-  return TOUR_TYPES.find((x) => x.value === t)?.span ?? 1;
-}
-
-/** Gợi ý ngày lượt về từ ngày đi + loại tour. "2026-07-03" + 3N2Đ -> "2026-07-05". */
-export function defaultReturnDate(outboundDate: string, tourType: string): string {
-  const span = tourSpanDays(tourType);
-  const [y, m, d] = outboundDate.split("-").map(Number);
-  const dt = new Date(y, m - 1, d + (span - 1));
-  const p = (n: number) => n.toString().padStart(2, "0");
-  return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}`;
+/**
+ * Suy loại tour từ ngày đi/về (thay cho việc chọn tay).
+ * Không có lượt về ⇒ "một chiều"; có về ⇒ theo số đêm giữa hai ngày.
+ */
+export function tourTypeFromDates(outboundDate: string, returnDate: string | null): TourType {
+  if (!returnDate) return "oneway";
+  if (!outboundDate) return "1d";
+  const [y1, m1, d1] = outboundDate.split("-").map(Number);
+  const [y2, m2, d2] = returnDate.split("-").map(Number);
+  const nights = Math.round(
+    (new Date(y2, m2 - 1, d2).getTime() - new Date(y1, m1 - 1, d1).getTime()) / 86_400_000
+  );
+  if (nights <= 0) return "1d";
+  if (nights === 1) return "2n1d";
+  if (nights === 2) return "3n2d";
+  return "4n3d"; // 3+ đêm: gộp về mức cao nhất trong enum
 }
 
 /** Cùng 1 xe chạy cả lượt đi lẫn về? (⇒ "trọn gói") */
@@ -38,6 +42,16 @@ export function legMeta(trip: Trip, kind: "out" | "ret"): { label: string; tone:
   return kind === "out" ? { label: "Lượt đi", tone: "go" } : { label: "Lượt về", tone: "back" };
 }
 
+/** Class viền trái theo tone lượt (dùng chung 2 view). */
+export function toneBorderClass(tone: "round" | "go" | "back"): string {
+  return tone === "round" ? "border-l-emerald-500" : tone === "go" ? "border-l-blue-500" : "border-l-amber-500";
+}
+
+/** Lộ trình "điểm đón → điểm đến" (bỏ phần rỗng); không có -> "—". */
+export function legRoute(leg: { from: string; to: string }): string {
+  return [leg.from, leg.to].map((x) => x?.trim()).filter(Boolean).join(" → ") || "—";
+}
+
 /** Tiền: 1500000 -> "1.500.000 ₫"; null -> "—". */
 export function fmtMoney(n: number | null | undefined): string {
   if (n == null) return "—";
@@ -46,7 +60,7 @@ export function fmtMoney(n: number | null | undefined): string {
 
 /** Nền thẻ chuyến theo trạng thái (dùng chung cho các view lịch). */
 export function statusBg(status?: string): string {
-  if (status === "completed_paid") return "bg-green-600 text-white hover:bg-green-700";
+  if (status === "completed_paid") return "bg-rose-200 text-rose-900 hover:bg-rose-300";
   if (status === "info_sent") return "bg-green-200 text-green-900 hover:bg-green-300";
   return "bg-white text-slate-700 hover:bg-slate-50";
 }
@@ -72,4 +86,33 @@ export function assignLanes<T extends { lane: number }>(
     it.lane = lane;
   }
   return laneEnd.length;
+}
+
+/**
+ * Xếp gọn thẻ chiều-cao-thay-đổi có LẤP KHE: mỗi mục rơi xuống Y thấp nhất còn trống
+ * trên dải ngày [s, e] của nó (chỉ né mục thực sự trùng ngày). Gán `top`, trả tổng chiều cao.
+ */
+export function packVariableHeight<T extends { s: number; e: number; top: number; height: number }>(
+  items: T[],
+  gap: number,
+  padTop: number
+): number {
+  items.sort((a, b) => a.s - b.s || a.e - b.e);
+  const placed: { s: number; e: number; top: number; bottom: number }[] = [];
+  let bottom = padTop;
+  for (const it of items) {
+    const overlaps = placed.filter((p) => p.e >= it.s && p.s <= it.e);
+    const cands = [padTop, ...overlaps.map((p) => p.bottom + gap)].sort((a, b) => a - b);
+    let y = padTop;
+    for (const c of cands) {
+      if (overlaps.every((p) => c + it.height + gap <= p.top || c >= p.bottom + gap)) {
+        y = c;
+        break;
+      }
+    }
+    it.top = y;
+    placed.push({ s: it.s, e: it.e, top: y, bottom: y + it.height });
+    bottom = Math.max(bottom, y + it.height);
+  }
+  return bottom + padTop;
 }

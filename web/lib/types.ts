@@ -3,6 +3,7 @@ export type Vehicle = {
   plate: string;
   seats: number | null;
   status: string; // active | maintenance | inactive
+  type: string; // own | partner (của công ty | cộng tác ngoài)
   inspectionDue: string | null; // YYYY-MM-DD - hạn đăng kiểm
   insuranceDue: string | null; // YYYY-MM-DD - hạn bảo hiểm
   note: string;

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { pad } from "@/lib/format";
+import { useDismiss } from "@/lib/useDismiss";
 
 const WD = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
-function pad(n: number) {
-  return String(n).padStart(2, "0");
-}
 function iso(y: number, m: number, d: number) {
   return `${y}-${pad(m + 1)}-${pad(d)}`; // m: 0-based
 }
@@ -44,19 +43,7 @@ export default function DatePicker({
     if (open && sel) setView({ y: sel.y, m: sel.m });
   }, [open, sel]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: PointerEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  useDismiss(open, wrapRef, () => setOpen(false));
 
   const today = new Date();
   const [ty, tm, td] = [today.getFullYear(), today.getMonth(), today.getDate()];

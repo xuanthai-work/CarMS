@@ -18,6 +18,7 @@ function toVehicle(r: VehicleRow): Vehicle {
     plate: r.plate,
     seats: r.seats,
     status: r.status,
+    type: r.type,
     inspectionDue: r.inspectionDue,
     insuranceDue: r.insuranceDue,
     note: r.note ?? "",
@@ -80,7 +81,10 @@ export async function getDrivers(): Promise<Driver[]> {
 }
 
 export async function getTrips(): Promise<Trip[]> {
-  const rows = await prisma.trip.findMany({ orderBy: { outboundDate: "asc" } });
+  // Thứ tự cố định (ngày → giờ đón → id) để xếp tầng lịch không đổi sau mỗi lần sửa.
+  const rows = await prisma.trip.findMany({
+    orderBy: [{ outboundDate: "asc" }, { outboundTime: "asc" }, { id: "asc" }],
+  });
   return rows.map(toTrip);
 }
 

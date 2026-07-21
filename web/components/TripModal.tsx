@@ -5,7 +5,7 @@ import Modal from "@/components/Modal";
 import TripForm from "@/components/TripForm";
 import { Info } from "@/components/ui";
 import { fmtDate, weekdayVn } from "@/lib/format";
-import { fmtMoney, tourTypeLabel, sameVehicleBothLegs } from "@/lib/trips";
+import { fmtMoney, tourTypeLabel, sameVehicleBothLegs, legRoute } from "@/lib/trips";
 import { seatLabel } from "@/lib/vehicles";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
@@ -30,13 +30,13 @@ function LegView({
     <div className={`rounded-lg border p-3 ${tone}`}>
       <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
         <span>{title}</span>
-        <span className="text-xs font-normal text-slate-500">
-          {weekdayVn(leg.date)} {fmtDate(leg.date)}
+        <span className="text-xs font-medium text-slate-700">
+          {weekdayVn(leg.date)} - {fmtDate(leg.date)}
           {leg.time ? ` · ${leg.time}${leg.endTime ? `–${leg.endTime}` : ""}` : ""}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-        <Info label="Lộ trình" value={`${leg.from || "—"} → ${leg.to || "—"}`} className="col-span-2" />
+        <Info label="Lộ trình" value={legRoute(leg)} className="col-span-2" />
         <Info label="Xe" value={v ? `${v.plate} · ${seatLabel(v.seats)}` : "—"} />
         <Info label="Lái xe" value={d ? d.name + (d.phone ? ` (${d.phone})` : "") : "—"} />
       </div>

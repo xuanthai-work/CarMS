@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { saveTrip, deleteTrip } from "@/lib/actions";
+import { saveTrip, deleteTrip, quickCreateVehicle, quickCreateDriver } from "@/lib/actions";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { Field, inputCls } from "@/components/ui";
 import DatePicker from "@/components/DatePicker";
 import TimePicker from "@/components/TimePicker";
-import { TOUR_TYPES, defaultReturnDate } from "@/lib/trips";
+import Combobox from "@/components/Combobox";
+import { tourTypeLabel, tourTypeFromDates } from "@/lib/trips";
 import { seatLabel } from "@/lib/vehicles";
 import { fmtDateFull } from "@/lib/format";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
@@ -32,6 +33,9 @@ function LegFields({
   onDateChange?: (v: string) => void;
   vehicleId?: string;
 }) {
+  const [vehId, setVehId] = useState(leg?.vehicleId ?? vehicleId ?? "");
+  const [drvId, setDrvId] = useState(leg?.driverId ?? "");
+
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <Field label="Ngày">
@@ -50,24 +54,28 @@ function LegFields({
         <input name={`${prefix}_to`} defaultValue={leg?.to ?? ""} placeholder="VD: Sapa" className={inputCls} />
       </Field>
       <Field label="Xe">
-        <select name={`${prefix}_vehicleId`} defaultValue={leg?.vehicleId ?? vehicleId ?? ""} className={inputCls}>
-          <option value="">— Chọn xe —</option>
-          {vehicles.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.plate} · {seatLabel(v.seats)}
-            </option>
-          ))}
-        </select>
+        <Combobox
+          name={`${prefix}_vehicleId`}
+          value={vehId}
+          onChange={setVehId}
+          options={vehicles.map((v) => ({ id: v.id, label: v.plate, sub: seatLabel(v.seats) }))}
+          placeholder="Tìm / chọn xe…"
+          emptyText="Không thấy xe"
+          onCreate={(t) => quickCreateVehicle(t)}
+          createLabel={(t) => `+ Thêm xe “${t}”`}
+        />
       </Field>
       <Field label="Lái xe">
-        <select name={`${prefix}_driverId`} defaultValue={leg?.driverId ?? ""} className={inputCls}>
-          <option value="">— Chọn lái xe —</option>
-          {drivers.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
+        <Combobox
+          name={`${prefix}_driverId`}
+          value={drvId}
+          onChange={setDrvId}
+          options={drivers.map((d) => ({ id: d.id, label: d.name }))}
+          placeholder="Tìm / chọn lái xe…"
+          emptyText="Không thấy lái xe"
+          onCreate={(t) => quickCreateDriver(t)}
+          createLabel={(t) => `+ Thêm lái xe “${t}”`}
+        />
       </Field>
     </div>
   );
@@ -89,25 +97,20 @@ export default function TripForm({
   onCancel: () => void;
 }) {
   const formId = `trip-form-${trip?.id ?? "new"}`;
-  const [tourType, setTourType] = useState<string>(trip?.tourType ?? "2n1d");
-  const [hasReturn, setHasReturn] = useState<boolean>(trip ? !!trip.return : tourType !== "oneway");
+  const [hasReturn, setHasReturn] = useState<boolean>(trip ? !!trip.return : true);
   const [oDate, setODate] = useState<string>(trip?.outbound.date ?? prefill?.date ?? "");
   const [rDate, setRDate] = useState<string>(
-    trip?.return?.date ?? (oDate ? defaultReturnDate(oDate, tourType) : "")
+    trip?.return?.date ?? trip?.outbound.date ?? prefill?.date ?? ""
   );
 
   function changeODate(v: string) {
     setODate(v);
-    if (!trip) setRDate(defaultReturnDate(v, tourType)); // gợi ý ngày về khi thêm mới
+    // khi thêm mới: giữ ngày về hợp lệ (mặc định cùng ngày, không để trước ngày đi)
+    if (!trip) setRDate((prev) => (prev && prev >= v ? prev : v));
   }
-  function changeTourType(v: string) {
-    setTourType(v);
-    if (v === "oneway") setHasReturn(false);
-    else if (!trip) {
-      setHasReturn(true);
-      if (oDate) setRDate(defaultReturnDate(oDate, v));
-    }
-  }
+
+  // Loại tour suy ra từ ngày đi/về (+ có lượt về hay không) — thay cho việc chọn tay.
+  const derivedType = tourTypeFromDates(oDate, hasReturn ? rDate : null);
 
   async function handleSave(fd: FormData) {
     await saveTrip(fd);
@@ -131,15 +134,6 @@ export default function TripForm({
           <Field label="SĐT khách">
             <input name="customerPhone" defaultValue={trip?.customerPhone ?? ""} placeholder="VD: 0987xxxxxx" className={inputCls} />
           </Field>
-          <Field label="Loại tour">
-            <select name="tourType" value={tourType} onChange={(e) => changeTourType(e.target.value)} className={inputCls}>
-              {TOUR_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Tiền chuyến">
               <input name="price" inputMode="numeric" defaultValue={trip?.price ?? ""} placeholder="VD: 5000000" className={inputCls} />
@@ -151,10 +145,18 @@ export default function TripForm({
           <Field label="Trạng thái">
             <select name="status" defaultValue={trip?.status ?? "pending"} className={inputCls}>
               <option value="pending">Mới / Chưa xử lý</option>
-              <option value="info_sent">Đã nhắn khách / Đang chạy</option>
-              <option value="completed_paid">Đã về & Thanh toán</option>
+              <option value="info_sent">Đã nhắn khách</option>
+              <option value="completed_paid">Đã thanh toán</option>
             </select>
           </Field>
+        </div>
+
+        {/* Loại tour tự tính theo ngày đi/về */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-slate-500">Loại tour (tự tính):</span>
+          <span className="rounded-md bg-brand-50 px-2 py-0.5 font-semibold text-brand-700">
+            {oDate ? tourTypeLabel(derivedType) : "—"}
+          </span>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

@@ -11,6 +11,7 @@ model Vehicle {
   plate         String  @unique
   seats         Int?
   status        String  @default("active")
+  type          String  @default("own")
   inspectionDue String?
   insuranceDue  String?
   note          String?
