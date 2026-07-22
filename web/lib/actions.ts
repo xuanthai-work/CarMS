@@ -24,6 +24,7 @@ function revalidateAll() {
   revalidatePath("/lich");
   revalidatePath("/xe");
   revalidatePath("/nhan-su");
+  revalidatePath("/doanh-thu");
 }
 
 export async function saveVehicle(fd: FormData): Promise<void> {
@@ -94,12 +95,16 @@ export async function deleteDriver(fd: FormData): Promise<void> {
 
 /** Ghép các cột phẳng của một lượt (đi = "o", về = "r") từ FormData. */
 function legFields(fd: FormData, prefix: string) {
+  // Ô "Xe" mang id xe thật, hoặc "seat:<n>" = placeholder số chỗ (chưa xếp xe cụ thể).
+  const rawVeh = optStr(fd, `${prefix}_vehicleId`);
+  const seatClass = rawVeh?.startsWith("seat:") ? Number(rawVeh.slice(5)) || null : null;
   return {
     date: s(fd, `${prefix}_date`),
     time: optStr(fd, `${prefix}_time`),
     from: s(fd, `${prefix}_from`),
     to: s(fd, `${prefix}_to`),
-    vehicleId: optStr(fd, `${prefix}_vehicleId`), // "" → null (chưa gán / giao đối tác)
+    vehicleId: seatClass != null ? null : rawVeh, // placeholder ⇒ không gán xe thật
+    seatClass,
     driverId: optStr(fd, `${prefix}_driverId`),
   };
 }
@@ -115,6 +120,10 @@ export async function saveTrip(fd: FormData): Promise<void> {
     tourType: tourTypeFromDates(o.date, r?.date ?? null),
     price: optNum(fd, "price"),
     deposit: optNum(fd, "deposit"),
+    fuelCost: optNum(fd, "fuelCost"),
+    tollCost: optNum(fd, "tollCost"),
+    partnerCost: optNum(fd, "partnerCost"),
+    otherCost: optNum(fd, "otherCost"),
     status: (s(fd, "status") || "pending") as "pending" | "info_sent" | "completed_paid",
     heldThroughTour: s(fd, "heldThroughTour") === "on",
     note: s(fd, "note"),
@@ -124,6 +133,7 @@ export async function saveTrip(fd: FormData): Promise<void> {
     outboundTo: o.to,
     outboundVehicleId: o.vehicleId,
     outboundDriverId: o.driverId,
+    outboundSeatClass: o.seatClass,
     hasReturn,
     returnDate: r?.date ?? null,
     returnTime: r?.time ?? null,
@@ -131,6 +141,7 @@ export async function saveTrip(fd: FormData): Promise<void> {
     returnTo: r?.to ?? null,
     returnVehicleId: r?.vehicleId ?? null,
     returnDriverId: r?.driverId ?? null,
+    returnSeatClass: r?.seatClass ?? null,
   };
   if (id) {
     await prisma.trip.update({ where: { id }, data });
@@ -156,5 +167,11 @@ export async function setLegEndTime(
     where: { id },
     data: kind === "ret" ? { returnEndTime: endTime } : { outboundEndTime: endTime },
   });
+  revalidateAll();
+}
+
+/** Đổi trạng thái 1 chuyến (từ dropdown trạng thái ở màn Doanh thu). */
+export async function setTripStatus(id: string, status: string): Promise<void> {
+  await prisma.trip.update({ where: { id }, data: { status } });
   revalidateAll();
 }

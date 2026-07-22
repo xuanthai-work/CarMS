@@ -8,7 +8,7 @@ import DatePicker from "@/components/DatePicker";
 import TimePicker from "@/components/TimePicker";
 import Combobox from "@/components/Combobox";
 import { tourTypeLabel, tourTypeFromDates } from "@/lib/trips";
-import { seatLabel } from "@/lib/vehicles";
+import { seatLabel, VEHICLE_TYPES } from "@/lib/vehicles";
 import { fmtDateFull } from "@/lib/format";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
@@ -23,7 +23,10 @@ function LegFields({
   drivers,
   date,
   onDateChange,
-  vehicleId,
+  vehId,
+  setVehId,
+  drvId,
+  setDrvId,
 }: {
   prefix: string;
   leg?: Leg;
@@ -31,10 +34,13 @@ function LegFields({
   drivers: Driver[];
   date: string;
   onDateChange?: (v: string) => void;
-  vehicleId?: string;
+  vehId: string;
+  setVehId: (v: string) => void;
+  drvId: string;
+  setDrvId: (v: string) => void;
 }) {
-  const [vehId, setVehId] = useState(leg?.vehicleId ?? vehicleId ?? "");
-  const [drvId, setDrvId] = useState(leg?.driverId ?? "");
+  // Xe đối tác/thuê ngoài thường đi kèm lái xe của họ → ẩn ô lái xe (không gửi driverId → lưu null).
+  const isPartnerVeh = !!vehId && vehicles.find((v) => v.id === vehId)?.type === "partner";
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -58,7 +64,10 @@ function LegFields({
           name={`${prefix}_vehicleId`}
           value={vehId}
           onChange={setVehId}
-          options={vehicles.map((v) => ({ id: v.id, label: v.plate, sub: seatLabel(v.seats) }))}
+          options={[
+            ...vehicles.map((v) => ({ id: v.id, label: v.plate, sub: seatLabel(v.seats) })),
+            ...VEHICLE_TYPES.map((n) => ({ id: `seat:${n}`, label: `${n} chỗ`, sub: "chưa xếp xe (mẫu)" })),
+          ]}
           placeholder="Tìm / chọn xe…"
           emptyText="Không thấy xe"
           onCreate={(t) => quickCreateVehicle(t)}
@@ -66,16 +75,22 @@ function LegFields({
         />
       </Field>
       <Field label="Lái xe">
-        <Combobox
-          name={`${prefix}_driverId`}
-          value={drvId}
-          onChange={setDrvId}
-          options={drivers.map((d) => ({ id: d.id, label: d.name }))}
-          placeholder="Tìm / chọn lái xe…"
-          emptyText="Không thấy lái xe"
-          onCreate={(t) => quickCreateDriver(t)}
-          createLabel={(t) => `+ Thêm lái xe “${t}”`}
-        />
+        {isPartnerVeh ? (
+          <div className="w-full rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            🤝 Lái xe do đối tác cung cấp
+          </div>
+        ) : (
+          <Combobox
+            name={`${prefix}_driverId`}
+            value={drvId}
+            onChange={setDrvId}
+            options={drivers.map((d) => ({ id: d.id, label: d.name }))}
+            placeholder="Tìm / chọn lái xe…"
+            emptyText="Không thấy lái xe"
+            onCreate={(t) => quickCreateDriver(t)}
+            createLabel={(t) => `+ Thêm lái xe “${t}”`}
+          />
+        )}
       </Field>
     </div>
   );
@@ -102,6 +117,20 @@ export default function TripForm({
   const [rDate, setRDate] = useState<string>(
     trip?.return?.date ?? trip?.outbound.date ?? prefill?.date ?? ""
   );
+  // Ô "Xe" giữ id xe thật, hoặc "seat:<n>" nếu mới chọn placeholder số chỗ (chưa xếp xe).
+  const initVeh = (leg?: Leg | null) => leg?.vehicleId ?? (leg?.seatClass ? `seat:${leg.seatClass}` : "");
+  const [oVehId, setOVehId] = useState(initVeh(trip?.outbound) || prefill?.vehicleId || "");
+  const [oDrvId, setODrvId] = useState(trip?.outbound.driverId ?? "");
+  const [rVehId, setRVehId] = useState(initVeh(trip?.return));
+  const [rDrvId, setRDrvId] = useState(trip?.return?.driverId ?? "");
+
+  // Chỉ hiện ô "Tiền thuê đối tác" khi chuyến có dùng xe HOẶC lái xe của đối tác.
+  const isPartnerVehId = (id: string) => !!id && vehicles.find((v) => v.id === id)?.type === "partner";
+  const isPartnerDrvId = (id: string) => !!id && drivers.find((d) => d.id === id)?.type === "partner";
+  const usesPartner =
+    isPartnerVehId(oVehId) ||
+    isPartnerDrvId(oDrvId) ||
+    (hasReturn && (isPartnerVehId(rVehId) || isPartnerDrvId(rDrvId)));
 
   function changeODate(v: string) {
     setODate(v);
@@ -163,7 +192,7 @@ export default function TripForm({
           {/* Lượt đi */}
           <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-3">
             <div className="mb-2 text-sm font-semibold text-blue-700">Lượt đi</div>
-            <LegFields prefix="o" leg={trip?.outbound} vehicles={vehicles} drivers={drivers} date={oDate} onDateChange={changeODate} vehicleId={prefill?.vehicleId} />
+            <LegFields prefix="o" leg={trip?.outbound} vehicles={vehicles} drivers={drivers} date={oDate} onDateChange={changeODate} vehId={oVehId} setVehId={setOVehId} drvId={oDrvId} setDrvId={setODrvId} />
           </div>
 
           {/* Lượt về */}
@@ -174,13 +203,31 @@ export default function TripForm({
             </label>
             {hasReturn && (
               <>
-                <LegFields prefix="r" leg={trip?.return ?? undefined} vehicles={vehicles} drivers={drivers} date={rDate} onDateChange={setRDate} />
+                <LegFields prefix="r" leg={trip?.return ?? undefined} vehicles={vehicles} drivers={drivers} date={rDate} onDateChange={setRDate} vehId={rVehId} setVehId={setRVehId} drvId={rDrvId} setDrvId={setRDrvId} />
                 <label className="mt-3 flex items-start gap-2 text-xs text-slate-600">
                   <input type="checkbox" name="heldThroughTour" defaultChecked={trip?.heldThroughTour ?? false} className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300" />
                   <span>Giữ xe suốt tour (xe bận cả các ngày giữa) — chỉ áp dụng khi lượt đi & về cùng một xe</span>
                 </label>
               </>
             )}
+          </div>
+        </div>
+
+        {/* Chi phí (để tính lợi nhuận) — của cả chuyến */}
+        <div>
+          <div className="mb-2 text-sm font-semibold text-slate-700">Chi phí</div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <Field label="VETC / Cầu đường">
+              <input name="tollCost" inputMode="numeric" defaultValue={trip?.tollCost ?? ""} placeholder="0" className={inputCls} />
+            </Field>
+            {usesPartner && (
+              <Field label="Tiền thuê đối tác">
+                <input name="partnerCost" inputMode="numeric" defaultValue={trip?.partnerCost ?? ""} placeholder="0" className={inputCls} />
+              </Field>
+            )}
+            <Field label="Chi phí khác">
+              <input name="otherCost" inputMode="numeric" defaultValue={trip?.otherCost ?? ""} placeholder="0" className={inputCls} />
+            </Field>
           </div>
         </div>
 

@@ -14,3 +14,6 @@ next-env.d.ts
 /data/db*.json
 
 /lib/generated/prisma
+
+# tài liệu spec/plan brainstorm — giữ local, không commit
+/docs/superpowers

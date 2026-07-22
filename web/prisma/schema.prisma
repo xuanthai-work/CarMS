@@ -51,6 +51,7 @@ model Trip {
   outboundTo        String
   outboundVehicleId String?
   outboundDriverId  String?
+  outboundSeatClass Int? // placeholder số chỗ khi chưa xếp xe cụ thể (VD 7, 16)
 
   outboundVehicle   Vehicle? @relation("OutboundVehicle", fields: [outboundVehicleId], references: [id])
   outboundDriver    Driver?  @relation("OutboundDriver", fields: [outboundDriverId], references: [id])
@@ -64,7 +65,14 @@ model Trip {
   returnTo          String?
   returnVehicleId   String?
   returnDriverId    String?
+  returnSeatClass   Int? // placeholder số chỗ khi chưa xếp xe cụ thể
 
   returnVehicle     Vehicle? @relation("ReturnVehicle", fields: [returnVehicleId], references: [id])
   returnDriver      Driver?  @relation("ReturnDriver", fields: [returnDriverId], references: [id])
+
+  // ----- Chi phí (để tính lợi nhuận) -----
+  fuelCost    Float? // xăng dầu
+  tollCost    Float? // VETC / cầu đường
+  partnerCost Float? // tiền thuê đối tác
+  otherCost   Float? // chi phí khác
 }

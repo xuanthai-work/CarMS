@@ -5,9 +5,9 @@ import TripModal from "@/components/TripModal";
 import DragScroll from "@/components/DragScroll";
 import VehicleSchedule from "@/components/VehicleSchedule";
 import { buildDayMeta } from "@/lib/format";
-import { fmtMoney, sameVehicleBothLegs, statusBg, packVariableHeight } from "@/lib/trips";
+import { fmtMoney, sameVehicleBothLegs, statusBg, packVariableHeight, TRIP_STATUSES } from "@/lib/trips";
 import { CARD_HOVER, CARD_HOVER_GROUP } from "@/components/ui";
-import type { Trip, Vehicle, Driver } from "@/lib/types";
+import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
 const W = 190; // bề rộng mỗi ngày (view theo tour)
 const HEADER_H = 52;
@@ -36,7 +36,7 @@ export default function ScheduleGrid({
   trips: Trip[];
 }) {
   const [modal, setModal] = useState<{ trip: Trip | null; prefill?: { vehicleId?: string; date?: string } } | null>(null);
-  const [view, setView] = useState<"xe" | "tour">("xe"); // theo xe (1 xe, ngày×giờ) | theo tour (Gantt)
+  const [view, setView] = useState<"xe" | "tour">("tour"); // theo tour (Gantt) mặc định | theo xe (1 xe, ngày×giờ)
 
   const trackWidth = days.length * W;
   const first = days[0];
@@ -53,18 +53,32 @@ export default function ScheduleGrid({
   // View "theo tour": mỗi tour là 1 thanh kéo dài theo đúng ngày đi→ngày về, xếp tầng để không chồng.
   const tour = useMemo(() => {
     const idxOf = new Map(days.map((d, i) => [d, i]));
-    type TItem = { trip: Trip; s: number; e: number; top: number; height: number };
+    type TItem = {
+      trip: Trip;
+      s: number;
+      e: number;
+      oIdx: number | null; // cột lượt đi (null nếu ngày đi ở tháng khác)
+      rIdx: number | null; // cột lượt về (null nếu ngày về ở tháng khác / không có lượt về)
+      nights: number; // số đêm thực (theo ngày, KHÔNG kẹp về tháng)
+      top: number;
+      height: number;
+    };
     const items: TItem[] = [];
     for (const t of trips) {
       const startD = t.outbound.date;
       const endD = t.return?.date ?? t.outbound.date;
       if (endD < first || startD > last) continue; // ngoài tháng
-      const s = Math.max(0, idxOf.has(startD) ? idxOf.get(startD)! : 0);
-      const e = Math.min(days.length - 1, idxOf.has(endD) ? idxOf.get(endD)! : days.length - 1);
+      const oIdx = idxOf.has(startD) ? idxOf.get(startD)! : null;
+      const rIdx = t.return && idxOf.has(endD) ? idxOf.get(endD)! : null;
+      // s/e = khoảng ngày THẬT của chuyến, kẹp về tháng (KHÔNG dùng oIdx/rIdx vì chúng
+      // null khi lượt ở tháng khác / không có lượt về → sẽ kéo thẻ tràn cả tháng).
+      const s = idxOf.has(startD) ? idxOf.get(startD)! : 0; // đi tháng trước ⇒ mép trái
+      const e = idxOf.has(endD) ? idxOf.get(endD)! : days.length - 1; // về tháng sau ⇒ mép phải
+      const nights = t.return ? Math.round((Date.parse(endD) - Date.parse(startD)) / 86_400_000) : 0;
       // chiều cao responsive: có tiền +1 dòng, có cọc +1 dòng
       const height =
         CARD_BASE_H + (t.price != null ? MONEY_LINE_H : 0) + (t.deposit != null ? MONEY_LINE_H : 0);
-      items.push({ trip: t, s, e, top: 0, height });
+      items.push({ trip: t, s, e, oIdx, rIdx, nights, top: 0, height });
     }
     // Xếp gọn có lấp khe (thuật toán ở lib/trips.ts): thẻ chỉ né đúng thẻ trùng ngày, không ép thẳng hàng.
     const totalHeight = packVariableHeight(items, LANE_GAP, PAD_TOP);
@@ -81,10 +95,18 @@ export default function ScheduleGrid({
     day: "border-l-yellow-400", // trong ngày → vàng
   } as const;
 
-  /** Dòng biển số — in đậm như dòng tiền; nhiều xe nối bằng " - " (VD: 29B15621 - 29B08972). */
-  const plateLine = (...vehs: (Vehicle | undefined)[]) => (
+  /** Nhãn "xe" của một lượt: biển số nếu đã xếp xe; chưa xếp thì "N chỗ" (placeholder); không có → "?". */
+  const vehLabel = (leg: Leg | null | undefined): string => {
+    const v = leg?.vehicleId ? vehicleMap.get(leg.vehicleId) : undefined;
+    if (v) return v.plate;
+    if (leg?.seatClass) return `${leg.seatClass} chỗ`;
+    return "?";
+  };
+
+  /** Dòng biển số — in đậm như dòng tiền; nhiều lượt nối bằng " - " (VD: 29B15621 - 16 chỗ). */
+  const plateLine = (...labels: string[]) => (
     <span className="truncate text-[12px] font-bold leading-tight">
-      🚐 {vehs.map((v) => v?.plate ?? "?").join(" - ")}
+      🚐 {labels.join(" - ")}
     </span>
   );
 
@@ -135,9 +157,11 @@ export default function ScheduleGrid({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
           <span className="font-semibold text-slate-600">Trạng thái:</span>
-          <span className="flex items-center gap-1"><i className="h-3 w-3 rounded border border-slate-300 bg-white" /> Mới/Chưa xử lý</span>
-          <span className="flex items-center gap-1"><i className="h-3 w-3 rounded bg-green-200" /> Đã nhắn khách</span>
-          <span className="flex items-center gap-1"><i className="h-3 w-3 rounded bg-green-400" /> Đã thanh toán</span>
+          {TRIP_STATUSES.map((s) => (
+            <span key={s.value} className="flex items-center gap-1">
+              <i className={`h-3 w-3 rounded ${s.swatch}`} /> {s.label}
+            </span>
+          ))}
           <span aria-hidden className="mx-1 h-3.5 w-px bg-slate-200" />
           <span className="font-semibold text-slate-600">Viền:</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-yellow-400" /> Trong ngày</span>
@@ -232,35 +256,41 @@ export default function ScheduleGrid({
               {/* thẻ tour: kéo dài theo span ngày, tóm tắt gọn */}
               {tour.items.map((it) => {
                 const trip = it.trip;
-                const vOut = trip.outbound.vehicleId ? vehicleMap.get(trip.outbound.vehicleId) : undefined;
-                const vRet = trip.return?.vehicleId ? vehicleMap.get(trip.return.vehicleId) : undefined;
                 const sameVeh = sameVehicleBothLegs(trip);
                 const top = it.top;
                 const cardH = it.height;
 
                 // Dài ngày + KHÔNG giữ xe suốt tour → tách 2 thẻ đi/về (không kéo dài), nối bằng đường.
-                if (!!trip.return && it.s !== it.e && !trip.heldThroughTour) {
-                  const xOutRight = it.s * W + 4 + CARD_W;
-                  const xRetLeft = it.e * W + 4;
+                // Xét theo NGÀY thực (không theo index đã kẹp) để chuyến vắt qua 2 tháng vẫn tách đúng.
+                const isSplit =
+                  !!trip.return && trip.return.date !== trip.outbound.date && !trip.heldThroughTour;
+                if (isSplit) {
+                  const trackW = days.length * W;
+                  // Lượt nằm ở tháng khác → không vẽ thẻ đó; đường nối chạy tới mép lịch.
+                  const xOutRight = it.oIdx != null ? it.oIdx * W + 4 + CARD_W : 0;
+                  const xRetLeft = it.rIdx != null ? it.rIdx * W + 4 : trackW;
                   const gapW = Math.max(0, xRetLeft - xOutRight);
-                  const nights = it.e - it.s;
                   return (
                     <div className="group" key={trip.id}>
-                      {/* đường nối giữa 2 thẻ (xe rảnh các ngày giữa) */}
-                      <div
-                        className="absolute flex items-center transition duration-150 group-hover:-translate-y-0.5"
-                        style={{ left: xOutRight, width: gapW, top: top + cardH / 2 - 9, height: 18 }}
-                      >
-                        <div className="h-0 flex-1 border-t-2 border-dashed border-slate-300 transition-colors group-hover:border-[#cbb48f]" />
-                        {gapW >= 44 && (
-                          <span className="mx-1 whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
-                            {nights}Đ
-                          </span>
-                        )}
-                        <div className="h-0 flex-1 border-t-2 border-dashed border-slate-300 transition-colors group-hover:border-[#cbb48f]" />
-                      </div>
-                      {tourCard(trip, "out", it.s * W + 4, CARD_W, top, cardH, plateLine(vOut), true, true)}
-                      {tourCard(trip, "ret", it.e * W + 4, CARD_W, top, cardH, plateLine(vRet), false, true)}
+                      {/* đường nối 2 thẻ (xe rảnh các ngày giữa); chạy tới mép nếu 1 lượt ở tháng khác */}
+                      {gapW > 0 && (
+                        <div
+                          className="absolute flex items-center transition duration-150 group-hover:-translate-y-0.5"
+                          style={{ left: xOutRight, width: gapW, top: top + cardH / 2 - 9, height: 18 }}
+                        >
+                          <div className="h-0 flex-1 border-t-2 border-dashed border-slate-300 transition-colors group-hover:border-[#cbb48f]" />
+                          {gapW >= 44 && (
+                            <span className="mx-1 whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                              {it.nights}Đ
+                            </span>
+                          )}
+                          <div className="h-0 flex-1 border-t-2 border-dashed border-slate-300 transition-colors group-hover:border-[#cbb48f]" />
+                        </div>
+                      )}
+                      {it.oIdx != null &&
+                        tourCard(trip, "out", it.oIdx * W + 4, CARD_W, top, cardH, plateLine(vehLabel(trip.outbound)), true, true)}
+                      {it.rIdx != null &&
+                        tourCard(trip, "ret", it.rIdx * W + 4, CARD_W, top, cardH, plateLine(vehLabel(trip.return)), it.oIdx == null, true)}
                     </div>
                   );
                 }
@@ -275,7 +305,10 @@ export default function ScheduleGrid({
                     : sameVeh
                     ? "round"
                     : "both";
-                const plates = trip.return && !sameVeh ? plateLine(vOut, vRet) : plateLine(vOut);
+                const plates =
+                  trip.return && !sameVeh
+                    ? plateLine(vehLabel(trip.outbound), vehLabel(trip.return))
+                    : plateLine(vehLabel(trip.outbound));
                 return tourCard(trip, role, it.s * W + 4, (it.e - it.s + 1) * W - 8, top, cardH, plates, true);
               })}
             </div>

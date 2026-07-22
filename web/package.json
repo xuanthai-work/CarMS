@@ -10,7 +10,11 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.mjs",
-    "db:realtime": "node prisma/realtime-setup.mjs"
+    "db:realtime": "node prisma/realtime-setup.mjs",
+    "db:setup": "npm run db:push && npm run db:realtime && npm run db:seed",
+    "supabase:start": "npx --yes supabase start",
+    "supabase:stop": "npx --yes supabase stop",
+    "supabase:status": "npx --yes supabase status"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

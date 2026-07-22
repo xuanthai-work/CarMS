@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getVehicles, getDrivers, getTrips } from "@/lib/db";
-import { LinkButton } from "@/components/ui";
 import ScheduleGrid from "@/components/ScheduleGrid";
 import { daysInMonth, monthKeyOf, monthLabel, addMonth, todayStr } from "@/lib/format";
 
@@ -24,9 +23,19 @@ export default async function LichPage({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Lịch điều xe</h1>
         <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
-          <LinkButton href={`/lich?m=${addMonth(monthKey, -1)}`} variant="ghost">←</LinkButton>
+          <Link
+            href={`/lich?m=${addMonth(monthKey, -1)}`}
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            ←
+          </Link>
           <span className="min-w-[120px] text-center text-sm font-semibold text-slate-700">{monthLabel(monthKey)}</span>
-          <LinkButton href={`/lich?m=${addMonth(monthKey, 1)}`} variant="ghost">→</LinkButton>
+          <Link
+            href={`/lich?m=${addMonth(monthKey, 1)}`}
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            →
+          </Link>
         </div>
       </div>
 

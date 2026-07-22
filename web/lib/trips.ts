@@ -58,12 +58,38 @@ export function fmtMoney(n: number | null | undefined): string {
   return `${n.toLocaleString("vi-VN")} ₫`;
 }
 
+/**
+ * Trạng thái chuyến — NGUỒN DUY NHẤT cho nhãn, màu nền thẻ (statusBg) và chấm màu ở
+ * chú giải (legend). 👉 Muốn đổi màu/nhãn một trạng thái thì sửa ngay tại đây, cả lịch
+ * lẫn màn doanh thu sẽ theo.
+ *  - bg     : class nền thẻ trên lịch (qua statusBg) — cyan = đã nhắn khách, xanh lá = đã thanh toán
+ *  - swatch : chấm màu hiển thị ở legend (khớp với bg)
+ *  - text   : màu CHỮ khi đặt trên nền trắng (VD cột Trạng thái) — pending để đen (nền trắng)
+ *  - chip   : nền + viền cho dropdown trạng thái (tô màu theo legend, chữ để đen)
+ */
+export const TRIP_STATUSES = [
+  { value: "pending", label: "Mới/Chưa xử lý", swatch: "border border-slate-300 bg-white", bg: "bg-white text-slate-700 hover:bg-slate-50", text: "text-slate-700", chip: "border-slate-300 bg-white" },
+  { value: "info_sent", label: "Đã nhắn khách", swatch: "bg-cyan-100", bg: "bg-cyan-100 text-green-900 hover:bg-cyan-200", text: "text-cyan-700", chip: "border-cyan-200 bg-cyan-100" },
+  { value: "completed_paid", label: "Đã thanh toán", swatch: "bg-green-200", bg: "bg-green-200 text-green-900 hover:bg-green-300", text: "text-green-700", chip: "border-green-300 bg-green-200" },
+] as const;
+
+export function tripStatusLabel(status?: string): string {
+  return (TRIP_STATUSES.find((s) => s.value === status) ?? TRIP_STATUSES[0]).label;
+}
+
 /** Nền thẻ chuyến theo trạng thái (dùng chung cho các view lịch). */
 export function statusBg(status?: string): string {
-  // 👉 Muốn đổi màu nền "Đã thanh toán" thì sửa dòng ngay dưới đây.
-  if (status === "completed_paid") return "bg-green-200 text-green-900 hover:bg-green-300";
-  if (status === "info_sent") return "bg-cyan-100 text-green-900 hover:bg-cyan-200";
-  return "bg-white text-slate-700 hover:bg-slate-50";
+  return (TRIP_STATUSES.find((s) => s.value === status) ?? TRIP_STATUSES[0]).bg;
+}
+
+/** Màu chữ trạng thái khi đặt trên nền trắng (cột Trạng thái ở màn doanh thu). */
+export function statusTextClass(status?: string): string {
+  return (TRIP_STATUSES.find((s) => s.value === status) ?? TRIP_STATUSES[0]).text;
+}
+
+/** Nền + viền "chip" cho dropdown trạng thái (tô màu theo legend, chữ để đen). */
+export function statusChipClass(status?: string): string {
+  return (TRIP_STATUSES.find((s) => s.value === status) ?? TRIP_STATUSES[0]).chip;
 }
 
 /**

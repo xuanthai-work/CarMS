@@ -7,6 +7,7 @@ import { Info } from "@/components/ui";
 import { fmtDate, weekdayVn } from "@/lib/format";
 import { fmtMoney, tourTypeLabel, sameVehicleBothLegs, legRoute } from "@/lib/trips";
 import { seatLabel } from "@/lib/vehicles";
+import { tripMoney, profitTextClass } from "@/lib/revenue";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
 type Prefill = { vehicleId?: string; date?: string };
@@ -37,7 +38,16 @@ function LegView({
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-2">
         <Info label="Lộ trình" value={legRoute(leg)} className="col-span-2" />
-        <Info label="Xe" value={v ? `${v.plate} · ${seatLabel(v.seats)}` : "—"} />
+        <Info
+          label="Xe"
+          value={
+            v
+              ? `${v.plate} · ${seatLabel(v.seats)}`
+              : leg.seatClass
+              ? `${leg.seatClass} chỗ (chưa xếp)`
+              : "—"
+          }
+        />
         <Info label="Lái xe" value={d ? d.name + (d.phone ? ` (${d.phone})` : "") : "—"} />
       </div>
     </div>
@@ -77,6 +87,7 @@ export default function TripModal({
 
   // ----- CHẾ ĐỘ XEM -----
   const t = trip!;
+  const m = tripMoney(t);
   const vmap = new Map(vehicles.map((v) => [v.id, v]));
   const dmap = new Map(drivers.map((d) => [d.id, d]));
   const round = sameVehicleBothLegs(t);
@@ -111,6 +122,19 @@ export default function TripModal({
         <div className="grid grid-cols-2 gap-x-6 gap-y-2">
           <Info label="Tiền chuyến" value={fmtMoney(t.price)} />
           <Info label="Đặt cọc" value={fmtMoney(t.deposit)} />
+          {t.fuelCost != null && <Info label="Xăng dầu" value={fmtMoney(t.fuelCost)} />}
+          {t.tollCost != null && <Info label="VETC / Cầu đường" value={fmtMoney(t.tollCost)} />}
+          {t.partnerCost != null && <Info label="Tiền thuê đối tác" value={fmtMoney(t.partnerCost)} />}
+          {t.otherCost != null && <Info label="Chi phí khác" value={fmtMoney(t.otherCost)} />}
+          <Info label="Tổng chi phí" value={fmtMoney(m.cost)} />
+          <Info
+            label="Lợi nhuận"
+            value={
+              <span className={`font-semibold ${profitTextClass(m.profit)}`}>
+                {fmtMoney(m.profit)}
+              </span>
+            }
+          />
           <Info label="Ghi chú" value={t.note || "—"} className="col-span-2" />
         </div>
 

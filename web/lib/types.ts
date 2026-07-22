@@ -30,6 +30,7 @@ export type Leg = {
   to: string; // điểm đến
   vehicleId: string | null; // ⇒ suy ra loại xe + biển số (null = chưa gán / giao đối tác)
   driverId: string | null; // ⇒ suy ra tên + sđt lái xe (null = chưa gán)
+  seatClass: number | null; // số chỗ (placeholder) khi chưa xếp xe cụ thể — hiện trên thẻ thay biển số
 };
 
 /**
@@ -46,6 +47,10 @@ export type Trip = {
   status?: "pending" | "info_sent" | "completed_paid";
   heldThroughTour: boolean; // giữ xe suốt tour (chỉ có nghĩa khi cùng 1 xe cả đi & về)
   note: string;
+  fuelCost: number | null; // xăng dầu
+  tollCost: number | null; // VETC / cầu đường
+  partnerCost: number | null; // tiền thuê đối tác
+  otherCost: number | null; // chi phí khác
   outbound: Leg; // lượt đi (bắt buộc)
   return: Leg | null; // lượt về (null nếu một chiều)
 };
