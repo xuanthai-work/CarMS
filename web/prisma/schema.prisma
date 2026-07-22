@@ -18,6 +18,7 @@ model Vehicle {
 
   outboundTrips Trip[]  @relation("OutboundVehicle")
   returnTrips   Trip[]  @relation("ReturnVehicle")
+  fuelEntries   FuelEntry[]
 }
 
 model Driver {
@@ -75,4 +76,24 @@ model Trip {
   tollCost    Float? // VETC / cầu đường
   partnerCost Float? // tiền thuê đối tác
   otherCost   Float? // chi phí khác
+}
+
+model FuelEntry {
+  id            String   @id
+  vehicleId     String
+  refuelDate    String
+  amount        Float
+  paymentStatus String   @default("unpaid")
+  paymentDate   String?
+  payerName     String   @default("")
+  note          String?  @default("")
+  source        String   @default("manual")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([refuelDate])
+  @@index([vehicleId, refuelDate])
+  @@index([source])
 }

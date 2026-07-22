@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import type { Trip, Vehicle, Driver } from "@/lib/types";
-import { tripMoney, summarize, revenueMonthKey, profitTextClass } from "@/lib/revenue";
+import { tripMoney, summarize, revenueMonthKey, monthProfit } from "@/lib/revenue";
 import { fmtMoney, tourTypeLabel, tripStatusLabel } from "@/lib/trips";
 import { monthLabel, addMonth, fmtDate } from "@/lib/format";
 import { normalizeVn } from "@/lib/search";
@@ -45,11 +45,13 @@ export default function RevenueScreen({
   vehicles,
   drivers,
   defaultMonthKey,
+  fuelTotalsByMonth,
 }: {
   trips: Trip[];
   vehicles: Vehicle[];
   drivers: Driver[];
   defaultMonthKey: string;
+  fuelTotalsByMonth: Record<string, number>;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -67,6 +69,9 @@ export default function RevenueScreen({
     [monthTrips]
   );
   const summary = useMemo(() => summarize(monthMoney.map((r) => r.money)), [monthMoney]);
+  const fuelTotal = fuelTotalsByMonth[monthKey] ?? 0;
+  const totalCost = summary.cost + fuelTotal;
+  const profit = monthProfit(summary, fuelTotal);
   // "Đã thanh toán" = tiền các chuyến có trạng thái completed_paid (theo status, không tính cọc).
   const paidTotal = useMemo(
     () =>
@@ -135,21 +140,19 @@ export default function RevenueScreen({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <Stat label="Doanh thu ghi nhận" value={fmtMoney(summary.recognized)} />
-        <Stat label="Chi phí" value={fmtMoney(summary.cost)} />
+        <Stat label="Chi phí khác" value={fmtMoney(summary.cost)} />
+        <Stat label="Tiền dầu tháng" value={fmtMoney(fuelTotal)} />
+        <Stat label="Tổng chi phí tháng" value={fmtMoney(totalCost)} />
         <Stat
           label="Lợi nhuận"
-          value={fmtMoney(summary.profit)}
-          tone={summary.profit >= 0 ? "emerald" : "rose"}
+          value={fmtMoney(profit)}
+          tone={profit >= 0 ? "emerald" : "rose"}
         />
         <Stat label="Đã thanh toán" value={fmtMoney(paidTotal)} />
         <Stat label="Còn phải thu" value={fmtMoney(summary.outstanding)} tone="amber" />
-        <Stat
-          label="Số chuyến"
-          value={String(summary.count)}
-          hint={noPriceCount > 0 ? `${noPriceCount} chuyến chưa có giá` : undefined}
-        />
+        <Stat label="Số chuyến" value={String(summary.count)} hint={noPriceCount > 0 ? `${noPriceCount} chuyến chưa có giá` : undefined} />
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -193,14 +196,13 @@ export default function RevenueScreen({
         ) : (
           <table className="w-full table-fixed text-sm">
             <colgroup>
-              <col style={{ width: "20%" }} />
-              <col style={{ width: "9%" }} />
-              <col style={{ width: "9%" }} />
-              <col style={{ width: "12%" }} />
+              <col style={{ width: "24%" }} />
               <col style={{ width: "11%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "13%" }} />
               <col style={{ width: "12%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "15%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "16%" }} />
             </colgroup>
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-500">
@@ -209,7 +211,6 @@ export default function RevenueScreen({
                 <th className="px-3 py-2.5">Loại</th>
                 <th className="px-3 py-2.5 text-right">Giá</th>
                 <th className="px-3 py-2.5 text-right">Chi phí</th>
-                <th className="px-3 py-2.5 text-right">Lợi nhuận</th>
                 <th className="px-3 py-2.5 text-right">Còn phải thu</th>
                 <th className="py-2.5 pl-8 pr-3">Trạng thái</th>
               </tr>
@@ -240,9 +241,6 @@ export default function RevenueScreen({
                   </td>
                   <td className="px-3 py-2.5 text-right text-slate-600">
                     {money.cost > 0 ? fmtMoney(money.cost) : "—"}
-                  </td>
-                  <td className={`px-3 py-2.5 text-right font-semibold ${profitTextClass(money.profit)}`}>
-                    {fmtMoney(money.profit)}
                   </td>
                   <td
                     className={`px-3 py-2.5 text-right font-semibold ${

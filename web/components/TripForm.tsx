@@ -7,6 +7,7 @@ import { Field, inputCls } from "@/components/ui";
 import DatePicker from "@/components/DatePicker";
 import TimePicker from "@/components/TimePicker";
 import Combobox from "@/components/Combobox";
+import MoneyInput from "@/components/MoneyInput";
 import { tourTypeLabel, tourTypeFromDates } from "@/lib/trips";
 import { seatLabel, VEHICLE_TYPES } from "@/lib/vehicles";
 import { fmtDateFull } from "@/lib/format";
@@ -165,10 +166,10 @@ export default function TripForm({
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Tiền chuyến">
-              <input name="price" inputMode="numeric" defaultValue={trip?.price ?? ""} placeholder="VD: 5000000" className={inputCls} />
+              <MoneyInput name="price" defaultValue={trip?.price ?? null} placeholder="VD: 5.000.000" />
             </Field>
             <Field label="Đặt cọc">
-              <input name="deposit" inputMode="numeric" defaultValue={trip?.deposit ?? ""} placeholder="0" className={inputCls} />
+              <MoneyInput name="deposit" defaultValue={trip?.deposit ?? null} placeholder="0" />
             </Field>
           </div>
           <Field label="Trạng thái">
@@ -218,15 +219,15 @@ export default function TripForm({
           <div className="mb-2 text-sm font-semibold text-slate-700">Chi phí</div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <Field label="VETC / Cầu đường">
-              <input name="tollCost" inputMode="numeric" defaultValue={trip?.tollCost ?? ""} placeholder="0" className={inputCls} />
+              <MoneyInput name="tollCost" defaultValue={trip?.tollCost ?? null} placeholder="0" />
             </Field>
             {usesPartner && (
               <Field label="Tiền thuê đối tác">
-                <input name="partnerCost" inputMode="numeric" defaultValue={trip?.partnerCost ?? ""} placeholder="0" className={inputCls} />
+                <MoneyInput name="partnerCost" defaultValue={trip?.partnerCost ?? null} placeholder="0" />
               </Field>
             )}
             <Field label="Chi phí khác">
-              <input name="otherCost" inputMode="numeric" defaultValue={trip?.otherCost ?? ""} placeholder="0" className={inputCls} />
+              <MoneyInput name="otherCost" defaultValue={trip?.otherCost ?? null} placeholder="0" />
             </Field>
           </div>
         </div>

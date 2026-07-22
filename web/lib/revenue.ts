@@ -6,9 +6,13 @@ export type TripMoney = {
   recognized: number; // doanh thu ghi nhận = price ?? 0
   collected: number; // đã thu
   outstanding: number; // còn phải thu (>= 0)
-  cost: number; // tổng chi phí = xăng + VETC + thuê đối tác + khác
+  cost: number; // tổng chi phí còn gắn trên chuyến = VETC + thuê đối tác + khác
   profit: number; // lợi nhuận = recognized − cost
 };
+
+export function tripOtherCost(trip: Trip): number {
+  return (trip.tollCost ?? 0) + (trip.partnerCost ?? 0) + (trip.otherCost ?? 0);
+}
 
 /**
  * Quy tắc tiền:
@@ -19,8 +23,7 @@ export function tripMoney(trip: Trip): TripMoney {
   const recognized = trip.price ?? 0;
   const collected =
     trip.status === "completed_paid" ? recognized : Math.min(trip.deposit ?? 0, recognized);
-  const cost =
-    (trip.fuelCost ?? 0) + (trip.tollCost ?? 0) + (trip.partnerCost ?? 0) + (trip.otherCost ?? 0);
+  const cost = tripOtherCost(trip);
   return {
     recognized,
     collected,
@@ -62,4 +65,8 @@ export function summarize(items: TripMoney[]): RevenueSummary {
     }),
     { recognized: 0, collected: 0, outstanding: 0, cost: 0, profit: 0, count: 0 }
   );
+}
+
+export function monthProfit(summary: RevenueSummary, fuelTotal: number): number {
+  return summary.recognized - summary.cost - fuelTotal;
 }

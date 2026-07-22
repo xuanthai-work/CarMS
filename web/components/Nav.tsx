@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/lich", label: "Lịch" },
   { href: "/doanh-thu", label: "Doanh thu" },
+  { href: "/tien-dau", label: "Tiền dầu" },
   { href: "/xe", label: "Quản lý xe" },
   { href: "/nhan-su", label: "Nhân sự" },
 ];

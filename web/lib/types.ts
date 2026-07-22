@@ -55,6 +55,22 @@ export type Trip = {
   return: Leg | null; // lượt về (null nếu một chiều)
 };
 
+export type FuelPaymentStatus = "paid" | "unpaid";
+
+export type FuelEntry = {
+  id: string;
+  vehicleId: string;
+  refuelDate: string; // YYYY-MM-DD
+  amount: number;
+  paymentStatus: FuelPaymentStatus;
+  paymentDate: string | null; // YYYY-MM-DD
+  payerName: string;
+  note: string;
+  source: string; // manual | import_july_2026
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 /**
  * Store JSON. App dùng `vehicles` + `drivers` + `trips`.
  * seed.json còn giữ customers/partners/bookings (import thô từ Excel, chưa nối UI)

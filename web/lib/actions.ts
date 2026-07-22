@@ -19,12 +19,19 @@ function optNum(fd: FormData, key: string): number | null {
   return v === "" ? null : Number(v);
 }
 
+function reqNum(fd: FormData, key: string): number {
+  const v = optNum(fd, key);
+  if (v == null) throw new Error(`Thiếu số cho trường ${key}`);
+  return v;
+}
+
 function revalidateAll() {
   revalidatePath("/");
   revalidatePath("/lich");
   revalidatePath("/xe");
   revalidatePath("/nhan-su");
   revalidatePath("/doanh-thu");
+  revalidatePath("/tien-dau");
 }
 
 export async function saveVehicle(fd: FormData): Promise<void> {
@@ -173,5 +180,36 @@ export async function setLegEndTime(
 /** Đổi trạng thái 1 chuyến (từ dropdown trạng thái ở màn Doanh thu). */
 export async function setTripStatus(id: string, status: string): Promise<void> {
   await prisma.trip.update({ where: { id }, data: { status } });
+  revalidateAll();
+}
+
+export async function saveFuelEntry(fd: FormData): Promise<void> {
+  const id = s(fd, "id");
+  const paymentStatus = (s(fd, "paymentStatus") || "unpaid") as "paid" | "unpaid";
+  const vehicleId = s(fd, "vehicleId");
+  const refuelDate = s(fd, "refuelDate");
+  if (!vehicleId) throw new Error("Thiếu xe cho phiếu dầu");
+  if (!refuelDate) throw new Error("Thiếu ngày đổ");
+  const paymentDate = paymentStatus === "paid" ? optStr(fd, "paymentDate") ?? refuelDate : null;
+  const data = {
+    vehicleId,
+    refuelDate,
+    amount: reqNum(fd, "amount"),
+    paymentStatus,
+    paymentDate,
+    payerName: s(fd, "payerName"),
+    note: s(fd, "note"),
+  };
+  if (id) {
+    await prisma.fuelEntry.update({ where: { id }, data });
+  } else {
+    await prisma.fuelEntry.create({ data: { id: newId("f"), source: "manual", ...data } });
+  }
+  revalidateAll();
+}
+
+export async function deleteFuelEntry(fd: FormData): Promise<void> {
+  const id = s(fd, "id");
+  await prisma.fuelEntry.delete({ where: { id } });
   revalidateAll();
 }

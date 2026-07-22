@@ -6,8 +6,8 @@ import TripForm from "@/components/TripForm";
 import { Info } from "@/components/ui";
 import { fmtDate, weekdayVn } from "@/lib/format";
 import { fmtMoney, tourTypeLabel, sameVehicleBothLegs, legRoute } from "@/lib/trips";
+import { tripOtherCost } from "@/lib/revenue";
 import { seatLabel } from "@/lib/vehicles";
-import { tripMoney, profitTextClass } from "@/lib/revenue";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
 type Prefill = { vehicleId?: string; date?: string };
@@ -87,7 +87,6 @@ export default function TripModal({
 
   // ----- CHẾ ĐỘ XEM -----
   const t = trip!;
-  const m = tripMoney(t);
   const vmap = new Map(vehicles.map((v) => [v.id, v]));
   const dmap = new Map(drivers.map((d) => [d.id, d]));
   const round = sameVehicleBothLegs(t);
@@ -126,15 +125,7 @@ export default function TripModal({
           {t.tollCost != null && <Info label="VETC / Cầu đường" value={fmtMoney(t.tollCost)} />}
           {t.partnerCost != null && <Info label="Tiền thuê đối tác" value={fmtMoney(t.partnerCost)} />}
           {t.otherCost != null && <Info label="Chi phí khác" value={fmtMoney(t.otherCost)} />}
-          <Info label="Tổng chi phí" value={fmtMoney(m.cost)} />
-          <Info
-            label="Lợi nhuận"
-            value={
-              <span className={`font-semibold ${profitTextClass(m.profit)}`}>
-                {fmtMoney(m.profit)}
-              </span>
-            }
-          />
+          <Info label="Tổng chi phí" value={fmtMoney(tripOtherCost(t))} />
           <Info label="Ghi chú" value={t.note || "—"} className="col-span-2" />
         </div>
 
