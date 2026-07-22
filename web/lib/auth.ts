@@ -14,13 +14,18 @@ import type { OfficeStaff } from "@/lib/types";
  * getUser + 1 query, thay vì lặp lại ở mỗi tầng.
  */
 
-/** User Supabase của phiên hiện tại (đã xác thực phía server), hoặc null. */
+/**
+ * User của phiên hiện tại — đọc từ cookie tại chỗ, KHÔNG gọi mạng.
+ * An toàn vì middleware (utils/supabase/middleware.ts) đã gọi getUser() để xác thực
+ * + làm mới cookie trên CÙNG request này TRƯỚC khi layout/page/action chạy. Dùng
+ * getSession() ở đây cắt 1 vòng round-trip tới Supabase Auth mỗi lần điều hướng.
+ */
 export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.user ?? null;
 });
 
 /** Nhân sự văn phòng ứng với tài khoản đang đăng nhập (khớp email), hoặc null. */

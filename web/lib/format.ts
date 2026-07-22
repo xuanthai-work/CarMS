@@ -46,10 +46,20 @@ export function fmtDate(s: string | null | undefined): string {
   return `${d}/${m}/${y}`;
 }
 
-/** Ngày hôm nay dạng YYYY-MM-DD (theo giờ máy). */
+/**
+ * Ngày hôm nay dạng YYYY-MM-DD theo GIỜ VIỆT NAM (Asia/Ho_Chi_Minh),
+ * không phụ thuộc timezone server. Trên Vercel server chạy UTC — nếu đọc "giờ máy"
+ * thì sau 17:00 UTC (tức đã qua nửa đêm ở VN) sẽ lệch 1 ngày. Client vốn ở giờ VN nên vẫn khớp.
+ */
 export function todayStr(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find((p) => p.type === t)!.value;
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 /** "2026-07-15" -> "2026-07" */
