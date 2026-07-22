@@ -5,9 +5,11 @@ Internal fleet-dispatch application for a chauffeured car-rental business. Built
 ## Features
 
 - **Dispatch calendar** — monthly schedule with two views: per-vehicle (day × hour) and per-tour (timeline). Drag to pan; opens on the current day. Live-updating across clients (Supabase Realtime).
-- **Trip management** — bookings with outbound/return legs, including different vehicles per leg, pricing, deposit and status.
-- **Vehicles & drivers** — CRUD management with search.
-- **Authentication** — Supabase-backed login protecting all internal pages.
+- **Trip management** — bookings with outbound/return legs, including different vehicles per leg, pricing, deposit, cost/profit and status.
+- **Revenue** — monthly receivables, cost/profit KPIs and per-trip status (managers only).
+- **Fuel costs** — per-vehicle fuel entries with payment tracking, feeding the revenue view.
+- **Vehicles & staff** — vehicle CRUD; staff split into Drivers and Office staff tabs.
+- **Authentication & roles** — Supabase-backed login; accounts link to an office-staff record by email. Managers (CEO/COO) see everything; regular staff are restricted (no Revenue; Staff shows Drivers only). Enforced at the app layer on nav, pages, and server actions.
 
 ## Getting started
 

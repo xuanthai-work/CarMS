@@ -16,7 +16,30 @@ function parse(v: string): { y: number; m: number; d: number } | null {
   return { y, m: m - 1, d };
 }
 
-/** Ô chọn ngày: nút hiển thị + lịch popover tự thiết kế (thay input[type=date] mặc định). */
+/** Chuẩn hoá chuỗi gõ tay → "YYYY-MM-DD". Chấp nhận "15/03/1990", "15-3-1990", "15031990", "15/3/90". */
+function parseTyped(s: string): string | null {
+  const parts = s.split(/[^\d]+/).filter(Boolean);
+  const digits = s.replace(/\D/g, "");
+  let d: number;
+  let m: number;
+  let y: number;
+  if (parts.length >= 3) {
+    [d, m, y] = [Number(parts[0]), Number(parts[1]), Number(parts[2])];
+  } else if (digits.length === 8) {
+    d = Number(digits.slice(0, 2));
+    m = Number(digits.slice(2, 4));
+    y = Number(digits.slice(4));
+  } else {
+    return null;
+  }
+  if (y < 100) y += y > 30 ? 1900 : 2000; // năm 2 chữ số (đoán thế kỷ)
+  if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1900 || y > 9999) return null;
+  const dt = new Date(y, m - 1, d);
+  if (dt.getMonth() !== m - 1 || dt.getDate() !== d) return null; // ngày không tồn tại (VD 31/02)
+  return iso(y, m - 1, d);
+}
+
+/** Ô chọn ngày: GÕ trực tiếp dd/mm/yyyy (tự chuẩn hoá) hoặc mở lịch popover (có nhảy theo tháng & năm). */
 export default function DatePicker({
   name,
   value,
@@ -32,6 +55,9 @@ export default function DatePicker({
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   const sel = useMemo(() => parse(value), [value]);
+  const displayText = sel ? `${pad(sel.d)}/${pad(sel.m + 1)}/${sel.y}` : "";
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
   const [view, setView] = useState(() => {
     const p = parse(value);
     const t = new Date();
@@ -62,36 +88,69 @@ export default function DatePicker({
       return { y: v.y + Math.floor(m / 12), m: ((m % 12) + 12) % 12 };
     });
   }
+  function shiftYear(delta: number) {
+    setView((v) => ({ y: v.y + delta, m: v.m }));
+  }
+  function commitTyped() {
+    const parsed = parseTyped(inputRef.current?.value ?? "");
+    if (parsed) onChange(parsed);
+    else if (inputRef.current) inputRef.current.value = displayText; // gõ sai → trả về giá trị cũ
+  }
 
-  const displayText = sel ? `${pad(sel.d)}/${pad(sel.m + 1)}/${sel.y}` : "Chọn ngày";
+  const navBtn = "grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100";
 
   return (
     <div className="relative" ref={wrapRef}>
       <input type="hidden" name={name} value={value} />
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen((o) => !o)}
-        className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm transition ${
+      <div
+        className={`flex w-full items-center rounded-md border pr-2 text-sm transition ${
           open ? "border-brand-500 ring-1 ring-brand-500" : "border-slate-300 hover:border-slate-400"
-        } ${sel ? "text-slate-800" : "text-slate-400"} disabled:opacity-50`}
+        } ${disabled ? "opacity-50" : ""}`}
       >
-        <span>{displayText}</span>
-        <span className="text-slate-400">📅</span>
-      </button>
+        <input
+          key={value}
+          ref={inputRef}
+          type="text"
+          defaultValue={displayText}
+          disabled={disabled}
+          onFocus={() => setOpen(true)}
+          onBlur={commitTyped}
+          placeholder="dd/mm/yyyy"
+          className="w-full rounded-md bg-transparent px-3 py-2 text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed"
+        />
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((o) => !o)}
+          className="shrink-0 text-slate-400 hover:text-slate-600 disabled:cursor-not-allowed"
+          aria-label="Mở lịch"
+        >
+          📅
+        </button>
+      </div>
 
-      {open && (
+      {open && !disabled && (
         <div className="absolute left-0 top-full z-30 mt-1 w-[268px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
-          {/* Header tháng */}
+          {/* Header: « năm ‹ tháng › tháng » năm */}
           <div className="mb-2 flex items-center justify-between">
-            <button type="button" onClick={() => shiftMonth(-1)} className="grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100">←</button>
-            <span className="text-sm font-semibold text-slate-700">Tháng {view.m + 1}, {view.y}</span>
-            <button type="button" onClick={() => shiftMonth(1)} className="grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100">→</button>
+            <div className="flex items-center gap-0.5">
+              <button type="button" onClick={() => shiftYear(-1)} className={navBtn} aria-label="Năm trước">«</button>
+              <button type="button" onClick={() => shiftMonth(-1)} className={navBtn} aria-label="Tháng trước">‹</button>
+            </div>
+            <span className="text-sm font-semibold text-slate-700">
+              Tháng {view.m + 1}, {view.y}
+            </span>
+            <div className="flex items-center gap-0.5">
+              <button type="button" onClick={() => shiftMonth(1)} className={navBtn} aria-label="Tháng sau">›</button>
+              <button type="button" onClick={() => shiftYear(1)} className={navBtn} aria-label="Năm sau">»</button>
+            </div>
           </div>
           {/* Thứ */}
           <div className="grid grid-cols-7 gap-0.5 text-center text-[11px] font-medium text-slate-400">
             {WD.map((w) => (
-              <div key={w} className={w === "CN" ? "text-rose-400" : ""}>{w}</div>
+              <div key={w} className={w === "CN" ? "text-rose-400" : ""}>
+                {w}
+              </div>
             ))}
           </div>
           {/* Ngày */}
@@ -100,7 +159,7 @@ export default function DatePicker({
               if (d === null) return <div key={i} />;
               const isSel = !!sel && sel.y === view.y && sel.m === view.m && sel.d === d;
               const isToday = ty === view.y && tm === view.m && td === d;
-              const isSun = (i % 7) === 6;
+              const isSun = i % 7 === 6;
               return (
                 <button
                   key={i}

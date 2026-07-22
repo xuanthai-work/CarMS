@@ -17,3 +17,9 @@ next-env.d.ts
 
 # tài liệu spec/plan brainstorm — giữ local, không commit
 /docs/superpowers
+
+# scratch của subagent-driven-development (ledger tạm)
+/.superpowers
+
+# snippet SQL tạm của Supabase Studio (local)
+/supabase/snippets

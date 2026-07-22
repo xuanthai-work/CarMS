@@ -5,15 +5,17 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/lich", label: "Lịch" },
-  { href: "/doanh-thu", label: "Doanh thu" },
+  { href: "/doanh-thu", label: "Doanh thu", managerOnly: true },
   { href: "/tien-dau", label: "Tiền dầu" },
   { href: "/xe", label: "Quản lý xe" },
   { href: "/nhan-su", label: "Nhân sự" },
+  { href: "/luong", label: "Lương" },
 ];
 
-export default function Nav() {
+export default function Nav({ isManager, name }: { isManager: boolean; name: string }) {
   const pathname = usePathname();
   const isActive = (href: string) => pathname.startsWith(href);
+  const links = LINKS.filter((l) => !l.managerOnly || isManager);
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -23,7 +25,7 @@ export default function Nav() {
           CarMS
         </Link>
         <nav className="flex items-center gap-1 flex-1">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -35,7 +37,7 @@ export default function Nav() {
             </Link>
           ))}
         </nav>
-        
+
         <Link
           href="/profile"
           className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
@@ -43,7 +45,7 @@ export default function Nav() {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-400">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a5.99 5.99 0 00-4.793 2.39A6.483 6.483 0 0010 16.5a6.483 6.483 0 004.793-2.11A5.99 5.99 0 0010 12z" clipRule="evenodd" />
           </svg>
-          Tài khoản
+          {name || "Tài khoản"}
         </Link>
       </div>
     </header>

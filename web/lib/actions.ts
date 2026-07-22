@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "./prisma";
 import { newId } from "./db";
 import { tourTypeFromDates } from "./trips";
+import { requireStaff, requireManager } from "@/lib/auth";
 
 function s(fd: FormData, key: string): string {
   const v = fd.get(key);
@@ -25,6 +26,12 @@ function reqNum(fd: FormData, key: string): number {
   return v;
 }
 
+/** Ngày trong tháng (1–31); trống hoặc ngoài khoảng → null. */
+function dayOfMonth(fd: FormData, key: string): number | null {
+  const v = optNum(fd, key);
+  return v != null && v >= 1 && v <= 31 ? v : null;
+}
+
 function revalidateAll() {
   revalidatePath("/");
   revalidatePath("/lich");
@@ -35,6 +42,7 @@ function revalidateAll() {
 }
 
 export async function saveVehicle(fd: FormData): Promise<void> {
+  await requireStaff();
   const id = s(fd, "id");
   const data = {
     plate: s(fd, "plate"),
@@ -54,6 +62,7 @@ export async function saveVehicle(fd: FormData): Promise<void> {
 }
 
 export async function deleteVehicle(fd: FormData): Promise<void> {
+  await requireStaff();
   const id = s(fd, "id");
   await prisma.vehicle.delete({ where: { id } });
   revalidateAll();
@@ -61,6 +70,7 @@ export async function deleteVehicle(fd: FormData): Promise<void> {
 
 /** Tạo nhanh 1 xe (chỉ biển số) từ combobox trong form chuyến — mặc định "cộng tác ngoài"; sửa sau ở trang Xe. */
 export async function quickCreateVehicle(plate: string): Promise<{ id: string; label: string }> {
+  await requireStaff();
   const p = plate.trim();
   const id = newId("v");
   await prisma.vehicle.create({ data: { id, plate: p, status: "active", type: "partner" } });
@@ -70,6 +80,7 @@ export async function quickCreateVehicle(plate: string): Promise<{ id: string; l
 
 /** Tạo nhanh 1 lái xe (chỉ tên) từ combobox trong form chuyến — mặc định "cộng tác ngoài". */
 export async function quickCreateDriver(name: string): Promise<{ id: string; label: string }> {
+  await requireStaff();
   const n = name.trim();
   const id = newId("d");
   await prisma.driver.create({ data: { id, name: n, type: "partner" } });
@@ -78,6 +89,7 @@ export async function quickCreateDriver(name: string): Promise<{ id: string; lab
 }
 
 export async function saveDriver(fd: FormData): Promise<void> {
+  await requireStaff();
   const id = s(fd, "id");
   const data = {
     name: s(fd, "name"),
@@ -95,6 +107,7 @@ export async function saveDriver(fd: FormData): Promise<void> {
 }
 
 export async function deleteDriver(fd: FormData): Promise<void> {
+  await requireStaff();
   const id = s(fd, "id");
   await prisma.driver.delete({ where: { id } });
   revalidateAll();
@@ -117,6 +130,7 @@ function legFields(fd: FormData, prefix: string) {
 }
 
 export async function saveTrip(fd: FormData): Promise<void> {
+  await requireStaff();
   const id = s(fd, "id");
   const hasReturn = s(fd, "hasReturn") === "on";
   const o = legFields(fd, "o");
@@ -159,6 +173,7 @@ export async function saveTrip(fd: FormData): Promise<void> {
 }
 
 export async function deleteTrip(fd: FormData): Promise<void> {
+  await requireStaff();
   const id = s(fd, "id");
   await prisma.trip.delete({ where: { id } });
   revalidateAll();
@@ -170,6 +185,7 @@ export async function setLegEndTime(
   kind: "out" | "ret",
   endTime: string | null
 ): Promise<void> {
+  await requireStaff();
   await prisma.trip.update({
     where: { id },
     data: kind === "ret" ? { returnEndTime: endTime } : { outboundEndTime: endTime },
@@ -179,11 +195,13 @@ export async function setLegEndTime(
 
 /** Đổi trạng thái 1 chuyến (từ dropdown trạng thái ở màn Doanh thu). */
 export async function setTripStatus(id: string, status: string): Promise<void> {
+  await requireManager();
   await prisma.trip.update({ where: { id }, data: { status } });
   revalidateAll();
 }
 
 export async function saveFuelEntry(fd: FormData): Promise<void> {
+  await requireStaff();
   const id = s(fd, "id");
   const paymentStatus = (s(fd, "paymentStatus") || "unpaid") as "paid" | "unpaid";
   const vehicleId = s(fd, "vehicleId");
@@ -209,7 +227,48 @@ export async function saveFuelEntry(fd: FormData): Promise<void> {
 }
 
 export async function deleteFuelEntry(fd: FormData): Promise<void> {
+  await requireStaff();
   const id = s(fd, "id");
   await prisma.fuelEntry.delete({ where: { id } });
+  revalidateAll();
+}
+
+export async function saveOfficeStaff(fd: FormData): Promise<void> {
+  await requireManager();
+  const id = s(fd, "id");
+  const data = {
+    name: s(fd, "name"),
+    phone: optStr(fd, "phone"),
+    position: s(fd, "position"),
+    baseSalary: optNum(fd, "baseSalary"),
+    startDate: optStr(fd, "startDate"),
+    note: s(fd, "note"),
+    dob: optStr(fd, "dob"),
+    gender: optStr(fd, "gender"),
+    email: optStr(fd, "email"),
+    idNumber: optStr(fd, "idNumber"),
+    socialInsurance: optStr(fd, "socialInsurance"),
+    payday: dayOfMonth(fd, "payday"),
+  };
+  // Email = tài khoản đăng nhập nên phải là duy nhất; chặn trùng để login không map nhầm người/quyền.
+  if (data.email) {
+    const dup = await prisma.officeStaff.findFirst({
+      where: { email: { equals: data.email, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) },
+      select: { id: true },
+    });
+    if (dup) throw new Error("Email này đã được gán cho nhân sự khác");
+  }
+  if (id) {
+    await prisma.officeStaff.update({ where: { id }, data });
+  } else {
+    await prisma.officeStaff.create({ data: { id: newId("os"), ...data } });
+  }
+  revalidateAll();
+}
+
+export async function deleteOfficeStaff(fd: FormData): Promise<void> {
+  await requireManager();
+  const id = s(fd, "id");
+  await prisma.officeStaff.delete({ where: { id } });
   revalidateAll();
 }

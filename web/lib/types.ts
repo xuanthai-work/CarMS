@@ -18,6 +18,22 @@ export type Driver = {
   note: string;
 };
 
+export type OfficeStaff = {
+  id: string;
+  name: string;
+  phone: string | null;
+  position: string; // chức vụ
+  baseSalary: number | null; // lương cơ bản (VND)
+  startDate: string | null; // ngày vào làm YYYY-MM-DD
+  note: string;
+  dob: string | null; // ngày sinh YYYY-MM-DD
+  gender: string | null; // Nam | Nữ | Khác
+  email: string | null;
+  idNumber: string | null; // CCCD
+  socialInsurance: string | null; // số BHXH
+  payday: number | null; // ngày nhận lương (trong tháng)
+};
+
 /** Loại tour (enum) — xem nhãn & số ngày trong lib/trips.ts */
 export type TourType = "1d" | "2n1d" | "3n2d" | "4n3d" | "oneway";
 

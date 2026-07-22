@@ -11,7 +11,7 @@ import { createClient } from "@/utils/supabase/client";
  * Không mang dữ liệu qua client; realtime chỉ là tín hiệu "có thay đổi".
  * router.refresh() giữ nguyên state client (view, cuộn, modal đang mở).
  */
-const TABLES = ["Vehicle", "Driver", "Trip"] as const;
+const TABLES = ["Vehicle", "Driver", "Trip", "FuelEntry"] as const;
 
 export default function RealtimeRefresh() {
   const router = useRouter();

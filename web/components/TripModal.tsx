@@ -29,16 +29,17 @@ function LegView({
   const d = leg.driverId ? dmap.get(leg.driverId) : undefined;
   return (
     <div className={`rounded-lg border p-3 ${tone}`}>
-      <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+      <div className="mb-2 flex items-center gap-2 text-base font-semibold">
         <span>{title}</span>
-        <span className="text-xs font-medium text-slate-700">
+        <span className="text-sm font-medium text-slate-700">
           {weekdayVn(leg.date)} - {fmtDate(leg.date)}
           {leg.time ? ` · ${leg.time}${leg.endTime ? `–${leg.endTime}` : ""}` : ""}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-        <Info label="Lộ trình" value={legRoute(leg)} className="col-span-2" />
+        <Info size="md" label="Lộ trình" value={legRoute(leg)} className="col-span-2" />
         <Info
+          size="md"
           label="Xe"
           value={
             v
@@ -48,7 +49,7 @@ function LegView({
               : "—"
           }
         />
-        <Info label="Lái xe" value={d ? d.name + (d.phone ? ` (${d.phone})` : "") : "—"} />
+        <Info size="md" label="Lái xe" value={d ? d.name + (d.phone ? ` (${d.phone})` : "") : "—"} />
       </div>
     </div>
   );
@@ -95,13 +96,13 @@ export default function TripModal({
     <Modal title={title} onClose={onClose} maxWidthClass="max-w-4xl">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-lg font-bold text-slate-900">{t.customerName}</span>
-          {t.customerPhone && <span className="text-sm text-slate-500">{t.customerPhone}</span>}
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+          <span className="text-xl font-bold text-slate-900">{t.customerName}</span>
+          {t.customerPhone && <span className="text-base text-slate-500">{t.customerPhone}</span>}
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm font-medium text-slate-600">
             {tourTypeLabel(t.tourType)}
           </span>
           {round && (
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-sm font-medium text-emerald-700">
               {t.heldThroughTour ? "Giữ xe suốt tour" : "Cùng xe đi & về"}
             </span>
           )}
@@ -112,28 +113,28 @@ export default function TripModal({
           {t.return ? (
             <LegView title="Lượt về" tone="border-amber-200 bg-amber-50/40" leg={t.return} vmap={vmap} dmap={dmap} />
           ) : (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-400">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-base text-slate-400">
               Một chiều — không có lượt về.
             </div>
           )}
         </div>
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-          <Info label="Tiền chuyến" value={fmtMoney(t.price)} />
-          <Info label="Đặt cọc" value={fmtMoney(t.deposit)} />
-          {t.fuelCost != null && <Info label="Xăng dầu" value={fmtMoney(t.fuelCost)} />}
-          {t.tollCost != null && <Info label="VETC / Cầu đường" value={fmtMoney(t.tollCost)} />}
-          {t.partnerCost != null && <Info label="Tiền thuê đối tác" value={fmtMoney(t.partnerCost)} />}
-          {t.otherCost != null && <Info label="Chi phí khác" value={fmtMoney(t.otherCost)} />}
-          <Info label="Tổng chi phí" value={fmtMoney(tripOtherCost(t))} />
-          <Info label="Ghi chú" value={t.note || "—"} className="col-span-2" />
+          <Info size="md" label="Tiền chuyến" value={fmtMoney(t.price)} />
+          <Info size="md" label="Đặt cọc" value={fmtMoney(t.deposit)} />
+          {t.fuelCost != null && <Info size="md" label="Xăng dầu" value={fmtMoney(t.fuelCost)} />}
+          {t.tollCost != null && <Info size="md" label="VETC / Cầu đường" value={fmtMoney(t.tollCost)} />}
+          {t.partnerCost != null && <Info size="md" label="Tiền thuê đối tác" value={fmtMoney(t.partnerCost)} />}
+          {t.otherCost != null && <Info size="md" label="Chi phí khác" value={fmtMoney(t.otherCost)} />}
+          <Info size="md" label="Tổng chi phí" value={fmtMoney(tripOtherCost(t))} />
+          <Info size="md" label="Ghi chú" value={t.note || "—"} className="col-span-2" />
         </div>
 
         <div className="flex justify-end pt-1">
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-md border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            className="rounded-md border border-slate-300 px-4 py-2 text-base font-medium text-slate-700 hover:bg-slate-100"
           >
             Chỉnh sửa
           </button>

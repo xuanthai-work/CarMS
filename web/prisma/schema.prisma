@@ -97,3 +97,19 @@ model FuelEntry {
   @@index([vehicleId, refuelDate])
   @@index([source])
 }
+
+model OfficeStaff {
+  id              String  @id
+  name            String
+  phone           String?
+  position        String? // chức vụ: điều hành, kế toán…
+  baseSalary      Float?  // lương cơ bản (VND)
+  startDate       String? // ngày vào làm (YYYY-MM-DD)
+  note            String?
+  dob             String? // ngày sinh (YYYY-MM-DD)
+  gender          String? // Nam | Nữ | Khác
+  email           String?
+  idNumber        String? // CCCD
+  socialInsurance String? // số bảo hiểm xã hội
+  payday          Int?    // ngày nhận lương (trong tháng, 1–31)
+}

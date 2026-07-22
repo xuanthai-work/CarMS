@@ -1,8 +1,10 @@
 import { getFuelMonthMap, getVehicles, getDrivers, getTrips } from "@/lib/db";
 import RevenueScreen from "@/components/RevenueScreen";
 import { monthKeyOf, todayStr } from "@/lib/format";
+import { requireManager } from "@/lib/auth";
 
 export default async function DoanhThuPage() {
+  await requireManager();
   const [vehicles, drivers, trips, fuelMonthMap] = await Promise.all([
     getVehicles(),
     getDrivers(),

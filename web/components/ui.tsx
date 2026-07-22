@@ -28,15 +28,17 @@ export function Info({
   label,
   value,
   className = "",
+  size = "sm",
 }: {
   label: string;
   value: ReactNode;
   className?: string;
+  size?: "sm" | "md";
 }) {
   return (
     <div className={className}>
-      <div className="text-xs font-medium text-slate-600">{label}</div>
-      <div className="text-sm text-slate-800">{value}</div>
+      <div className={`font-medium text-slate-600 ${size === "md" ? "text-sm" : "text-xs"}`}>{label}</div>
+      <div className={`text-slate-800 ${size === "md" ? "text-base" : "text-sm"}`}>{value}</div>
     </div>
   );
 }
