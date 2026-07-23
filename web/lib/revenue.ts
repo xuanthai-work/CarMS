@@ -67,6 +67,6 @@ export function summarize(items: TripMoney[]): RevenueSummary {
   );
 }
 
-export function monthProfit(summary: RevenueSummary, fuelTotal: number): number {
-  return summary.recognized - summary.cost - fuelTotal;
+export function monthProfit(summary: RevenueSummary, fuelTotal: number, salaryCost = 0): number {
+  return summary.recognized - summary.cost - fuelTotal - salaryCost;
 }

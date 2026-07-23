@@ -47,12 +47,14 @@ export default function RevenueScreen({
   drivers,
   defaultMonthKey,
   fuelTotalsByMonth,
+  salaryCostByMonth,
 }: {
   trips: Trip[];
   vehicles: Vehicle[];
   drivers: Driver[];
   defaultMonthKey: string;
   fuelTotalsByMonth: Record<string, number>;
+  salaryCostByMonth: Record<string, number>;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -71,8 +73,9 @@ export default function RevenueScreen({
   );
   const summary = useMemo(() => summarize(monthMoney.map((r) => r.money)), [monthMoney]);
   const fuelTotal = fuelTotalsByMonth[monthKey] ?? 0;
-  const totalCost = summary.cost + fuelTotal;
-  const profit = monthProfit(summary, fuelTotal);
+  const salaryCost = salaryCostByMonth[monthKey] ?? 0;
+  const totalCost = summary.cost + fuelTotal + salaryCost;
+  const profit = monthProfit(summary, fuelTotal, salaryCost);
   // "Đã thanh toán" = tiền các chuyến có trạng thái completed_paid (theo status, không tính cọc).
   const paidTotal = useMemo(
     () =>
@@ -145,6 +148,7 @@ export default function RevenueScreen({
         <Stat label="Doanh thu ghi nhận" value={fmtMoney(summary.recognized)} />
         <Stat label="Chi phí khác" value={fmtMoney(summary.cost)} />
         <Stat label="Tiền dầu tháng" value={fmtMoney(fuelTotal)} />
+        <Stat label="Chi phí lương (tháng này)" value={fmtMoney(salaryCost)} />
         <Stat label="Tổng chi phí tháng" value={fmtMoney(totalCost)} />
         <Stat
           label="Lợi nhuận"
