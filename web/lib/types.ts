@@ -15,6 +15,7 @@ export type Driver = {
   phone: string | null; // SĐT = Zalo (dùng chung một số)
   licenseClass: string; // hạng bằng: B2, C, D, E, F
   type: string; // own | partner
+  baseSalary: number | null; // lương tháng (VND) — chỉ dùng cho lái xe của công ty
   note: string;
 };
 
@@ -97,4 +98,32 @@ export type DB = {
   vehicles: Vehicle[];
   drivers: Driver[];
   trips: Trip[];
+};
+
+export type SalaryPersonType = "office" | "driver";
+
+export type SalaryMonth = {
+  id: string;
+  personType: SalaryPersonType;
+  personId: string;
+  monthKey: string;
+  baseSalary: number;
+  additions: number;
+  deductions: number;
+  note: string;
+  paid: boolean;
+  paidDate: string | null;
+};
+
+export type PartnerPayout = {
+  id: string;
+  driverId: string;
+  workDate: string;
+  amount: number;
+  paymentStatus: "paid" | "unpaid";
+  paymentDate: string | null;
+  payerName: string;
+  note: string;
+  createdAt?: string;
+  updatedAt?: string;
 };

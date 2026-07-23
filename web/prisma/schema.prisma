@@ -27,10 +27,12 @@ model Driver {
   phone        String?
   licenseClass String?
   type         String  @default("own")
+  baseSalary   Float?  // lương tháng (VND) — chỉ dùng cho lái xe type="own"
   note         String?
 
   outboundTrips Trip[]  @relation("OutboundDriver")
   returnTrips   Trip[]  @relation("ReturnDriver")
+  partnerPayouts PartnerPayout[]
 }
 
 model Trip {
@@ -112,4 +114,40 @@ model OfficeStaff {
   idNumber        String? // CCCD
   socialInsurance String? // số bảo hiểm xã hội
   payday          Int?    // ngày nhận lương (trong tháng, 1–31)
+}
+
+model SalaryMonth {
+  id         String   @id
+  personType String   // 'office' | 'driver'
+  personId   String
+  monthKey   String   // 'YYYY-MM'
+  baseSalary Float    @default(0) // snapshot lương cơ bản lúc tạo dòng
+  additions  Float    @default(0) // thưởng/phụ cấp (cộng)
+  deductions Float    @default(0) // tạm ứng/khấu trừ (trừ)
+  note       String?  @default("")
+  paid       Boolean  @default(false)
+  paidDate   String?  // YYYY-MM-DD
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([personType, personId, monthKey])
+  @@index([monthKey])
+}
+
+model PartnerPayout {
+  id            String   @id
+  driverId      String
+  workDate      String   // YYYY-MM-DD
+  amount        Float
+  paymentStatus String   @default("unpaid") // 'paid' | 'unpaid'
+  paymentDate   String?
+  payerName     String   @default("")
+  note          String?  @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  driver        Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([workDate])
+  @@index([driverId, workDate])
 }

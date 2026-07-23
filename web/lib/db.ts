@@ -43,6 +43,7 @@ function toDriver(r: DriverRow): Driver {
     phone: r.phone,
     licenseClass: r.licenseClass ?? "",
     type: r.type,
+    baseSalary: r.baseSalary,
     note: r.note ?? "",
   };
 }
