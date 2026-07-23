@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 export default function Modal({
   title,
@@ -13,6 +14,8 @@ export default function Modal({
   children: React.ReactNode;
   maxWidthClass?: string;
 }) {
+  const reduceMotion = useReducedMotion();
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -26,9 +29,18 @@ export default function Modal({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40" onClick={onClose}>
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: reduceMotion ? 0 : 0.16, ease: "easeOut" }}
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40"
+      onClick={onClose}
+    >
       <div className="flex min-h-full items-center justify-center p-4">
-        <div
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
           className={`w-full ${maxWidthClass} rounded-xl bg-white p-5 shadow-xl`}
           onClick={(e) => e.stopPropagation()}
         >
@@ -44,8 +56,8 @@ export default function Modal({
             </button>
           </div>
           {children}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { dropdownMotion } from "@/lib/motion";
 import { pad } from "@/lib/format";
 import { useDismiss } from "@/lib/useDismiss";
 
@@ -52,6 +54,7 @@ export default function DatePicker({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   const sel = useMemo(() => parse(value), [value]);
@@ -129,8 +132,12 @@ export default function DatePicker({
         </button>
       </div>
 
-      {open && !disabled && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-[268px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
+      <AnimatePresence>
+        {open && !disabled && (
+          <motion.div
+            {...dropdownMotion(reduceMotion)}
+            className="absolute left-0 top-full z-30 mt-1 w-[268px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl"
+          >
           {/* Header: « năm ‹ tháng › tháng » năm */}
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-0.5">
@@ -181,8 +188,9 @@ export default function DatePicker({
               );
             })}
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

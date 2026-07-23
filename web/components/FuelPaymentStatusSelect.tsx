@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { dropdownMotion } from "@/lib/motion";
 import { useDismiss } from "@/lib/useDismiss";
 
 const OPTIONS = [
@@ -30,6 +32,7 @@ export default function FuelPaymentStatusSelect({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   useDismiss(open, ref, () => setOpen(false));
+  const reduceMotion = useReducedMotion();
 
   const current = OPTIONS.find((option) => option.value === value) ?? OPTIONS[0];
 
@@ -39,6 +42,7 @@ export default function FuelPaymentStatusSelect({
       <button
         type="button"
         onClick={() => setOpen((state) => !state)}
+        aria-expanded={open}
         className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm transition ${
           current.chip
         } ${open ? "ring-2 ring-brand-400" : "hover:brightness-95"}`}
@@ -47,8 +51,12 @@ export default function FuelPaymentStatusSelect({
         <span className={`text-[10px] text-slate-500 transition ${open ? "rotate-180" : ""}`}>▼</span>
       </button>
 
-      {open && (
-        <div className="absolute inset-x-0 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            {...dropdownMotion(reduceMotion)}
+            className="absolute inset-x-0 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+          >
           {OPTIONS.map((option) => {
             const active = option.value === value;
             return (
@@ -68,8 +76,9 @@ export default function FuelPaymentStatusSelect({
               </button>
             );
           })}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

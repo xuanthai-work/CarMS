@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { cardMotion } from "@/lib/motion";
 import { saveVehicle, deleteVehicle } from "@/lib/actions";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS, seatLabel, statusLabel, ownerLabel } from "@/lib/vehicles";
 import { Field, Info, inputCls } from "@/components/ui";
@@ -27,6 +29,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     insuranceDue: v.insuranceDue ?? "",
   });
   const [editing, setEditing] = useState(false);
+  const reduceMotion = useReducedMotion();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -77,7 +80,10 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
 
   // ---------- CHẾ ĐỘ CHỈNH SỬA ----------
   return (
-    <div className="rounded-xl border border-brand-300 bg-white p-4 ring-1 ring-brand-200">
+    <motion.div
+      {...cardMotion(reduceMotion)}
+      className="rounded-xl border border-brand-300 bg-white p-4 ring-1 ring-brand-200"
+    >
       <form id={`veh-${v.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={v.id} />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,6 +132,6 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

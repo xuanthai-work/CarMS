@@ -8,6 +8,7 @@ import { buildDayMeta } from "@/lib/format";
 import { fmtMoney, sameVehicleBothLegs, statusBg, packVariableHeight, TRIP_STATUSES } from "@/lib/trips";
 import { CARD_HOVER, CARD_HOVER_GROUP } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
+import FilterTabs from "@/components/FilterTabs";
 import { seatLabel } from "@/lib/vehicles";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
@@ -183,26 +184,19 @@ export default function ScheduleGrid({
               <SelectMenu name="scheduleVehicle" value={vid} onChange={setVid} options={vehicleOptions} placeholder="Chọn xe" />
             </div>
           )}
-          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-sm font-medium">
-            <button
-              type="button"
-              onClick={() => setView("xe")}
-              className={`rounded-md px-3 py-1.5 ${view === "xe" ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
-            >
-              Theo xe
-            </button>
-            <button
-              type="button"
-              onClick={() => setView("tour")}
-              className={`rounded-md px-3 py-1.5 ${view === "tour" ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
-            >
-              Theo chuyến
-            </button>
-          </div>
+          <FilterTabs
+            value={view}
+            onChange={setView}
+            ariaLabel="Chuyển kiểu xem lịch"
+            options={[
+              ["xe", "Theo xe"],
+              ["tour", "Theo chuyến"],
+            ] as const}
+          />
           <button
             type="button"
             onClick={() => setModal({ trip: null })}
-            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
           >
             + Thêm chuyến
           </button>
@@ -288,7 +282,7 @@ export default function ScheduleGrid({
                       {/* đường nối 2 thẻ (xe rảnh các ngày giữa); chạy tới mép nếu 1 lượt ở tháng khác */}
                       {gapW > 0 && (
                         <div
-                          className="absolute flex items-center transition duration-150 group-hover:-translate-y-0.5"
+                          className="absolute flex items-center transition-colors duration-150"
                           style={{ left: xOutRight, width: gapW, top: top + cardH / 2 - 9, height: 18 }}
                         >
                           <div className="h-0 flex-1 border-t-2 border-dashed border-slate-300 transition-colors group-hover:border-[#cbb48f]" />

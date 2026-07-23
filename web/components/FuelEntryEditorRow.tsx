@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { cardMotion } from "@/lib/motion";
 import DatePicker from "@/components/DatePicker";
 import Combobox from "@/components/Combobox";
 import MoneyInput from "@/components/MoneyInput";
@@ -36,6 +38,7 @@ export default function FuelEntryEditorRow({
   onCancel: () => void;
 }) {
   const formId = `fuel-row-${entry?.id ?? "new"}`;
+  const reduceMotion = useReducedMotion();
   const [isPending, startTransition] = useTransition();
   const [vehicleId, setVehicleId] = useState(entry?.vehicleId ?? "");
   const [refuelDate, setRefuelDate] = useState(entry?.refuelDate ?? defaultDate);
@@ -67,7 +70,10 @@ export default function FuelEntryEditorRow({
   }
 
   return (
-    <tr className={`align-top ${entry ? "border-b border-slate-100 bg-brand-50/50" : "border-b border-brand-200 bg-brand-50/40"}`}>
+    <motion.tr
+      {...cardMotion(reduceMotion)}
+      className={`align-top ${entry ? "border-b border-slate-100 bg-brand-50/50" : "border-b border-brand-200 bg-brand-50/40"}`}
+    >
       <td colSpan={7} className="p-0">
         <form id={formId} action={submitForm}>
           {entry && <input type="hidden" name="id" value={entry.id} />}
@@ -167,6 +173,6 @@ export default function FuelEntryEditorRow({
           </table>
         </form>
       </td>
-    </tr>
+    </motion.tr>
   );
 }

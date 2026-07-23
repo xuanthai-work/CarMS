@@ -11,6 +11,7 @@ import TripModal from "@/components/TripModal";
 import Modal from "@/components/Modal";
 import StatusSelect from "@/components/StatusSelect";
 import { setTripStatus } from "@/lib/actions";
+import FilterTabs from "@/components/FilterTabs";
 
 const STAT_TONE = {
   neutral: { box: "border-slate-200 bg-white", text: "text-slate-900" },
@@ -123,7 +124,7 @@ export default function RevenueScreen({
           <button
             type="button"
             onClick={() => setMonthKey((m) => addMonth(m, -1))}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 active:scale-95"
           >
             ←
           </button>
@@ -133,7 +134,7 @@ export default function RevenueScreen({
           <button
             type="button"
             onClick={() => setMonthKey((m) => addMonth(m, 1))}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 active:scale-95"
           >
             →
           </button>
@@ -156,24 +157,16 @@ export default function RevenueScreen({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-sm font-medium">
-          {([
+        <FilterTabs
+          value={filter}
+          onChange={setFilter}
+          ariaLabel="Lọc trạng thái doanh thu"
+          options={[
             ["all", "Tất cả"],
             ["owing", "Còn nợ"],
             ["paid", "Đã thanh toán"],
-          ] as const).map(([val, label]) => (
-            <button
-              key={val}
-              type="button"
-              onClick={() => setFilter(val)}
-              className={`rounded-md px-3 py-1.5 ${
-                filter === val ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+          ] as const}
+        />
         <div className="relative min-w-[220px] flex-1">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
             🔍
@@ -189,12 +182,12 @@ export default function RevenueScreen({
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         {rows.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
-            Không có chuyến nào {filter === "owing" ? "còn nợ " : filter === "paid" ? "đã thanh toán " : ""}
-            trong tháng này.
-          </div>
-        ) : (
-          <table className="w-full table-fixed text-sm">
+            <div className="p-12 text-center text-slate-400">
+              Không có chuyến nào {filter === "owing" ? "còn nợ " : filter === "paid" ? "đã thanh toán " : ""}
+              trong tháng này.
+            </div>
+          ) : (
+            <table className="w-full table-fixed text-sm">
             <colgroup>
               <col style={{ width: "24%" }} />
               <col style={{ width: "11%" }} />
@@ -255,8 +248,8 @@ export default function RevenueScreen({
                 </tr>
               ))}
             </tbody>
-          </table>
-        )}
+            </table>
+          )}
       </div>
 
       {detail && (

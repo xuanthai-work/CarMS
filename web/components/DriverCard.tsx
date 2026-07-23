@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { cardMotion } from "@/lib/motion";
 import { saveDriver, deleteDriver } from "@/lib/actions";
 import { LICENSE_OPTIONS, DRIVER_TYPES, driverTypeLabel } from "@/lib/drivers";
 import { Field, Info, inputCls } from "@/components/ui";
@@ -15,6 +17,7 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
     type: d.type || "own",
   });
   const [editing, setEditing] = useState(false);
+  const reduceMotion = useReducedMotion();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -64,7 +67,10 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
 
   // ---------- CHẾ ĐỘ CHỈNH SỬA ----------
   return (
-    <div className="rounded-xl border border-brand-300 bg-white p-4 ring-1 ring-brand-200">
+    <motion.div
+      {...cardMotion(reduceMotion)}
+      className="rounded-xl border border-brand-300 bg-white p-4 ring-1 ring-brand-200"
+    >
       <form id={`drv-${d.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={d.id} />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -107,6 +113,6 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

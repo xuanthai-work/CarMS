@@ -6,13 +6,11 @@ export const inputCls =
   "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 export const labelCls = "block text-xs font-medium text-slate-600 mb-1";
 
-// Hiệu ứng hover thẻ lịch (nhấc nhẹ + đổ bóng + viền be nét đứt). Dùng chung 2 view.
-// LƯU Ý: đặt SẴN màu be + offset (outline vô hình khi style=none), chỉ bật style+width lúc hover
-// → tránh loé màu outline mặc định (đen) khi viền vừa xuất hiện.
+// Hiệu ứng hover thẻ lịch dùng chung cho hai chế độ xem.
 export const CARD_HOVER =
-  "outline-offset-2 outline-[#cbb48f] hover:z-20 hover:-translate-y-0.5 hover:shadow-lg hover:outline-1 hover:outline-dashed";
+  "transition duration-150 ease-out hover:z-20 hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md";
 export const CARD_HOVER_GROUP =
-  "outline-offset-2 outline-[#cbb48f] group-hover:z-20 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:outline-1 group-hover:outline-dashed";
+  "transition duration-150 ease-out group-hover:z-20 group-hover:-translate-y-0.5 group-hover:scale-[1.01] group-hover:shadow-md";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (

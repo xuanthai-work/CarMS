@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { dropdownMotion } from "@/lib/motion";
 import { TRIP_STATUSES, statusChipClass, tripStatusLabel } from "@/lib/trips";
 import { useDismiss } from "@/lib/useDismiss";
 
@@ -19,6 +21,7 @@ export default function StatusSelect({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   useDismiss(open, ref, () => setOpen(false));
+  const reduceMotion = useReducedMotion();
 
   const current = status ?? "pending";
 
@@ -27,6 +30,7 @@ export default function StatusSelect({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
         className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition ${statusChipClass(
           status
         )} ${open ? "ring-2 ring-brand-400" : "hover:brightness-95"}`}
@@ -35,8 +39,12 @@ export default function StatusSelect({
         <span className={`text-[10px] text-slate-500 transition ${open ? "rotate-180" : ""}`}>▼</span>
       </button>
 
-      {open && (
-        <div className="absolute inset-x-0 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            {...dropdownMotion(reduceMotion)}
+            className="absolute inset-x-0 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+          >
           {TRIP_STATUSES.map((s) => {
             const active = s.value === current;
             return (
@@ -56,8 +64,9 @@ export default function StatusSelect({
               </button>
             );
           })}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

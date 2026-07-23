@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import Modal from "@/components/Modal";
 import TripForm from "@/components/TripForm";
 import { Info } from "@/components/ui";
@@ -69,19 +70,26 @@ export default function TripModal({
   onClose: () => void;
 }) {
   const [editing, setEditing] = useState(!trip); // thêm mới -> mở thẳng form
+  const reduceMotion = useReducedMotion();
   const title = trip ? (editing ? "Sửa chuyến" : "Chi tiết chuyến") : "Thêm chuyến";
 
   if (editing) {
     return (
       <Modal title={title} onClose={onClose} maxWidthClass="max-w-4xl">
-        <TripForm
-          trip={trip ?? undefined}
-          prefill={prefill}
-          vehicles={vehicles}
-          drivers={drivers}
-          onDone={onClose}
-          onCancel={trip ? () => setEditing(false) : onClose}
-        />
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
+        >
+          <TripForm
+            trip={trip ?? undefined}
+            prefill={prefill}
+            vehicles={vehicles}
+            drivers={drivers}
+            onDone={onClose}
+            onCancel={trip ? () => setEditing(false) : onClose}
+          />
+        </motion.div>
       </Modal>
     );
   }
@@ -94,7 +102,12 @@ export default function TripModal({
 
   return (
     <Modal title={title} onClose={onClose} maxWidthClass="max-w-4xl">
-      <div className="space-y-4">
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
+        className="space-y-4"
+      >
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xl font-bold text-slate-900">{t.customerName}</span>
           {t.customerPhone && <span className="text-base text-slate-500">{t.customerPhone}</span>}
@@ -139,7 +152,7 @@ export default function TripModal({
             Chỉnh sửa
           </button>
         </div>
-      </div>
+      </motion.div>
     </Modal>
   );
 }

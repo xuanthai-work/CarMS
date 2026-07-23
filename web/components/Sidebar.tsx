@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType } from "react";
+import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { logout } from "@/app/login/actions";
 
 /* ---- Icon set (outline, kế thừa màu chữ qua currentColor) ---- */
@@ -98,6 +99,7 @@ export default function Sidebar({
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   const links = LINKS.filter((l) => !l.managerOnly || isManager);
   const initial = (name.trim()[0] ?? "?").toUpperCase();
+  const reduceMotion = useReducedMotion();
 
   return (
     <aside className="sticky top-3 m-3 flex h-[calc(100vh-1.5rem)] w-60 shrink-0 flex-col overflow-hidden rounded-2xl bg-sidebar text-slate-300 shadow-[0_8px_28px_-6px_rgba(15,23,42,0.35)]">
@@ -108,31 +110,40 @@ export default function Sidebar({
       </Link>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
-        {links.map((l) => {
-          const active = isActive(l.href);
-          const Icon = l.icon;
-          return (
-            <Link
-              key={l.href}
-              href={l.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                active ? "bg-dispatch-600 text-white shadow-sm" : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
-              }`}
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              {l.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <LayoutGroup id="sidebar-navigation">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
+          {links.map((l) => {
+            const active = isActive(l.href);
+            const Icon = l.icon;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={active ? "page" : undefined}
+                className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150 active:scale-[0.99] ${
+                  active ? "text-white" : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
+                }`}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="active-sidebar-link"
+                    transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
+                    className="absolute inset-0 rounded-xl bg-dispatch-600 shadow-sm"
+                  />
+                )}
+                <Icon className="relative z-10 h-5 w-5 shrink-0" />
+                <span className="relative z-10">{l.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </LayoutGroup>
 
       {/* Hồ sơ + đăng xuất */}
       <div className="space-y-1 border-t border-white/10 p-3">
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-white/[0.06]"
+          className="flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-150 hover:bg-white/[0.06] active:scale-[0.99]"
         >
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white">
             {initial}
@@ -145,7 +156,7 @@ export default function Sidebar({
         <form action={logout}>
           <button
             type="submit"
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:bg-white/[0.06] hover:text-rose-300"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition-all duration-150 hover:bg-white/[0.06] hover:text-rose-300 active:scale-[0.99]"
           >
             <LogoutIcon className="h-5 w-5 shrink-0" />
             Đăng xuất

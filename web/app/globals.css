@@ -10,6 +10,31 @@ body {
   @apply bg-canvas text-ink antialiased font-sans;
 }
 
+.route-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  height: 2px;
+  width: 35%;
+  background: theme('colors.brand.600');
+  box-shadow: 0 0 12px color-mix(in srgb, theme('colors.brand.600') 55%, transparent);
+  animation: route-loading 900ms ease-in-out infinite;
+}
+
+@keyframes route-loading {
+  0% { transform: translateX(-110%); }
+  55% { transform: translateX(180%); }
+  100% { transform: translateX(320%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-loading-bar {
+    animation: none;
+    width: 100%;
+  }
+}
+
 /* Ẩn thanh cuộn cửa sổ trên mọi trang (vẫn cuộn được bằng lăn/kéo/bàn phím) */
 html,
 body {

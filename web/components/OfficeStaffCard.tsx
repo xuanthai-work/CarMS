@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { cardMotion } from "@/lib/motion";
 import { saveOfficeStaff, deleteOfficeStaff } from "@/lib/actions";
 import { Field, Info, inputCls } from "@/components/ui";
 import MoneyInput from "@/components/MoneyInput";
@@ -20,6 +22,7 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
     gender: p.gender ?? "",
   });
   const [editing, setEditing] = useState(false);
+  const reduceMotion = useReducedMotion();
   const [form, setForm] = useState(initialForm);
   const set = (k: keyof ReturnType<typeof initialForm>) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const formRef = useRef<HTMLFormElement>(null);
@@ -71,7 +74,10 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
   }
 
   return (
-    <div className="rounded-xl border border-brand-300 bg-white p-4 ring-1 ring-brand-200">
+    <motion.div
+      {...cardMotion(reduceMotion)}
+      className="rounded-xl border border-brand-300 bg-white p-4 ring-1 ring-brand-200"
+    >
       <form id={`os-${p.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={p.id} />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -138,6 +144,6 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

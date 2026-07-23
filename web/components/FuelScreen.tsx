@@ -1,8 +1,11 @@
 "use client";
 
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { dropdownMotion } from "@/lib/motion";
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import FuelEntryEditorRow, { FuelColgroup } from "@/components/FuelEntryEditorRow";
+import FilterTabs from "@/components/FilterTabs";
 import { useDismiss } from "@/lib/useDismiss";
 import { addMonth, fmtDate, monthLabel } from "@/lib/format";
 import { normalizeVn } from "@/lib/search";
@@ -43,7 +46,7 @@ function VehicleFilterSelect({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   useDismiss(open, ref, () => setOpen(false));
-
+  const reduceMotion = useReducedMotion();
   const selectedLabel =
     value === "all" ? "Tất cả xe" : vehicles.find((v) => v.id === value)?.plate ?? "Tất cả xe";
 
@@ -52,6 +55,7 @@ function VehicleFilterSelect({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
         className={`flex min-w-[140px] items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition ${
           open
             ? "border-brand-500 bg-white ring-1 ring-brand-500"
@@ -62,8 +66,12 @@ function VehicleFilterSelect({
         <span className={`text-[10px] text-slate-500 transition ${open ? "rotate-180" : ""}`}>▼</span>
       </button>
 
-      {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 max-h-72 min-w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            {...dropdownMotion(reduceMotion)}
+            className="absolute left-0 top-full z-30 mt-1 max-h-72 min-w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+          >
           <button
             type="button"
             onClick={() => {
@@ -95,8 +103,9 @@ function VehicleFilterSelect({
               {v.plate}
             </button>
           ))}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -158,7 +167,7 @@ export default function FuelScreen({
           <button
             type="button"
             onClick={() => moveMonth(-1)}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 active:scale-95"
           >
             ←
           </button>
@@ -168,7 +177,7 @@ export default function FuelScreen({
           <button
             type="button"
             onClick={() => moveMonth(1)}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 active:scale-95"
           >
             →
           </button>
@@ -183,24 +192,16 @@ export default function FuelScreen({
       </div>
 
       <div className="flex flex-wrap items-center justify-start gap-3">
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-sm font-medium">
-          {([
+        <FilterTabs
+          value={statusFilter}
+          onChange={setStatusFilter}
+          ariaLabel="Lọc trạng thái thanh toán"
+          options={[
             ["all", "Tất cả"],
             ["paid", "Đã thanh toán"],
             ["unpaid", "Chưa thanh toán"],
-          ] as const).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setStatusFilter(value)}
-              className={`rounded-md px-3 py-1.5 ${
-                statusFilter === value ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+          ] as const}
+        />
         <VehicleFilterSelect
           value={vehicleFilter}
           vehicles={vehicles}
@@ -220,7 +221,7 @@ export default function FuelScreen({
         <button
           type="button"
           onClick={() => setAdding((open) => !open)}
-          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
         >
           {adding ? "Đóng phiếu mới" : "+ Thêm phiếu dầu"}
         </button>
@@ -228,9 +229,9 @@ export default function FuelScreen({
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         {!adding && rows.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">Không có phiếu dầu trong tháng này.</div>
-        ) : (
-          <table className="w-full table-fixed text-[14px]">
+            <div className="p-12 text-center text-slate-400">Không có phiếu dầu trong tháng này.</div>
+          ) : (
+            <table className="w-full table-fixed text-[14px]">
             <FuelColgroup />
             <thead>
               <tr className="border-b border-slate-200 text-left text-[12px] font-bold uppercase tracking-[0.02em] text-slate-500">
@@ -307,8 +308,8 @@ export default function FuelScreen({
                 )
               )}
             </tbody>
-          </table>
-        )}
+            </table>
+          )}
       </div>
     </div>
   );
