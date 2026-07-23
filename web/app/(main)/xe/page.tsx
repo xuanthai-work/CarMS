@@ -5,10 +5,10 @@ export default async function QuanLyXePage() {
   const vehicles = await getVehicles();
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Quản lý xe</h1>
-        <p className="text-sm text-slate-500">{vehicles.length} xe</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Đội xe</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Quản lý xe</h1>
       </div>
       <VehicleList vehicles={vehicles} />
     </div>

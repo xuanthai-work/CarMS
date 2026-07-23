@@ -14,8 +14,11 @@ export default async function NhanSuPage() {
   ]);
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-slate-900">Quản lý nhân sự</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Đội ngũ vận hành</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Quản lý nhân sự</h1>
+      </div>
       <StaffTabs drivers={drivers} staff={office} canSeeOffice={manager} />
     </div>
   );

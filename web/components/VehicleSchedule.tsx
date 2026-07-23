@@ -162,12 +162,12 @@ export default function VehicleSchedule({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       {!selected ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-400 shadow-sm">
+        <div className="rounded-2xl border border-hairline bg-surface p-10 text-center text-muted shadow-sm">
           Chưa có xe nào.
         </div>
       ) : (
         <DragScroll
-          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
+          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]"
           initialLeft={initialLeft}
           initialTop={initialTop}
         >

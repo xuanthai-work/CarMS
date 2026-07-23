@@ -7,7 +7,6 @@ import TripForm from "@/components/TripForm";
 import { Info } from "@/components/ui";
 import { fmtDate, weekdayVn } from "@/lib/format";
 import { fmtMoney, tourTypeLabel, sameVehicleBothLegs, legRoute } from "@/lib/trips";
-import { tripOtherCost } from "@/lib/revenue";
 import { seatLabel } from "@/lib/vehicles";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
@@ -29,15 +28,15 @@ function LegView({
   const v = leg.vehicleId ? vmap.get(leg.vehicleId) : undefined;
   const d = leg.driverId ? dmap.get(leg.driverId) : undefined;
   return (
-    <div className={`rounded-lg border p-3 ${tone}`}>
-      <div className="mb-2 flex items-center gap-2 text-base font-semibold">
+    <div className={`rounded-2xl border p-4 ${tone}`}>
+      <div className="mb-3 flex items-center gap-2 text-base font-bold tracking-tight text-ink">
         <span>{title}</span>
-        <span className="text-sm font-medium text-slate-700">
+        <span className="text-sm font-medium text-muted">
           {weekdayVn(leg.date)} - {fmtDate(leg.date)}
           {leg.time ? ` · ${leg.time}${leg.endTime ? `–${leg.endTime}` : ""}` : ""}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
         <Info size="md" label="Lộ trình" value={legRoute(leg)} className="col-span-2" />
         <Info
           size="md"
@@ -52,6 +51,15 @@ function LegView({
         />
         <Info size="md" label="Lái xe" value={d ? d.name + (d.phone ? ` (${d.phone})` : "") : "—"} />
       </div>
+    </div>
+  );
+}
+
+function FinanceMetric({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-[124px]">
+      <div className="text-sm font-medium text-muted">{label}</div>
+      <div className="mt-1 text-base font-semibold tracking-tight text-ink">{value}</div>
     </div>
   );
 }
@@ -108,14 +116,14 @@ export default function TripModal({
         transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
         className="space-y-4"
       >
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xl font-bold text-slate-900">{t.customerName}</span>
-          {t.customerPhone && <span className="text-base text-slate-500">{t.customerPhone}</span>}
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-sm font-medium text-slate-600">
+        <div className="flex flex-wrap items-center gap-2 border-b border-hairline pb-4">
+          <span className="text-xl font-bold tracking-tight text-ink">{t.customerName}</span>
+          {t.customerPhone && <span className="text-sm text-muted">{t.customerPhone}</span>}
+          <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-muted">
             {tourTypeLabel(t.tourType)}
           </span>
           {round && (
-            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-sm font-medium text-emerald-700">
+            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
               {t.heldThroughTour ? "Giữ xe suốt tour" : "Cùng xe đi & về"}
             </span>
           )}
@@ -132,22 +140,24 @@ export default function TripModal({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-          <Info size="md" label="Tiền chuyến" value={fmtMoney(t.price)} />
-          <Info size="md" label="Đặt cọc" value={fmtMoney(t.deposit)} />
-          {t.fuelCost != null && <Info size="md" label="Xăng dầu" value={fmtMoney(t.fuelCost)} />}
-          {t.tollCost != null && <Info size="md" label="VETC / Cầu đường" value={fmtMoney(t.tollCost)} />}
-          {t.partnerCost != null && <Info size="md" label="Tiền thuê đối tác" value={fmtMoney(t.partnerCost)} />}
-          {t.otherCost != null && <Info size="md" label="Chi phí khác" value={fmtMoney(t.otherCost)} />}
-          <Info size="md" label="Tổng chi phí" value={fmtMoney(tripOtherCost(t))} />
-          <Info size="md" label="Ghi chú" value={t.note || "—"} className="col-span-2" />
+        <div className="py-2">
+          <div className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Tài chính chuyến</div>
+          <div className="mt-4 flex flex-wrap items-start gap-x-8 gap-y-4">
+            <FinanceMetric label="Tiền chuyến" value={fmtMoney(t.price)} />
+            <FinanceMetric label="Đã cọc" value={fmtMoney(t.deposit)} />
+            {t.fuelCost != null && <FinanceMetric label="Xăng dầu" value={fmtMoney(t.fuelCost)} />}
+            {t.tollCost != null && <FinanceMetric label="VETC / Cầu đường" value={fmtMoney(t.tollCost)} />}
+            {t.partnerCost != null && <FinanceMetric label="Tiền thuê đối tác" value={fmtMoney(t.partnerCost)} />}
+            {t.otherCost != null && <FinanceMetric label="Chi phí khác" value={fmtMoney(t.otherCost)} />}
+          </div>
         </div>
 
-        <div className="flex justify-end pt-1">
+        <div className="flex items-end justify-between gap-4 border-t border-hairline pt-4">
+          <Info size="md" label="Ghi chú" value={t.note || "—"} className="min-w-0 flex-1" />
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-md border border-slate-300 px-4 py-2 text-base font-medium text-slate-700 hover:bg-slate-100"
+            className="shrink-0 rounded-xl border border-hairline px-4 py-2 text-sm font-semibold text-muted transition hover:bg-canvas active:scale-[0.98]"
           >
             Chỉnh sửa
           </button>

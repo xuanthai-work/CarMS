@@ -72,7 +72,7 @@ export default function FuelEntryEditorRow({
   return (
     <motion.tr
       {...cardMotion(reduceMotion)}
-      className={`align-top ${entry ? "border-b border-slate-100 bg-brand-50/50" : "border-b border-brand-200 bg-brand-50/40"}`}
+      className={`align-top ${entry ? "border-b border-hairline bg-brand-50/40" : "border-b border-brand-200 bg-brand-50/60"}`}
     >
       <td colSpan={7} className="p-0">
         <form id={formId} action={submitForm}>

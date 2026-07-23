@@ -62,27 +62,30 @@ export default function Overview({
   warnings.sort((a, b) => a.days - b.days);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">Tổng quan</h1>
-          <p className="mt-0.5 text-sm text-muted">
-            {monthLabel(monthKey)} · Hôm nay{" "}
-            <span className="font-medium text-ink tabular-nums">{fmtDate(today)}</span>
-          </p>
+      <div className="relative overflow-hidden rounded-3xl bg-sidebar px-6 py-6 text-white shadow-[0_18px_45px_-24px_rgba(15,23,42,0.8)] sm:px-8">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-dispatch-500/20 blur-3xl" />
+        <div className="relative flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Điều hành hôm nay</p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Tổng quan</h1>
+            <p className="mt-2 text-sm text-slate-300">
+              {monthLabel(monthKey)} <span className="mx-1 text-slate-500">·</span> {fmtDate(today)}
+            </p>
+          </div>
+          <Link
+            href="/lich"
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-sidebar shadow-sm transition hover:bg-dispatch-50 active:scale-[0.98]"
+          >
+            Mở lịch điều xe
+            <span aria-hidden className="text-dispatch-600">→</span>
+          </Link>
         </div>
-        <Link
-          href="/lich"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-dispatch-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-dispatch-700"
-        >
-          Mở lịch điều xe
-          <span aria-hidden>→</span>
-        </Link>
       </div>
 
       {/* KPI vận hành */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
           label="Chuyến trong tháng"
           value={String(monthTrips.length)}
@@ -122,8 +125,8 @@ export default function Overview({
       </div>
 
       {/* Chuyến hôm nay + đội xe */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2" title="Chuyến sắp tới hôm nay" subtitle={`${todayLegs.length} lượt`}>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.8fr)]">
+        <Card className="xl:col-span-1" title="Chuyến sắp tới hôm nay" subtitle={`${todayLegs.length} lượt`}>
           <TodayList legs={todayLegs} />
         </Card>
         <Card title="Trạng thái đội xe">
@@ -203,12 +206,12 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className={`rounded-2xl border border-hairline bg-surface p-5 shadow-sm ${className}`}>
-      <div className="mb-4 flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold text-ink">{title}</h2>
-        {subtitle && <span className="text-xs text-muted tabular-nums">{subtitle}</span>}
+    <section className={`overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[0_10px_30px_-24px_rgba(15,23,42,0.7)] ${className}`}>
+      <div className="flex items-baseline justify-between gap-2 border-b border-hairline px-5 py-4">
+        <h2 className="text-base font-bold tracking-tight text-ink">{title}</h2>
+        {subtitle && <span className="text-xs font-medium text-muted tabular-nums">{subtitle}</span>}
       </div>
-      {children}
+      <div className="p-5">{children}</div>
     </section>
   );
 }
@@ -232,10 +235,10 @@ function StatTile({
   accent?: keyof typeof ACCENT;
 }) {
   return (
-    <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm">
-      <div className="text-xs font-medium text-muted">{label}</div>
-      <div className="mt-2 flex items-baseline gap-1">
-        <span className={`text-[26px] font-bold leading-none tracking-tight tabular-nums ${ACCENT[accent]}`}>
+    <div className="relative overflow-hidden rounded-2xl border border-hairline bg-surface p-5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.8)]">
+      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
+      <div className="mt-3 flex items-baseline gap-1.5">
+        <span className={`text-3xl font-bold leading-none tracking-tight tabular-nums ${ACCENT[accent]}`}>
           {value}
         </span>
         {unit && <span className="text-xs font-medium text-muted">{unit}</span>}
@@ -331,10 +334,10 @@ function TodayList({ legs }: { legs: LegRow[] }) {
         {shown.map((l, i) => (
           <li key={i} className="flex items-center gap-3 px-1 py-2.5">
             <span className="w-12 shrink-0 text-sm font-bold text-ink tabular-nums">
-              {l.time ?? "—"}
+              {l.time ?? "Chưa giờ"}
             </span>
             <span
-              className={`h-8 w-1 shrink-0 rounded-full ${l.partner ? "bg-violet-400" : "bg-dispatch-500"}`}
+              className={`h-8 w-1 shrink-0 rounded-full ${l.partner ? "bg-slate-400" : "bg-dispatch-500"}`}
               aria-hidden
             />
             <div className="min-w-0 flex-1">

@@ -27,7 +27,7 @@ export default function AddOfficeStaffButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+        className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
       >
         + Thêm nhân sự văn phòng
       </button>

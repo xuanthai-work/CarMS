@@ -35,8 +35,8 @@ export function Info({
 }) {
   return (
     <div className={className}>
-      <div className={`font-medium text-slate-600 ${size === "md" ? "text-sm" : "text-xs"}`}>{label}</div>
-      <div className={`text-slate-800 ${size === "md" ? "text-base" : "text-sm"}`}>{value}</div>
+      <div className={`font-medium text-muted ${size === "md" ? "text-sm" : "text-xs"}`}>{label}</div>
+      <div className={`text-ink ${size === "md" ? "text-base" : "text-sm"}`}>{value}</div>
     </div>
   );
 }

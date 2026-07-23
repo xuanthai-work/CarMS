@@ -14,10 +14,10 @@ import { setTripStatus } from "@/lib/actions";
 import FilterTabs from "@/components/FilterTabs";
 
 const STAT_TONE = {
-  neutral: { box: "border-slate-200 bg-white", text: "text-slate-900" },
-  amber: { box: "border-amber-300 bg-amber-50", text: "text-amber-700" },
-  emerald: { box: "border-emerald-300 bg-emerald-50", text: "text-emerald-700" },
-  rose: { box: "border-rose-300 bg-rose-50", text: "text-rose-700" },
+  neutral: { box: "border-hairline bg-surface", text: "text-ink" },
+  amber: { box: "border-hairline bg-surface", text: "text-signal" },
+  emerald: { box: "border-hairline bg-surface", text: "text-emerald-700" },
+  rose: { box: "border-hairline bg-surface", text: "text-rose-700" },
 } as const;
 
 function Stat({
@@ -36,13 +36,13 @@ function Stat({
   const t = STAT_TONE[tone];
   const content = (
     <>
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className={`mt-1 text-xl font-bold ${t.text}`}>{value}</div>
-      {hint && <div className="mt-0.5 text-xs text-slate-400">{hint}</div>}
+      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
+      <div className={`mt-2 text-xl font-bold tracking-tight tabular-nums ${t.text}`}>{value}</div>
+      {hint && <div className="mt-1 text-xs text-muted">{hint}</div>}
     </>
   );
-  const className = `w-full rounded-xl border p-4 text-left shadow-sm ${t.box} ${
-    onClick ? "cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md" : ""
+  const className = `w-full rounded-2xl border p-4 text-left shadow-[0_10px_26px_-24px_rgba(15,23,42,0.8)] ${t.box} ${
+    onClick ? "cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2" : ""
   }`;
   return onClick ? (
     <button type="button" onClick={onClick} className={className}>
@@ -115,8 +115,8 @@ export default function RevenueScreen({
     filtered.sort((a, b) =>
       filter === "owing"
         ? b.money.outstanding - a.money.outstanding ||
-          a.trip.outbound.date.localeCompare(b.trip.outbound.date)
-        : a.trip.outbound.date.localeCompare(b.trip.outbound.date) ||
+          b.trip.outbound.date.localeCompare(a.trip.outbound.date)
+        : b.trip.outbound.date.localeCompare(a.trip.outbound.date) ||
           (a.trip.outbound.time ?? "").localeCompare(b.trip.outbound.time ?? "")
     );
     return filtered;
@@ -133,24 +133,27 @@ export default function RevenueScreen({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Doanh thu</h1>
-        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Tài chính vận hành</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Doanh thu</h1>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-xl border border-hairline bg-surface p-1.5 shadow-sm">
           <button
             type="button"
             onClick={() => setMonthKey((m) => addMonth(m, -1))}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 active:scale-95"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-canvas active:scale-95"
           >
             ←
           </button>
-          <span className="min-w-[120px] text-center text-sm font-semibold text-slate-700">
+          <span className="min-w-[132px] text-center text-sm font-semibold text-ink">
             {monthLabel(monthKey)}
           </span>
           <button
             type="button"
             onClick={() => setMonthKey((m) => addMonth(m, 1))}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 active:scale-95"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-canvas active:scale-95"
           >
             →
           </button>
@@ -175,7 +178,7 @@ export default function RevenueScreen({
         <Stat label="Số chuyến" value={String(summary.count)} hint={noPriceCount > 0 ? `${noPriceCount} chuyến chưa có giá` : undefined} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-hairline bg-surface p-2.5 shadow-[0_10px_28px_-25px_rgba(15,23,42,0.8)]">
         <FilterTabs
           value={filter}
           onChange={setFilter}
@@ -187,19 +190,16 @@ export default function RevenueScreen({
           ] as const}
         />
         <div className="relative min-w-[220px] flex-1">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-            🔍
-          </span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm tên khách…"
-            className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            placeholder="Tìm tên khách..."
+            className="h-9 w-full rounded-xl border border-hairline bg-canvas px-3.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand-500 focus:bg-surface focus:ring-1 focus:ring-brand-500"
           />
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]">
         {rows.length === 0 ? (
             <div className="p-12 text-center text-slate-400">
               Không có chuyến nào {filter === "owing" ? "còn nợ " : filter === "paid" ? "đã thanh toán " : ""}
@@ -209,22 +209,24 @@ export default function RevenueScreen({
             <table className="w-full table-fixed text-sm">
             <colgroup>
               <col style={{ width: "24%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "8%" }} />
               <col style={{ width: "11%" }} />
-              <col style={{ width: "11%" }} />
-              <col style={{ width: "13%" }} />
               <col style={{ width: "12%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "16%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "11%" }} />
             </colgroup>
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-500">
+            <thead className="bg-canvas/70">
+              <tr className="border-b border-hairline text-left text-xs font-semibold text-muted">
                 <th className="px-3 py-2.5">Khách</th>
                 <th className="px-3 py-2.5">Ngày đi</th>
                 <th className="px-3 py-2.5">Loại</th>
                 <th className="px-3 py-2.5 text-right">Giá</th>
+                <th className="px-3 py-2.5 text-right">Đã cọc</th>
                 <th className="px-3 py-2.5 text-right">Chi phí</th>
                 <th className="px-3 py-2.5 text-right">Còn phải thu</th>
-                <th className="py-2.5 pl-8 pr-3">Trạng thái</th>
+                <th className="px-3 py-2.5">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -232,17 +234,17 @@ export default function RevenueScreen({
                 <tr
                   key={trip.id}
                   onClick={() => setDetail(trip)}
-                  className="cursor-pointer border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                  className="cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
                 >
                   <td className="px-3 py-2.5">
-                    <div className="font-medium text-slate-800">{trip.customerName}</div>
+                    <div className="font-semibold text-ink">{trip.customerName}</div>
                     {trip.customerPhone && (
-                      <div className="text-xs text-slate-400">{trip.customerPhone}</div>
+                      <div className="text-xs text-muted">{trip.customerPhone}</div>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-slate-600">{fmtDate(trip.outbound.date)}</td>
-                  <td className="px-3 py-2.5 text-slate-600">{tourTypeLabel(trip.tourType)}</td>
-                  <td className="px-3 py-2.5 text-right font-semibold text-slate-700">
+                  <td className="px-3 py-2.5 text-muted">{fmtDate(trip.outbound.date)}</td>
+                  <td className="px-3 py-2.5 text-muted">{tourTypeLabel(trip.tourType)}</td>
+                  <td className="px-3 py-2.5 text-right font-semibold text-ink">
                     {trip.price == null ? (
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-400">
                         chưa có giá
@@ -251,7 +253,10 @@ export default function RevenueScreen({
                       fmtMoney(money.recognized)
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-right text-slate-600">
+                  <td className="px-3 py-2.5 text-right text-slate-700">
+                    {trip.deposit != null && trip.deposit > 0 ? fmtMoney(trip.deposit) : "—"}
+                  </td>
+                  <td className="px-3 py-2.5 text-right text-muted">
                     {money.cost > 0 ? fmtMoney(money.cost) : "—"}
                   </td>
                   <td
@@ -261,7 +266,7 @@ export default function RevenueScreen({
                   >
                     {money.outstanding > 0 ? fmtMoney(money.outstanding) : "—"}
                   </td>
-                  <td className="py-2.5 pl-8 pr-3" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                     <StatusSelect status={trip.status} onPick={(next) => setStatusChange({ trip, next })} />
                   </td>
                 </tr>

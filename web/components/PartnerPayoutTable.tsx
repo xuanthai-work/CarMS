@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
+import { cardMotion } from "@/lib/motion";
 import { savePartnerPayout, deletePartnerPayout } from "@/lib/actions";
 import { Field, inputCls } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
@@ -27,6 +29,7 @@ function EditorRow({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const reduceMotion = useReducedMotion();
   const { form, set } = useFormState(() => ({
     driverId: payout?.driverId ?? "",
     workDate: payout?.workDate ?? defaultDate,
@@ -42,7 +45,10 @@ function EditorRow({
   }
 
   return (
-    <tr className="border-b border-brand-200 bg-brand-50/40 align-top">
+    <motion.tr
+      {...cardMotion(reduceMotion)}
+      className="border-b border-brand-200 bg-brand-50/50 align-top"
+    >
       <td colSpan={6} className="p-3">
         <form id={`pp-${payout?.id ?? "new"}`} action={submit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {payout && <input type="hidden" name="id" value={payout.id} />}
@@ -71,17 +77,17 @@ function EditorRow({
               <span />
             )}
             <div className="flex gap-2">
-              <button type="button" onClick={onCancel} className="rounded-md border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100">
+              <button type="button" onClick={onCancel} className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas">
                 Hủy
               </button>
-              <button type="submit" className="rounded-md bg-brand-600 px-5 py-1.5 text-sm font-semibold text-white hover:bg-brand-700">
+              <button type="submit" className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
                 Lưu
               </button>
             </div>
           </div>
         </form>
       </td>
-    </tr>
+    </motion.tr>
   );
 }
 
@@ -112,15 +118,15 @@ export default function PartnerPayoutTable({
         <button
           type="button"
           onClick={() => setAdding((o) => !o)}
-          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
+          className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
         >
           {adding ? "Đóng phiếu mới" : "＋ Thêm phiếu trả công"}
         </button>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="relative rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]">
         {!adding && payouts.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">Chưa có phiếu trả công đối tác trong tháng này.</div>
+          <div className="p-12 text-center text-muted">Chưa có phiếu trả công đối tác trong tháng này.</div>
         ) : (
           <table className="w-full table-fixed text-sm">
             <colgroup>
@@ -131,8 +137,8 @@ export default function PartnerPayoutTable({
               <col style={{ width: "16%" }} />
               <col style={{ width: "16%" }} />
             </colgroup>
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-500">
+            <thead className="bg-canvas/70">
+              <tr className="border-b border-hairline text-left text-xs font-semibold text-muted">
                 <th className="px-3 py-2.5">Lái xe</th>
                 <th className="px-3 py-2.5">Ngày làm</th>
                 <th className="px-3 py-2.5 text-right">Số tiền</th>
@@ -152,18 +158,18 @@ export default function PartnerPayoutTable({
                   <tr
                     key={p.id}
                     onClick={() => setEditingId(p.id)}
-                    className="cursor-pointer border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                    className="cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
                   >
-                    <td className="px-3 py-2.5 font-medium text-slate-800">{driverName(p.driverId)}</td>
-                    <td className="px-3 py-2.5 text-slate-600 tabular-nums">{fmtDate(p.workDate)}</td>
-                    <td className="px-3 py-2.5 text-right font-semibold text-slate-700 tabular-nums">{fmtMoney(p.amount)}</td>
+                    <td className="px-3 py-2.5 font-semibold text-ink">{driverName(p.driverId)}</td>
+                    <td className="px-3 py-2.5 text-muted tabular-nums">{fmtDate(p.workDate)}</td>
+                    <td className="px-3 py-2.5 text-right font-semibold text-ink tabular-nums">{fmtMoney(p.amount)}</td>
                     <td className="px-3 py-2.5">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                         {p.paymentStatus === "paid" ? "Đã trả" : "Chưa trả"}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-slate-600">{p.payerName || "—"}</td>
-                    <td className="px-3 py-2.5 text-slate-500">{p.note || "—"}</td>
+                    <td className="px-3 py-2.5 text-muted">{p.payerName || "-"}</td>
+                    <td className="px-3 py-2.5 text-muted">{p.note || "-"}</td>
                   </tr>
                 )
               )}

@@ -7,8 +7,9 @@ import AddDriverButton from "@/components/AddDriverButton";
 import GroupColumn from "@/components/GroupColumn";
 import { normalizeVn } from "@/lib/search";
 
-export default function DriverList({ drivers }: { drivers: Driver[] }) {
-  const [q, setQ] = useState("");
+export default function DriverList({ drivers, query, hideToolbar = false }: { drivers: Driver[]; query?: string; hideToolbar?: boolean }) {
+  const [localQuery, setLocalQuery] = useState("");
+  const q = query ?? localQuery;
   const nq = normalizeVn(q);
   const filtered = nq ? drivers.filter((d) => normalizeVn(d.name).includes(nq)) : drivers;
   const own = filtered.filter((d) => d.type !== "partner");
@@ -16,25 +17,24 @@ export default function DriverList({ drivers }: { drivers: Driver[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+      {!hideToolbar && <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-hairline bg-surface p-2.5 shadow-[0_10px_28px_-25px_rgba(15,23,42,0.8)]">
         <div className="relative min-w-[220px] flex-1">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm tên lái xe …"
-            className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            onChange={(e) => setLocalQuery(e.target.value)}
+            placeholder="Tìm tên lái xe..."
+            className="h-9 w-full rounded-xl border border-hairline bg-canvas px-3.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand-500 focus:bg-surface focus:ring-1 focus:ring-brand-500"
           />
         </div>
         <AddDriverButton />
-      </div>
+      </div>}
 
       {drivers.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-400">
+        <div className="rounded-2xl border border-hairline bg-surface p-10 text-center text-muted">
           Chưa có lái xe nào — bấm “+ Thêm lái xe”.
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-400">
+        <div className="rounded-2xl border border-hairline bg-surface p-10 text-center text-muted">
           Không tìm thấy lái xe khớp “{q}”.
         </div>
       ) : (
