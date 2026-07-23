@@ -41,7 +41,7 @@ export default function SelectMenu({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm transition ${
+        className={`flex h-9 w-full items-center justify-between gap-2 rounded-xl border px-3 text-sm transition ${
           open ? "border-brand-500 ring-1 ring-brand-500" : "border-slate-300 hover:border-slate-400"
         } ${selectedLabel ? "text-slate-800" : "text-slate-400"}`}
       >

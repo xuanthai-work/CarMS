@@ -22,14 +22,14 @@ function Stat({
   tone?: "slate" | "emerald" | "amber";
 }) {
   const tones = {
-    slate: "border-slate-200 bg-white text-slate-900",
-    emerald: "border-emerald-300 bg-emerald-50 text-emerald-700",
-    amber: "border-amber-300 bg-amber-50 text-amber-700",
+    slate: "border-hairline bg-surface text-ink",
+    emerald: "border-hairline bg-surface text-emerald-700",
+    amber: "border-hairline bg-surface text-signal",
   } as const;
   return (
-    <div className={`rounded-xl border p-4 shadow-sm ${tones[tone]}`}>
-      <div className="text-xs font-medium text-slate-500">{label}</div>
-      <div className="mt-1 text-xl font-bold">{value}</div>
+    <div className={`rounded-2xl border p-5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.8)] ${tones[tone]}`}>
+      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
+      <div className="mt-3 text-2xl font-bold tracking-tight tabular-nums">{value}</div>
     </div>
   );
 }
@@ -56,21 +56,21 @@ function VehicleFilterSelect({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`flex min-w-[140px] items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition ${
+        className={`flex h-9 min-w-[148px] items-center justify-between gap-2 rounded-xl border px-3.5 text-sm font-medium text-ink shadow-sm transition ${
           open
             ? "border-brand-500 bg-white ring-1 ring-brand-500"
-            : "border-slate-300 bg-white hover:border-slate-400"
+            : "border-hairline bg-surface hover:border-slate-400"
         }`}
       >
         <span className="truncate">{selectedLabel}</span>
-        <span className={`text-[10px] text-slate-500 transition ${open ? "rotate-180" : ""}`}>▼</span>
+        <span className={`text-xs text-muted transition ${open ? "rotate-180" : ""}`}>⌄</span>
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
             {...dropdownMotion(reduceMotion)}
-            className="absolute left-0 top-full z-30 mt-1 max-h-72 min-w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+            className="absolute left-0 top-full z-30 mt-2 max-h-72 min-w-full overflow-auto rounded-xl border border-hairline bg-surface p-1.5 shadow-xl"
           >
           <button
             type="button"
@@ -78,10 +78,10 @@ function VehicleFilterSelect({
               onChange("all");
               setOpen(false);
             }}
-            className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
+              className={`block w-full rounded-lg px-3 py-2 text-left text-sm transition ${
               value === "all"
                 ? "bg-brand-600 font-semibold text-white"
-                : "text-slate-700 hover:bg-slate-100"
+                : "text-ink hover:bg-canvas"
             }`}
           >
             Tất cả xe
@@ -94,10 +94,10 @@ function VehicleFilterSelect({
                 onChange(v.id);
                 setOpen(false);
               }}
-              className={`mt-0.5 block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${
+              className={`mt-0.5 block w-full rounded-lg px-3 py-2 text-left text-sm transition ${
                 value === v.id
                   ? "bg-brand-600 font-semibold text-white"
-                  : "text-slate-700 hover:bg-slate-100"
+                  : "text-ink hover:bg-canvas"
               }`}
             >
               {v.plate}
@@ -157,27 +157,27 @@ export default function FuelScreen({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Tiền dầu</h1>
-          
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Chi phí vận hành</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Tiền dầu</h1>
         </div>
-        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+        <div className="flex items-center gap-1.5 rounded-xl border border-hairline bg-surface p-1.5 shadow-sm">
           <button
             type="button"
             onClick={() => moveMonth(-1)}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 active:scale-95"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-canvas active:scale-95"
           >
             ←
           </button>
-          <span className="min-w-[120px] text-center text-sm font-semibold text-slate-700">
+          <span className="min-w-[132px] text-center text-sm font-semibold text-ink">
             {monthLabel(monthKey)}
           </span>
           <button
             type="button"
             onClick={() => moveMonth(1)}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-all duration-150 hover:bg-slate-100 active:scale-95"
+            className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-canvas active:scale-95"
           >
             →
           </button>
@@ -191,7 +191,7 @@ export default function FuelScreen({
         <Stat label="Số lần đổ" value={String(summary.count)} />
       </div>
 
-      <div className="flex flex-wrap items-center justify-start gap-3">
+      <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-hairline bg-surface p-2.5 shadow-[0_10px_28px_-25px_rgba(15,23,42,0.8)]">
         <FilterTabs
           value={statusFilter}
           onChange={setStatusFilter}
@@ -208,33 +208,30 @@ export default function FuelScreen({
           onChange={setVehicleFilter}
         />
         <div className="relative min-w-[220px] flex-1">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-            🔍
-          </span>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm biển số, người đổ, ghi chú…"
-            className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            placeholder="Tìm biển số, người đổ, ghi chú..."
+            className="h-9 w-full rounded-xl border border-hairline bg-canvas px-3.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand-500 focus:bg-surface focus:ring-1 focus:ring-brand-500"
           />
         </div>
         <button
           type="button"
           onClick={() => setAdding((open) => !open)}
-          className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
+          className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
         >
           {adding ? "Đóng phiếu mới" : "+ Thêm phiếu dầu"}
         </button>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]">
         {!adding && rows.length === 0 ? (
             <div className="p-12 text-center text-slate-400">Không có phiếu dầu trong tháng này.</div>
           ) : (
             <table className="w-full table-fixed text-[14px]">
             <FuelColgroup />
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-[12px] font-bold uppercase tracking-[0.02em] text-slate-500">
+            <thead className="bg-canvas/70">
+              <tr className="border-b border-hairline text-left text-[12px] font-bold uppercase tracking-[0.02em] text-muted">
                 <th className="whitespace-nowrap px-4 py-3.5">Ngày đổ</th>
                 <th className="whitespace-nowrap px-4 py-3.5">Biển số</th>
                 <th className="whitespace-nowrap px-4 py-3.5 text-right">Số tiền</th>

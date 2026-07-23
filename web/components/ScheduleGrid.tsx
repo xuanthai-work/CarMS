@@ -162,16 +162,16 @@ export default function ScheduleGrid({
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       {/* Thanh công cụ: chú giải + chuyển view + thêm */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-          <span className="font-semibold text-slate-600">Trạng thái:</span>
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-hairline bg-surface p-2 shadow-[0_10px_28px_-25px_rgba(15,23,42,0.8)]">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
+          <span className="font-semibold text-ink">Trạng thái:</span>
           {TRIP_STATUSES.map((s) => (
             <span key={s.value} className="flex items-center gap-1">
               <i className={`h-3 w-3 rounded ${s.swatch}`} /> {s.label}
             </span>
           ))}
           <span aria-hidden className="mx-1 h-3.5 w-px bg-slate-200" />
-          <span className="font-semibold text-slate-600">Viền:</span>
+          <span className="font-semibold text-ink">Viền:</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-yellow-400" /> Trong ngày</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-blue-500" /> Lượt đi</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-amber-500" /> Lượt về</span>
@@ -196,7 +196,7 @@ export default function ScheduleGrid({
           <button
             type="button"
             onClick={() => setModal({ trip: null })}
-            className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
+            className="h-9 rounded-lg bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
           >
             + Thêm chuyến
           </button>
@@ -217,17 +217,17 @@ export default function ScheduleGrid({
 
       {view === "tour" && (
         <DragScroll
-          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
+          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]"
           initialLeft={todayScrollLeft}
         >
-          <div style={{ width: trackWidth }}>
+          <div className="min-h-full" style={{ width: trackWidth }}>
             {/* header ngày — ghim trên khi cuộn dọc */}
             <div className="sticky top-0 z-30 flex border-b-2 border-slate-300" style={{ height: HEADER_H }}>
               {dayMeta.map((m) => (
                 <div
                   key={m.d}
                   className={`flex shrink-0 flex-col items-center justify-center gap-0.5 border-r border-slate-200 ${
-                    m.isToday ? "bg-brand-100" : m.weekend ? "bg-slate-100" : "bg-slate-50"
+                    m.isToday ? "bg-brand-100" : m.weekend ? "bg-slate-100" : "bg-canvas"
                   }`}
                   style={{ width: W }}
                 >
@@ -246,14 +246,17 @@ export default function ScheduleGrid({
             </div>
 
             {/* vùng lane tour */}
-            <div className="relative" style={{ height: tour.totalHeight }}>
+            <div
+              className="relative"
+              style={{ height: tour.totalHeight, minHeight: "calc(100dvh - 14rem)" }}
+            >
               {/* underlay cột ngày (nền + bấm để thêm theo ngày) */}
               <div className="absolute inset-0 flex">
                 {dayMeta.map((m, di) => (
                   <div
                     key={m.d}
                     className={`shrink-0 border-r border-slate-200 ${
-                      m.isToday ? "bg-brand-50" : m.weekend ? "bg-slate-100/70" : di % 2 ? "bg-slate-50/60" : "bg-white"
+                      m.isToday ? "bg-brand-50" : m.weekend ? "bg-slate-100/70" : di % 2 ? "bg-canvas/60" : "bg-surface"
                     }`}
                     style={{ width: W }}
                   />

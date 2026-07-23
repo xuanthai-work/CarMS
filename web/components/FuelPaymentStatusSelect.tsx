@@ -43,19 +43,19 @@ export default function FuelPaymentStatusSelect({
         type="button"
         onClick={() => setOpen((state) => !state)}
         aria-expanded={open}
-        className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm font-medium shadow-sm transition ${
+        className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold shadow-sm transition ${
           current.chip
         } ${open ? "ring-2 ring-brand-400" : "hover:brightness-95"}`}
       >
         <span className="truncate">{current.label}</span>
-        <span className={`text-[10px] text-slate-500 transition ${open ? "rotate-180" : ""}`}>▼</span>
+        <span className={`text-xs text-slate-500 transition ${open ? "rotate-180" : ""}`}>⌄</span>
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
             {...dropdownMotion(reduceMotion)}
-            className="absolute inset-x-0 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+            className="absolute inset-x-0 top-full z-30 mt-2 rounded-xl border border-hairline bg-surface p-1.5 shadow-xl"
           >
           {OPTIONS.map((option) => {
             const active = option.value === value;
@@ -67,8 +67,8 @@ export default function FuelPaymentStatusSelect({
                   onChange(option.value);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm transition ${
-                  active ? "bg-brand-600 font-semibold text-white" : "text-slate-700 hover:bg-slate-100"
+                className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition ${
+                  active ? "bg-brand-600 font-semibold text-white" : "text-ink hover:bg-canvas"
                 }`}
               >
                 <i className={`h-2.5 w-2.5 shrink-0 rounded-full ${active ? "bg-white" : option.swatch}`} />

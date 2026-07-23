@@ -24,7 +24,7 @@ export default function FilterTabs<T extends string>({
       <div
         role="tablist"
         aria-label={ariaLabel}
-        className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-sm font-medium shadow-sm"
+        className="inline-flex h-9 items-center overflow-hidden rounded-xl border border-hairline bg-surface text-sm font-medium shadow-sm"
       >
         {options.map(([optionValue, label]) => {
           const active = value === optionValue;
@@ -35,7 +35,7 @@ export default function FilterTabs<T extends string>({
               role="tab"
               aria-selected={active}
               onClick={() => onChange(optionValue)}
-              className={`relative rounded-md px-3 py-1.5 transition-colors duration-150 ${
+              className={`relative h-9 rounded-[10px] px-3 py-0 transition-colors duration-150 ${
                 active ? "text-white" : "text-slate-600 hover:bg-slate-100"
               }`}
             >
@@ -43,7 +43,7 @@ export default function FilterTabs<T extends string>({
                 <motion.span
                   layoutId="active-filter"
                   transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
-                  className="absolute inset-0 rounded-md bg-brand-600"
+                  className="absolute inset-0 rounded-[10px] bg-brand-600"
                 />
               )}
               <span className="relative z-10">{label}</span>
