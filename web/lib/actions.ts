@@ -5,6 +5,7 @@ import { prisma } from "./prisma";
 import { newId } from "./db";
 import { tourTypeFromDates } from "./trips";
 import { requireStaff, requireManager } from "@/lib/auth";
+import { todayStr } from "@/lib/format";
 
 function s(fd: FormData, key: string): string {
   const v = fd.get(key);
@@ -39,6 +40,7 @@ function revalidateAll() {
   revalidatePath("/nhan-su");
   revalidatePath("/doanh-thu");
   revalidatePath("/tien-dau");
+  revalidatePath("/luong");
 }
 
 export async function saveVehicle(fd: FormData): Promise<void> {
@@ -270,5 +272,80 @@ export async function deleteOfficeStaff(fd: FormData): Promise<void> {
   await requireManager();
   const id = s(fd, "id");
   await prisma.officeStaff.delete({ where: { id } });
+  revalidateAll();
+}
+
+/** Lương cơ bản hiện tại của người (để snapshot khi tạo dòng lương tháng). */
+async function lookupBaseSalary(personType: string, personId: string): Promise<number> {
+  if (personType === "office") {
+    const p = await prisma.officeStaff.findUnique({ where: { id: personId } });
+    return p?.baseSalary ?? 0;
+  }
+  const d = await prisma.driver.findUnique({ where: { id: personId } });
+  return d?.baseSalary ?? 0;
+}
+
+/** Sửa điều chỉnh lương tháng (thưởng/phụ cấp, tạm ứng/khấu trừ, ghi chú). Upsert theo (personType, personId, monthKey). */
+export async function saveSalaryMonth(fd: FormData): Promise<void> {
+  const personType = s(fd, "personType");
+  if (personType === "office") await requireManager();
+  else await requireStaff();
+
+  const personId = s(fd, "personId");
+  const monthKey = s(fd, "monthKey");
+  const additions = optNum(fd, "additions") ?? 0;
+  const deductions = optNum(fd, "deductions") ?? 0;
+  const note = s(fd, "note");
+  const baseSalary = await lookupBaseSalary(personType, personId);
+
+  await prisma.salaryMonth.upsert({
+    where: { personType_personId_monthKey: { personType, personId, monthKey } },
+    create: { id: newId("sm"), personType, personId, monthKey, baseSalary, additions, deductions, note },
+    update: { additions, deductions, note }, // giữ nguyên baseSalary snapshot cũ
+  });
+  revalidateAll();
+}
+
+/** Đánh dấu đã trả / chưa trả lương tháng của một người. */
+export async function setSalaryPaid(fd: FormData): Promise<void> {
+  const personType = s(fd, "personType");
+  if (personType === "office") await requireManager();
+  else await requireStaff();
+
+  const personId = s(fd, "personId");
+  const monthKey = s(fd, "monthKey");
+  const paid = s(fd, "paid") === "true";
+  const paidDate = paid ? todayStr() : null;
+  const baseSalary = await lookupBaseSalary(personType, personId);
+
+  await prisma.salaryMonth.upsert({
+    where: { personType_personId_monthKey: { personType, personId, monthKey } },
+    create: { id: newId("sm"), personType, personId, monthKey, baseSalary, paid, paidDate },
+    update: { paid, paidDate },
+  });
+  revalidateAll();
+}
+
+/** Tạo/sửa phiếu trả công lái xe đối tác. */
+export async function savePartnerPayout(fd: FormData): Promise<void> {
+  await requireStaff();
+  const id = s(fd, "id");
+  const data = {
+    driverId: s(fd, "driverId"),
+    workDate: s(fd, "workDate"),
+    amount: reqNum(fd, "amount"),
+    paymentStatus: s(fd, "paymentStatus") || "unpaid",
+    paymentDate: optStr(fd, "paymentDate"),
+    payerName: s(fd, "payerName"),
+    note: s(fd, "note"),
+  };
+  if (id) await prisma.partnerPayout.update({ where: { id }, data });
+  else await prisma.partnerPayout.create({ data: { id: newId("pp"), ...data } });
+  revalidateAll();
+}
+
+export async function deletePartnerPayout(fd: FormData): Promise<void> {
+  await requireStaff();
+  await prisma.partnerPayout.delete({ where: { id: s(fd, "id") } });
   revalidateAll();
 }
