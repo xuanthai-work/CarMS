@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { Trip, Vehicle, Driver } from "@/lib/types";
 import { revenueMonthKey } from "@/lib/revenue";
 import { tourTypeLabel, legRoute } from "@/lib/trips";
-import { fmtDate } from "@/lib/format";
+import { fmtDate, monthLabel } from "@/lib/format";
 
 /**
  * Màn "Tổng quan" (control-room) — thuần VẬN HÀNH, giống nhau cho mọi role.
@@ -70,6 +70,7 @@ export default function Overview({
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Điều hành hôm nay</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Tổng quan</h1>
+            <p className="mt-2 text-sm text-slate-300">{monthLabel(monthKey)}</p>
           </div>
           <Link
             href="/lich"
