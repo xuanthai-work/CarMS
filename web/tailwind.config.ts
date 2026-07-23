@@ -8,7 +8,26 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+      },
       colors: {
+        // Bảng màu "control-room" (theo redesign brief).
+        canvas: "#F5F7FA", // nền trang
+        surface: "#FFFFFF", // thẻ / mặt phẳng
+        ink: "#16233B", // chữ chính (slate-navy đậm)
+        muted: "#64748B", // chữ phụ
+        hairline: "#E6EAF1", // viền mảnh
+        signal: "#F59E0B", // nhấn "chú ý" (mốc now, cảnh báo)
+        sidebar: "#0f1729", // nền thanh điều hướng tối (deep navy)
+        // Xanh điều phối — dùng cho nav/nút/link (giữ 'brand' cũ để không vỡ trang khác).
+        dispatch: {
+          50: "#eef2fe",
+          100: "#dbe4fd",
+          500: "#2F5BEA",
+          600: "#2F5BEA",
+          700: "#2447c4",
+        },
         brand: {
           50: "#eff6ff",
           100: "#dbeafe",

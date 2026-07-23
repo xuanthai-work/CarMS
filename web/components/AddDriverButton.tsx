@@ -3,15 +3,19 @@
 import { useState } from "react";
 import { saveDriver } from "@/lib/actions";
 import Modal from "@/components/Modal";
-import { LICENSE_CLASSES, DRIVER_TYPES } from "@/lib/drivers";
+import { LICENSE_OPTIONS, DRIVER_TYPES } from "@/lib/drivers";
 import { Field, inputCls } from "@/components/ui";
+import SelectMenu from "@/components/SelectMenu";
+import { useFormState } from "@/lib/useFormState";
 
 export default function AddDriverButton() {
   const [open, setOpen] = useState(false);
+  const { form, set, reset } = useFormState(() => ({ licenseClass: "", type: "own" }));
 
   async function handleAdd(fd: FormData) {
     await saveDriver(fd);
     setOpen(false);
+    reset();
   }
 
   return (
@@ -35,23 +39,10 @@ export default function AddDriverButton() {
                 <input name="phone" placeholder="VD: 0912xxxxxx" className={inputCls} />
               </Field>
               <Field label="Hạng bằng">
-                <select name="licenseClass" defaultValue="" className={inputCls}>
-                  <option value="">— Chưa rõ —</option>
-                  {LICENSE_CLASSES.map((c) => (
-                    <option key={c} value={c}>
-                      Hạng {c}
-                    </option>
-                  ))}
-                </select>
+                <SelectMenu name="licenseClass" value={form.licenseClass} onChange={set("licenseClass")} options={LICENSE_OPTIONS} />
               </Field>
               <Field label="Loại">
-                <select name="type" defaultValue="own" className={inputCls}>
-                  {DRIVER_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
+                <SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} />
               </Field>
             </div>
             <Field label="Ghi chú">

@@ -4,7 +4,6 @@ export const VEHICLE_TYPES = [4, 7, 16, 29, 35, 45] as const;
 export const VEHICLE_STATUS = [
   { value: "active", label: "Hoạt động" },
   { value: "maintenance", label: "Bảo dưỡng" },
-  { value: "inactive", label: "Ngưng" },
 ] as const;
 
 // Sở hữu xe: của công ty hay cộng tác/thuê ngoài.
@@ -20,6 +19,9 @@ export function ownerLabel(type: string): string {
 export function seatLabel(seats: number | null | undefined): string {
   return seats ? `${seats} chỗ` : "—";
 }
+
+// Options cho dropdown loại xe: hiển thị "16 chỗ" nhưng lưu số "16".
+export const SEAT_OPTIONS = VEHICLE_TYPES.map((t) => ({ value: String(t), label: seatLabel(t) }));
 
 export function statusLabel(status: string): string {
   return VEHICLE_STATUS.find((s) => s.value === status)?.label ?? status;

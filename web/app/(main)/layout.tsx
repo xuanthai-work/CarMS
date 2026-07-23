@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser, getCurrentStaff } from "@/lib/auth";
 import { isManager } from "@/lib/office";
-import Nav from "@/components/Nav";
+import Sidebar from "@/components/Sidebar";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 
 // Chốt bảo vệ DUY NHẤT cho toàn bộ khu nội bộ: mọi trang trong (main) đều đi qua layout này.
@@ -15,10 +15,12 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   if (!staff) redirect("/no-access");
 
   return (
-    <>
+    <div className="flex min-h-screen bg-canvas text-ink">
       <RealtimeRefresh />
-      <Nav isManager={isManager(staff.position)} name={staff.name} />
-      <main className="mx-auto max-w-[1720px] px-3 py-6">{children}</main>
-    </>
+      <Sidebar isManager={isManager(staff.position)} name={staff.name} position={staff.position} />
+      <main className="min-w-0 flex-1 px-4 py-5">
+        <div className="mx-auto w-full max-w-[1680px]">{children}</div>
+      </main>
+    </div>
   );
 }

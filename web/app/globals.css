@@ -7,7 +7,18 @@
 }
 
 body {
-  @apply bg-slate-50 text-slate-800 antialiased;
+  @apply bg-canvas text-ink antialiased font-sans;
+}
+
+/* Ẩn thanh cuộn cửa sổ trên mọi trang (vẫn cuộn được bằng lăn/kéo/bàn phím) */
+html,
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge cũ */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
 }
 
 /* thanh cuộn gọn cho các bảng timeline */

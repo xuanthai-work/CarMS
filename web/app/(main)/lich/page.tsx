@@ -18,8 +18,9 @@ export default async function LichPage({
     getTrips(),
   ]);
 
+  // Chiều cao trừ 2.5rem = padding dọc py-5 của <main> (xem (main)/layout.tsx) — đổi padding đó thì chỉnh theo.
   return (
-    <div className="flex h-[calc(100vh-7rem)] min-h-[420px] flex-col gap-4">
+    <div className="flex h-[calc(100vh-2.5rem)] min-h-[420px] flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Lịch điều xe</h1>
         <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">

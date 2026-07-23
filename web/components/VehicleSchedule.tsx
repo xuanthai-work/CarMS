@@ -6,7 +6,6 @@ import Modal from "@/components/Modal";
 import { buildDayMeta, pad } from "@/lib/format";
 import { legMeta, statusBg, assignLanes, fmtMoney, legRoute, toneBorderClass } from "@/lib/trips";
 import { setLegEndTime } from "@/lib/actions";
-import { seatLabel } from "@/lib/vehicles";
 import { CARD_HOVER_GROUP } from "@/components/ui";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
@@ -59,6 +58,7 @@ export default function VehicleSchedule({
   trips,
   days,
   today,
+  vid,
   onOpen,
 }: {
   vehicles: Vehicle[];
@@ -66,9 +66,9 @@ export default function VehicleSchedule({
   trips: Trip[];
   days: string[];
   today: string;
+  vid: string;
   onOpen: (trip: Trip) => void;
 }) {
-  const [vid, setVid] = useState(vehicles[0]?.id ?? "");
   const selected = vehicles.find((v) => v.id === vid);
   const driverMap = useMemo(() => new Map(drivers.map((d) => [d.id, d])), [drivers]);
   const dayMeta = useMemo(() => buildDayMeta(days, today), [days, today]);
@@ -161,22 +161,6 @@ export default function VehicleSchedule({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      {/* Bộ lọc chọn xe */}
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="text-sm font-medium text-slate-600">Xem xe:</label>
-        <select
-          value={vid}
-          onChange={(e) => setVid(e.target.value)}
-          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-        >
-          {vehicles.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.plate} · {seatLabel(v.seats)}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {!selected ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-400 shadow-sm">
           Chưa có xe nào.

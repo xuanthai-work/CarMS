@@ -2,10 +2,13 @@
 
 import { useRef, useState } from "react";
 import { saveVehicle, deleteVehicle } from "@/lib/actions";
-import { VEHICLE_TYPES, VEHICLE_STATUS, OWNER_TYPES, seatLabel, statusLabel, ownerLabel } from "@/lib/vehicles";
+import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS, seatLabel, statusLabel, ownerLabel } from "@/lib/vehicles";
 import { Field, Info, inputCls } from "@/components/ui";
+import SelectMenu from "@/components/SelectMenu";
+import DatePicker from "@/components/DatePicker";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { fmtDate } from "@/lib/format";
+import { useFormState } from "@/lib/useFormState";
 import type { Vehicle } from "@/lib/types";
 
 const STATUS_TONE: Record<string, string> = {
@@ -15,7 +18,16 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
+  // Các trường qua component tự làm (dropdown / lịch) cần state; input thường vẫn để uncontrolled.
+  const initialForm = () => ({
+    seats: v.seats ? String(v.seats) : "16",
+    status: v.status || "active",
+    type: v.type || "own",
+    inspectionDue: v.inspectionDue ?? "",
+    insuranceDue: v.insuranceDue ?? "",
+  });
   const [editing, setEditing] = useState(false);
+  const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
 
   async function handleSave(fd: FormData) {
@@ -24,6 +36,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
   }
   function cancel() {
     formRef.current?.reset();
+    reset();
     setEditing(false);
   }
 
@@ -32,20 +45,19 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-4">
         <div className="flex items-start justify-between gap-3">
-          
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-lg font-bold text-slate-900">{v.plate}</span>
-              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">
-                {seatLabel(v.seats)}
-              </span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_TONE[v.status] ?? STATUS_TONE.inactive}`}>
-                {statusLabel(v.status)}
-              </span>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                {ownerLabel(v.type)}
-              </span>
-            </div>
-          
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-lg font-bold text-slate-900">{v.plate}</span>
+            <span className="rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">
+              {seatLabel(v.seats)}
+            </span>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_TONE[v.status] ?? STATUS_TONE.inactive}`}>
+              {statusLabel(v.status)}
+            </span>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              {ownerLabel(v.type)}
+            </span>
+          </div>
+
           <button
             type="button"
             onClick={() => setEditing(true)}
@@ -73,37 +85,19 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
             <input name="plate" defaultValue={v.plate} className={inputCls} />
           </Field>
           <Field label="Loại xe">
-            <select name="seats" defaultValue={v.seats ? String(v.seats) : "16"} className={inputCls}>
-              {VEHICLE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t} chỗ
-                </option>
-              ))}
-            </select>
+            <SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} />
           </Field>
           <Field label="Hạn đăng kiểm">
-            <input name="inspectionDue" type="date" defaultValue={v.inspectionDue ?? ""} className={inputCls} />
+            <DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} />
           </Field>
           <Field label="Hạn bảo hiểm">
-            <input name="insuranceDue" type="date" defaultValue={v.insuranceDue ?? ""} className={inputCls} />
+            <DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} />
           </Field>
           <Field label="Trạng thái">
-            <select name="status" defaultValue={v.status} className={inputCls}>
-              {VEHICLE_STATUS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+            <SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} />
           </Field>
           <Field label="Sở hữu">
-            <select name="type" defaultValue={v.type} className={inputCls}>
-              {OWNER_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
+            <SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} />
           </Field>
         </div>
         <div className="mt-3">

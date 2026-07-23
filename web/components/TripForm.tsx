@@ -8,7 +8,8 @@ import DatePicker from "@/components/DatePicker";
 import TimePicker from "@/components/TimePicker";
 import Combobox from "@/components/Combobox";
 import MoneyInput from "@/components/MoneyInput";
-import { tourTypeLabel, tourTypeFromDates } from "@/lib/trips";
+import SelectMenu from "@/components/SelectMenu";
+import { tourTypeLabel, tourTypeFromDates, TRIP_STATUSES } from "@/lib/trips";
 import { seatLabel, VEHICLE_TYPES } from "@/lib/vehicles";
 import { fmtDateFull } from "@/lib/format";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
@@ -124,6 +125,7 @@ export default function TripForm({
   const [oDrvId, setODrvId] = useState(trip?.outbound.driverId ?? "");
   const [rVehId, setRVehId] = useState(initVeh(trip?.return));
   const [rDrvId, setRDrvId] = useState(trip?.return?.driverId ?? "");
+  const [status, setStatus] = useState<string>(trip?.status ?? "pending");
 
   // Chỉ hiện ô "Tiền thuê đối tác" khi chuyến có dùng xe HOẶC lái xe của đối tác.
   const isPartnerVehId = (id: string) => !!id && vehicles.find((v) => v.id === id)?.type === "partner";
@@ -173,11 +175,7 @@ export default function TripForm({
             </Field>
           </div>
           <Field label="Trạng thái">
-            <select name="status" defaultValue={trip?.status ?? "pending"} className={inputCls}>
-              <option value="pending">Mới / Chưa xử lý</option>
-              <option value="info_sent">Đã nhắn khách</option>
-              <option value="completed_paid">Đã thanh toán</option>
-            </select>
+            <SelectMenu name="status" value={status} onChange={setStatus} options={TRIP_STATUSES} />
           </Field>
         </div>
 

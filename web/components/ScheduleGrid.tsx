@@ -7,6 +7,8 @@ import VehicleSchedule from "@/components/VehicleSchedule";
 import { buildDayMeta } from "@/lib/format";
 import { fmtMoney, sameVehicleBothLegs, statusBg, packVariableHeight, TRIP_STATUSES } from "@/lib/trips";
 import { CARD_HOVER, CARD_HOVER_GROUP } from "@/components/ui";
+import SelectMenu from "@/components/SelectMenu";
+import { seatLabel } from "@/lib/vehicles";
 import type { Trip, Vehicle, Driver, Leg } from "@/lib/types";
 
 const W = 190; // bề rộng mỗi ngày (view theo tour)
@@ -37,6 +39,11 @@ export default function ScheduleGrid({
 }) {
   const [modal, setModal] = useState<{ trip: Trip | null; prefill?: { vehicleId?: string; date?: string } } | null>(null);
   const [view, setView] = useState<"xe" | "tour">("tour"); // theo tour (Gantt) mặc định | theo xe (1 xe, ngày×giờ)
+  const [vid, setVid] = useState(vehicles[0]?.id ?? ""); // xe đang xem ở view "theo xe" (dropdown ở toolbar)
+  const vehicleOptions = useMemo(
+    () => vehicles.map((v) => ({ value: v.id, label: `${v.plate} · ${seatLabel(v.seats)}` })),
+    [vehicles]
+  );
 
   const trackWidth = days.length * W;
   const first = days[0];
@@ -170,7 +177,12 @@ export default function ScheduleGrid({
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-violet-400" /> Theo đoàn</span>
           <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-slate-400" /> Một chiều</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {view === "xe" && (
+            <div className="relative z-[60] w-56">
+              <SelectMenu name="scheduleVehicle" value={vid} onChange={setVid} options={vehicleOptions} placeholder="Chọn xe" />
+            </div>
+          )}
           <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-sm font-medium">
             <button
               type="button"
@@ -204,6 +216,7 @@ export default function ScheduleGrid({
           trips={trips}
           days={days}
           today={today}
+          vid={vid}
           onOpen={(t) => setModal({ trip: t })}
         />
       )}
