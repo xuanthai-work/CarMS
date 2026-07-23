@@ -6,6 +6,7 @@ export type SalariedPerson = {
   name: string;
   role: string; // chức vụ (office) hoặc "Lái xe"
   baseSalary: number;
+  payday?: number | null;
 };
 
 export type SalaryRow = SalariedPerson & {
@@ -13,10 +14,11 @@ export type SalaryRow = SalariedPerson & {
   deductions: number;
   note: string;
   paid: boolean;
+  paidDate?: string | null;
   net: number;
 };
 
-type OfficeLike = { id: string; name: string; position: string | null; baseSalary: number | null };
+type OfficeLike = { id: string; name: string; position: string | null; baseSalary: number | null; payday?: number | null };
 type DriverLike = { id: string; name: string; type: string; baseSalary: number | null };
 type MonthLike = {
   personType: string;
@@ -26,6 +28,7 @@ type MonthLike = {
   deductions: number;
   note: string;
   paid: boolean;
+  paidDate?: string | null;
 };
 type PayoutLike = { workDate: string; amount: number };
 
@@ -42,6 +45,7 @@ export function salariedPeople(office: OfficeLike[], drivers: DriverLike[]): Sal
     name: p.name,
     role: p.position || "Nhân viên",
     baseSalary: p.baseSalary ?? 0,
+    payday: p.payday ?? null,
   }));
   const fromDrivers: SalariedPerson[] = drivers
     .filter((d) => d.type === "own")
@@ -51,6 +55,7 @@ export function salariedPeople(office: OfficeLike[], drivers: DriverLike[]): Sal
       name: d.name,
       role: "Lái xe",
       baseSalary: d.baseSalary ?? 0,
+      payday: null,
     }));
   return [...fromOffice, ...fromDrivers];
 }
@@ -70,6 +75,7 @@ export function buildSalaryRows(people: SalariedPerson[], months: MonthLike[]): 
       deductions,
       note: m?.note ?? "",
       paid: m?.paid ?? false,
+      paidDate: m?.paidDate ?? null,
       net: salaryNet({ baseSalary, additions, deductions }),
     };
   });

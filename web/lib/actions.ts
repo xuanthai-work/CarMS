@@ -317,13 +317,31 @@ export async function setSalaryPaid(fd: FormData): Promise<void> {
   const personId = s(fd, "personId");
   const monthKey = s(fd, "monthKey");
   const paid = s(fd, "paid") === "true";
-  const paidDate = paid ? todayStr() : null;
   const baseSalary = await lookupBaseSalary(personType, personId);
 
   await prisma.salaryMonth.upsert({
     where: { personType_personId_monthKey: { personType, personId, monthKey } },
-    create: { id: newId("sm"), personType, personId, monthKey, baseSalary, paid, paidDate },
-    update: { paid, paidDate },
+    create: { id: newId("sm"), personType, personId, monthKey, baseSalary, paid },
+    update: { paid },
+  });
+  revalidateAll();
+}
+
+/** Cập nhật riêng ngày trả lương, không thay đổi trạng thái đã trả. */
+export async function setSalaryPaidDate(fd: FormData): Promise<void> {
+  const personType = s(fd, "personType");
+  if (personType === "office") await requireManager();
+  else await requireStaff();
+
+  const personId = s(fd, "personId");
+  const monthKey = s(fd, "monthKey");
+  const paidDate = optStr(fd, "paidDate");
+  const baseSalary = await lookupBaseSalary(personType, personId);
+
+  await prisma.salaryMonth.upsert({
+    where: { personType_personId_monthKey: { personType, personId, monthKey } },
+    create: { id: newId("sm"), personType, personId, monthKey, baseSalary, paidDate },
+    update: { paidDate },
   });
   revalidateAll();
 }

@@ -36,10 +36,17 @@ export default function SalaryScreen({
   payoutTotal: number;
 }) {
   const [tab, setTab] = useState<"month" | "partner">("month");
+  const [query, setQuery] = useState("");
 
   const totalNet = rows.reduce((s, r) => s + r.net, 0);
   const paidNet = rows.filter((r) => r.paid).reduce((s, r) => s + r.net, 0);
-  const owing = totalNet - paidNet;
+  const paidPayout = payouts
+    .filter((p) => p.paymentStatus === "paid")
+    .reduce((s, p) => s + p.amount, 0);
+  const paidTotal = paidNet + paidPayout;
+  const owing = totalNet + payoutTotal - paidTotal;
+  const officeRows = rows.filter((row) => row.personType === "office");
+  const driverRows = rows.filter((row) => row.personType === "driver");
 
   return (
     <div className="space-y-4">
@@ -54,26 +61,58 @@ export default function SalaryScreen({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {isManager && <Tile label="Tổng lương tháng" value={fmtMoney(totalNet)} />}
-        {isManager && <Tile label="Đã trả" value={fmtMoney(paidNet)} tone="emerald" />}
+        <Tile label="Trả công đối tác" value={fmtMoney(payoutTotal)} />
+        {isManager && <Tile label="Đã trả" value={fmtMoney(paidTotal)} tone="emerald" />}
         {isManager && <Tile label="Còn phải trả" value={fmtMoney(owing)} tone={owing > 0 ? "amber" : "ink"} />}
-        <Tile label="Trả công đối tác (tháng)" value={fmtMoney(payoutTotal)} />
       </div>
 
-      <FilterTabs
-        value={tab}
-        onChange={setTab}
-        ariaLabel="Chọn nhóm lương"
-        options={[
-          ["month", "Lương tháng"],
-          ["partner", "Trả công đối tác"],
-        ] as const}
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <FilterTabs
+          value={tab}
+          onChange={setTab}
+          ariaLabel="Chọn nhóm lương"
+          options={[
+            ["month", "Lương tháng"],
+            ["partner", "Trả công đối tác"],
+          ] as const}
+        />
+        <div className="relative min-w-[220px] flex-1">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm tên nhân sự, chức vụ…"
+            className="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
+      </div>
 
       {tab === "month" ? (
-        <SalaryMonthTable rows={rows} monthKey={monthKey} />
+        <div className="space-y-5">
+          {isManager && (
+            <SalaryGroup title="Văn phòng" count={officeRows.length}>
+              <SalaryMonthTable rows={officeRows} monthKey={monthKey} query={query} />
+            </SalaryGroup>
+          )}
+          <SalaryGroup title="Lái xe" count={driverRows.length}>
+            <SalaryMonthTable rows={driverRows} monthKey={monthKey} query={query} />
+          </SalaryGroup>
+        </div>
       ) : (
         <PartnerPayoutTable payouts={payouts} drivers={drivers} monthKey={monthKey} />
       )}
     </div>
+  );
+}
+
+function SalaryGroup({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center gap-2 px-1">
+        <h2 className="text-base font-bold text-slate-800">{title}</h2>
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">{count}</span>
+      </div>
+      {children}
+    </section>
   );
 }

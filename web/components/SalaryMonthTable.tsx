@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { saveSalaryMonth, setSalaryPaid } from "@/lib/actions";
+import { saveSalaryMonth, setSalaryPaid, setSalaryPaidDate } from "@/lib/actions";
 import { Field } from "@/components/ui";
 import MoneyInput from "@/components/MoneyInput";
+import DatePicker from "@/components/DatePicker";
 import { fmtMoney } from "@/lib/trips";
+import { normalizeVn } from "@/lib/search";
 import type { SalaryRow } from "@/lib/salary";
 
 function EditorRow({
@@ -25,7 +27,7 @@ function EditorRow({
   }
   return (
     <tr className="border-b border-brand-200 bg-brand-50/40 align-top">
-      <td colSpan={5} className="p-3">
+      <td colSpan={8} className="p-3">
         <form action={submit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <input type="hidden" name="personType" value={row.personType} />
           <input type="hidden" name="personId" value={row.personId} />
@@ -50,6 +52,31 @@ function EditorRow({
         </form>
       </td>
     </tr>
+  );
+}
+
+function PaidDatePicker({ row, monthKey }: { row: SalaryRow; monthKey: string }) {
+  const router = useRouter();
+  const [value, setValue] = useState(row.paidDate ?? "");
+  const [pending, start] = useTransition();
+
+  function change(next: string) {
+    setValue(next);
+    const fd = new FormData();
+    fd.set("personType", row.personType);
+    fd.set("personId", row.personId);
+    fd.set("monthKey", monthKey);
+    fd.set("paidDate", next);
+    start(async () => {
+      await setSalaryPaidDate(fd);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div onClick={(e) => e.stopPropagation()} className={pending ? "opacity-60" : ""}>
+      <DatePicker name="paidDate" value={value} onChange={change} disabled={pending} />
+    </div>
   );
 }
 
@@ -84,10 +111,14 @@ function PaidToggle({ row, monthKey }: { row: SalaryRow; monthKey: string }) {
   );
 }
 
-export default function SalaryMonthTable({ rows, monthKey }: { rows: SalaryRow[]; monthKey: string }) {
+export default function SalaryMonthTable({ rows, monthKey, query }: { rows: SalaryRow[]; monthKey: string; query: string }) {
   const router = useRouter();
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const keyOf = (r: SalaryRow) => `${r.personType}:${r.personId}`;
+  const normalizedQuery = normalizeVn(query);
+  const filteredRows = normalizedQuery
+    ? rows.filter((row) => normalizeVn(`${row.name} ${row.role}`).includes(normalizedQuery))
+    : rows;
 
   if (rows.length === 0) {
     return <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-400 shadow-sm">Chưa có ai ăn lương tháng.</div>;
@@ -95,13 +126,19 @@ export default function SalaryMonthTable({ rows, monthKey }: { rows: SalaryRow[]
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <table className="w-full table-fixed text-sm">
+        {filteredRows.length === 0 ? (
+          <div className="p-12 text-center text-slate-400">Không tìm thấy nhân sự phù hợp.</div>
+        ) : (
+        <table className="w-full table-fixed text-sm">
         <colgroup>
-          <col style={{ width: "28%" }} />
-          <col style={{ width: "18%" }} />
-          <col style={{ width: "18%" }} />
-          <col style={{ width: "18%" }} />
-          <col style={{ width: "18%" }} />
+          <col style={{ width: "17%" }} />
+          <col style={{ width: "12%" }} />
+          <col style={{ width: "12%" }} />
+          <col style={{ width: "13%" }} />
+          <col style={{ width: "10%" }} />
+          <col style={{ width: "14%" }} />
+          <col style={{ width: "10%" }} />
+          <col style={{ width: "12%" }} />
         </colgroup>
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-500">
@@ -109,11 +146,14 @@ export default function SalaryMonthTable({ rows, monthKey }: { rows: SalaryRow[]
             <th className="px-3 py-2.5 text-right">Cơ bản</th>
             <th className="px-3 py-2.5 text-right">Điều chỉnh</th>
             <th className="px-3 py-2.5 text-right">Thực nhận</th>
-            <th className="px-3 py-2.5">Trạng thái</th>
+            <th className="px-3 py-2.5">Ngày nhận lương</th>
+            <th className="px-4 py-2.5">Ngày trả lương</th>
+            <th className="px-4 py-2.5">Trạng thái</th>
+            <th className="px-4 py-2.5">Ghi chú</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) =>
+          {filteredRows.map((r) =>
             editingKey === keyOf(r) ? (
               <EditorRow key={keyOf(r)} row={r} monthKey={monthKey} onDone={() => { setEditingKey(null); router.refresh(); }} onCancel={() => setEditingKey(null)} />
             ) : (
@@ -130,14 +170,22 @@ export default function SalaryMonthTable({ rows, monthKey }: { rows: SalaryRow[]
                   {!r.additions && !r.deductions ? <span className="text-slate-300">—</span> : null}
                 </td>
                 <td className="px-3 py-2.5 text-right font-semibold text-slate-800 tabular-nums">{fmtMoney(r.net)}</td>
-                <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                <td className="px-3 py-2.5 text-slate-600 tabular-nums">{r.payday ? `Ngày ${r.payday}` : "—"}</td>
+                <td className="px-4 py-2.5 text-slate-600 tabular-nums">
+                  <PaidDatePicker row={r} monthKey={monthKey} />
+                </td>
+                <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
                   <PaidToggle row={r} monthKey={monthKey} />
+                </td>
+                <td className="max-w-0 truncate px-4 py-2.5 text-slate-500" title={r.note || undefined}>
+                  {r.note || "—"}
                 </td>
               </tr>
             )
           )}
         </tbody>
-      </table>
+        </table>
+        )}
     </div>
   );
 }
