@@ -98,6 +98,7 @@ export async function saveDriver(fd: FormData): Promise<void> {
     phone: optStr(fd, "phone"),
     licenseClass: s(fd, "licenseClass"),
     type: s(fd, "type") || "own",
+    baseSalary: optNum(fd, "baseSalary"),
     note: s(fd, "note"),
   };
   if (id) {

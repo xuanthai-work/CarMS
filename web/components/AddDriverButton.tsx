@@ -6,6 +6,7 @@ import Modal from "@/components/Modal";
 import { LICENSE_OPTIONS, DRIVER_TYPES } from "@/lib/drivers";
 import { Field, inputCls } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
+import MoneyInput from "@/components/MoneyInput";
 import { useFormState } from "@/lib/useFormState";
 
 export default function AddDriverButton() {
@@ -44,6 +45,11 @@ export default function AddDriverButton() {
               <Field label="Loại">
                 <SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} />
               </Field>
+              {form.type === "own" && (
+                <Field label="Lương tháng">
+                  <MoneyInput name="baseSalary" placeholder="VD: 12.000.000" />
+                </Field>
+              )}
             </div>
             <Field label="Ghi chú">
               <input name="note" placeholder="Ghi chú" className={inputCls} />

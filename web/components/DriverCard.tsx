@@ -7,7 +7,9 @@ import { saveDriver, deleteDriver } from "@/lib/actions";
 import { LICENSE_OPTIONS, DRIVER_TYPES, driverTypeLabel } from "@/lib/drivers";
 import { Field, Info, inputCls } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
+import MoneyInput from "@/components/MoneyInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import { fmtMoney } from "@/lib/trips";
 import { useFormState } from "@/lib/useFormState";
 import type { Driver } from "@/lib/types";
 
@@ -59,6 +61,7 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
         </div>
         <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
           <Info label="SĐT / Zalo" value={d.phone || "—"} />
+          {d.type === "own" && <Info label="Lương tháng" value={fmtMoney(d.baseSalary)} />}
           <Info label="Ghi chú" value={d.note || "—"} className="col-span-2 sm:col-span-1" />
         </div>
       </div>
@@ -86,6 +89,11 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
           <Field label="Loại">
             <SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} />
           </Field>
+          {form.type === "own" && (
+            <Field label="Lương tháng">
+              <MoneyInput name="baseSalary" defaultValue={d.baseSalary} placeholder="VD: 12.000.000" />
+            </Field>
+          )}
         </div>
         <div className="mt-3">
           <Field label="Ghi chú">
