@@ -12,6 +12,7 @@ model Vehicle {
   seats         Int?
   status        String  @default("active")
   type          String  @default("own")
+  phone         String?
   inspectionDue String?
   insuranceDue  String?
   note          String?

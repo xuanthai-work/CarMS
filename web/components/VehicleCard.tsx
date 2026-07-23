@@ -25,6 +25,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     seats: v.seats ? String(v.seats) : "16",
     status: v.status || "active",
     type: v.type || "own",
+    phone: v.phone ?? "",
     inspectionDue: v.inspectionDue ?? "",
     insuranceDue: v.insuranceDue ?? "",
   });
@@ -70,8 +71,14 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
           </button>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-          <Info label="Hạn đăng kiểm" value={fmtDate(v.inspectionDue)} />
-          <Info label="Hạn bảo hiểm" value={fmtDate(v.insuranceDue)} />
+          {v.type === "partner" ? (
+            <Info label="SĐT / Zalo" value={v.phone || "—"} />
+          ) : (
+            <>
+              <Info label="Hạn đăng kiểm" value={fmtDate(v.inspectionDue)} />
+              <Info label="Hạn bảo hiểm" value={fmtDate(v.insuranceDue)} />
+            </>
+          )}
           <Info label="Ghi chú" value={v.note || "—"} className="col-span-2 sm:col-span-1" />
         </div>
       </div>
@@ -93,18 +100,26 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
           <Field label="Loại xe">
             <SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} />
           </Field>
-          <Field label="Hạn đăng kiểm">
-            <DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} />
-          </Field>
-          <Field label="Hạn bảo hiểm">
-            <DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} />
-          </Field>
           <Field label="Trạng thái">
             <SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} />
           </Field>
           <Field label="Sở hữu">
             <SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} />
           </Field>
+          {form.type === "partner" ? (
+            <Field label="SĐT / Zalo">
+              <input name="phone" defaultValue={v.phone ?? ""} placeholder="Số điện thoại / Zalo" className={inputCls} />
+            </Field>
+          ) : (
+            <>
+              <Field label="Hạn đăng kiểm">
+                <DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} />
+              </Field>
+              <Field label="Hạn bảo hiểm">
+                <DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} />
+              </Field>
+            </>
+          )}
         </div>
         <div className="mt-3">
           <Field label="Ghi chú">

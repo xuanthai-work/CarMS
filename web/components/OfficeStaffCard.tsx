@@ -59,7 +59,19 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
         </div>
         <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
           <Info label="SĐT" value={p.phone || "—"} />
-          <Info label="Email" value={p.email || "—"} />
+          <Info
+            label="Email"
+            className="min-w-0"
+            value={
+              p.email ? (
+                <span className="block truncate" title={p.email}>
+                  {p.email}
+                </span>
+              ) : (
+                "—"
+              )
+            }
+          />
           <Info label="Giới tính" value={p.gender || "—"} />
           <Info label="Ngày sinh" value={fmtDate(p.dob)} />
           <Info label="CCCD" value={p.idNumber || "—"} />

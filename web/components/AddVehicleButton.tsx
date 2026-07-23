@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { saveVehicle } from "@/lib/actions";
 import Modal from "@/components/Modal";
-import { VEHICLE_STATUS, SEAT_OPTIONS } from "@/lib/vehicles";
+import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS } from "@/lib/vehicles";
 import { Field, inputCls } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
 import DatePicker from "@/components/DatePicker";
@@ -11,7 +11,7 @@ import { useFormState } from "@/lib/useFormState";
 
 export default function AddVehicleButton() {
   const [open, setOpen] = useState(false);
-  const { form, set, reset } = useFormState(() => ({ seats: "16", status: "active", inspectionDue: "", insuranceDue: "" }));
+  const { form, set, reset } = useFormState(() => ({ seats: "16", status: "active", type: "own", phone: "", inspectionDue: "", insuranceDue: "" }));
 
   async function handleAdd(fd: FormData) {
     await saveVehicle(fd);
@@ -42,12 +42,23 @@ export default function AddVehicleButton() {
               <Field label="Trạng thái">
                 <SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} />
               </Field>
-              <Field label="Hạn đăng kiểm">
-                <DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} />
+              <Field label="Sở hữu">
+                <SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} />
               </Field>
-              <Field label="Hạn bảo hiểm">
-                <DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} />
-              </Field>
+              {form.type === "partner" ? (
+                <Field label="SĐT / Zalo">
+                  <input name="phone" placeholder="Số điện thoại / Zalo" className={inputCls} />
+                </Field>
+              ) : (
+                <>
+                  <Field label="Hạn đăng kiểm">
+                    <DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} />
+                  </Field>
+                  <Field label="Hạn bảo hiểm">
+                    <DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} />
+                  </Field>
+                </>
+              )}
             </div>
             <Field label="Ghi chú">
               <input name="note" placeholder="Ghi chú" className={inputCls} />

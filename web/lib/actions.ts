@@ -51,6 +51,7 @@ export async function saveVehicle(fd: FormData): Promise<void> {
     seats: Number(s(fd, "seats")) || null,
     status: s(fd, "status") || "active",
     type: s(fd, "type") || "own",
+    phone: optStr(fd, "phone"),
     inspectionDue: optStr(fd, "inspectionDue"),
     insuranceDue: optStr(fd, "insuranceDue"),
     note: s(fd, "note"),

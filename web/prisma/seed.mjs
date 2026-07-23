@@ -27,6 +27,7 @@ function vehicleRow(v) {
     seats: v.seats ?? null,
     status: v.status ?? "active",
     type: v.type ?? "own",
+    phone: v.phone ?? v.zalo ?? null,
     inspectionDue: v.inspectionDue ?? null,
     insuranceDue: v.insuranceDue ?? null,
     note: v.note ?? null,

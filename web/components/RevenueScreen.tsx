@@ -25,19 +25,31 @@ function Stat({
   value,
   hint,
   tone = "neutral",
+  onClick,
 }: {
   label: string;
   value: string;
   hint?: string;
   tone?: keyof typeof STAT_TONE;
+  onClick?: () => void;
 }) {
   const t = STAT_TONE[tone];
-  return (
-    <div className={`rounded-xl border p-4 shadow-sm ${t.box}`}>
+  const content = (
+    <>
       <div className="text-xs font-medium text-slate-500">{label}</div>
       <div className={`mt-1 text-xl font-bold ${t.text}`}>{value}</div>
       {hint && <div className="mt-0.5 text-xs text-slate-400">{hint}</div>}
-    </div>
+    </>
+  );
+  const className = `w-full rounded-xl border p-4 text-left shadow-sm ${t.box} ${
+    onClick ? "cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md" : ""
+  }`;
+  return onClick ? (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
+    </button>
+  ) : (
+    <div className={className}>{content}</div>
   );
 }
 
@@ -59,6 +71,7 @@ export default function RevenueScreen({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [detail, setDetail] = useState<Trip | null>(null);
+  const [costDetailOpen, setCostDetailOpen] = useState(false);
   const [statusChange, setStatusChange] = useState<{ trip: Trip; next: string } | null>(null);
   const [monthKey, setMonthKey] = useState(defaultMonthKey);
 
@@ -144,19 +157,21 @@ export default function RevenueScreen({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <Stat label="Doanh thu ghi nhận" value={fmtMoney(summary.recognized)} />
-        <Stat label="Chi phí khác" value={fmtMoney(summary.cost)} />
-        <Stat label="Tiền dầu tháng" value={fmtMoney(fuelTotal)} />
-        <Stat label="Chi phí lương (tháng này)" value={fmtMoney(salaryCost)} />
-        <Stat label="Tổng chi phí tháng" value={fmtMoney(totalCost)} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Stat label="Doanh thu" value={fmtMoney(summary.recognized)} />
+        <Stat label="Đã thanh toán" value={fmtMoney(paidTotal)} />
+        <Stat
+          label="Tổng chi phí tháng"
+          value={fmtMoney(totalCost)}
+          hint="Bấm để xem chi tiết"
+          onClick={() => setCostDetailOpen(true)}
+        />
+        <Stat label="Còn phải thu" value={fmtMoney(summary.outstanding)} tone="amber" />
         <Stat
           label="Lợi nhuận"
           value={fmtMoney(profit)}
           tone={profit >= 0 ? "emerald" : "rose"}
         />
-        <Stat label="Đã thanh toán" value={fmtMoney(paidTotal)} />
-        <Stat label="Còn phải thu" value={fmtMoney(summary.outstanding)} tone="amber" />
         <Stat label="Số chuyến" value={String(summary.count)} hint={noPriceCount > 0 ? `${noPriceCount} chuyến chưa có giá` : undefined} />
       </div>
 
@@ -290,6 +305,29 @@ export default function RevenueScreen({
           </div>
         </Modal>
       )}
+
+      {costDetailOpen && (
+        <Modal title="Chi tiết tổng chi phí tháng" onClose={() => setCostDetailOpen(false)} maxWidthClass="max-w-md">
+          <div className="space-y-3">
+            <CostLine label="Chi phí khác" value={summary.cost} />
+            <CostLine label="Tiền dầu" value={fuelTotal} />
+            <CostLine label="Chi phí lương" value={salaryCost} />
+            <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-base font-bold text-slate-900">
+              <span>Tổng chi phí tháng</span>
+              <span>{fmtMoney(totalCost)}</span>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function CostLine({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
+      <span className="text-slate-600">{label}</span>
+      <span className="font-semibold text-slate-800">{fmtMoney(value)}</span>
     </div>
   );
 }

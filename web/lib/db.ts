@@ -34,6 +34,7 @@ function toVehicle(r: VehicleRow): Vehicle {
     seats: r.seats,
     status: r.status,
     type: r.type,
+    phone: r.phone,
     inspectionDue: r.inspectionDue,
     insuranceDue: r.insuranceDue,
     note: r.note ?? "",
@@ -243,8 +244,10 @@ function toPartnerPayout(r: PartnerPayoutRow): PartnerPayout {
   };
 }
 
-export async function getSalaryMonths(monthKey: string): Promise<SalaryMonth[]> {
-  const rows = await prisma.salaryMonth.findMany({ where: { monthKey } });
+export async function getSalaryMonths(monthKey?: string): Promise<SalaryMonth[]> {
+  const rows = await prisma.salaryMonth.findMany({
+    where: monthKey ? { monthKey } : undefined,
+  });
   return rows.map(toSalaryMonth);
 }
 

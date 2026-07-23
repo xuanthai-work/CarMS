@@ -14,12 +14,18 @@ export default async function DoanhThuPage() {
     getTrips(),
     getFuelMonthMap(),
     getOfficeStaff(),
-    getSalaryMonths(defaultMonthKey),
-    getPartnerPayouts(defaultMonthKey),
+    getSalaryMonths(),
+    getPartnerPayouts(),
   ]);
 
-  const rows = buildSalaryRows(salariedPeople(office, drivers), months);
-  const salaryCostDefaultMonth = salaryCostForMonth(rows, payouts, defaultMonthKey);
+  const people = salariedPeople(office, drivers);
+  const salaryMonths = new Set([defaultMonthKey, ...months.map((month) => month.monthKey), ...payouts.map((payout) => payout.workDate.slice(0, 7))]);
+  const salaryCostByMonth = Object.fromEntries(
+    Array.from(salaryMonths, (monthKey) => {
+      const rows = buildSalaryRows(people, months.filter((month) => month.monthKey === monthKey));
+      return [monthKey, salaryCostForMonth(rows, payouts, monthKey)];
+    })
+  );
 
   return (
     <RevenueScreen
@@ -28,7 +34,7 @@ export default async function DoanhThuPage() {
       drivers={drivers}
       defaultMonthKey={defaultMonthKey}
       fuelTotalsByMonth={Object.fromEntries(fuelMonthMap)}
-      salaryCostByMonth={{ [defaultMonthKey]: salaryCostDefaultMonth }}
+      salaryCostByMonth={salaryCostByMonth}
     />
   );
 }
