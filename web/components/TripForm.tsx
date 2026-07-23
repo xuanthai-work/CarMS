@@ -170,7 +170,7 @@ export default function TripForm({
             <Field label="Tiền chuyến">
               <MoneyInput name="price" defaultValue={trip?.price ?? null} placeholder="VD: 5.000.000" />
             </Field>
-            <Field label="Đặt cọc">
+            <Field label="Đã cọc">
               <MoneyInput name="deposit" defaultValue={trip?.deposit ?? null} placeholder="0" />
             </Field>
           </div>
