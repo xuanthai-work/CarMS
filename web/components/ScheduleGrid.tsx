@@ -166,7 +166,7 @@ export default function ScheduleGrid({
           - vùng đủ rộng (≥ ngưỡng ở globals.css): 1 dòng — Trạng thái · Viền · (điều khiển dồn phải)
           - vùng hẹp:                              2 dòng — Trạng thái + điều khiển; "Viền" xuống hàng dưới */}
       <div className="[container-type:inline-size]">
-        <div className="sched-toolbar flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-hairline bg-surface p-2 text-xs text-slate-500 shadow-card">
+        <div className="sched-toolbar flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border border-hairline bg-surface px-2.5 py-1.5 text-xs text-slate-500 shadow-card">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <span className="font-semibold text-ink">Trạng thái:</span>
             {TRIP_STATUSES.map((s) => (
@@ -227,7 +227,7 @@ export default function ScheduleGrid({
 
       {view === "tour" && (
         <DragScroll
-          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-hairline bg-surface shadow-panel"
+          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-hairline bg-surface shadow-panel [touch-action:pan-x_pan-y]"
           initialLeft={todayScrollLeft}
         >
           <div className="min-h-full" style={{ width: trackWidth }}>

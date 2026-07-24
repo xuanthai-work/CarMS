@@ -166,7 +166,7 @@ export default function TripForm({
           <Field label="SĐT khách">
             <input name="customerPhone" defaultValue={trip?.customerPhone ?? ""} placeholder="VD: 0987xxxxxx" className={inputCls} />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Tiền chuyến">
               <MoneyInput name="price" defaultValue={trip?.price ?? null} placeholder="VD: 5.000.000" />
             </Field>

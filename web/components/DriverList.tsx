@@ -22,21 +22,25 @@ export default function DriverList({ drivers, query }: { drivers: Driver[]; quer
           Không tìm thấy lái xe khớp “{query}”.
         </div>
       ) : (
-        <div className="grid items-start gap-x-6 gap-y-4 lg:grid-cols-2">
-          <GroupColumn
-            title="Của công ty"
-            emoji="🏢"
-            items={own}
-            empty="Không có lái xe của công ty."
-            renderItem={(d) => <DriverCard key={d.id} driver={d} />}
-          />
-          <GroupColumn
-            title="Cộng tác / thuê ngoài"
-            emoji="🤝"
-            items={partner}
-            empty="Không có lái xe cộng tác ngoài."
-            renderItem={(d) => <DriverCard key={d.id} driver={d} />}
-          />
+        <div className="grid grid-cols-1 items-start gap-x-6 gap-y-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <GroupColumn
+              title="Của công ty"
+              emoji="🏢"
+              items={own}
+              empty="Không có lái xe của công ty."
+              renderItem={(d) => <DriverCard key={d.id} driver={d} />}
+            />
+          </div>
+          <div className="min-w-0">
+            <GroupColumn
+              title="Cộng tác / thuê ngoài"
+              emoji="🤝"
+              items={partner}
+              empty="Không có lái xe cộng tác ngoài."
+              renderItem={(d) => <DriverCard key={d.id} driver={d} />}
+            />
+          </div>
         </div>
       )}
     </div>

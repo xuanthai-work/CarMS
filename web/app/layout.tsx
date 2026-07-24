@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -12,6 +12,15 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "CarMS — Quản lý xe cho thuê",
   description: "Hệ thống điều xe & quản lý cho thuê xe (prototype)",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "CarMS" },
+  icons: { apple: "/apple-touch-icon.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+  viewportFit: "cover",
+  // KHÔNG đặt maximumScale/ userScalable=false — giữ accessibility (cho phép zoom).
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

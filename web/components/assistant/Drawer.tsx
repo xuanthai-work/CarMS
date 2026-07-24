@@ -173,7 +173,7 @@ export default function Drawer() {
               animate={{ width: PANEL_W, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ type: "tween", duration: reduceMotion ? 0 : 0.22, ease: EASE.out }}
-              className="sticky top-3 my-3 h-[calc(100vh-1.5rem)] shrink-0 overflow-hidden"
+              className="sticky top-3 my-3 h-[calc(100dvh-1.5rem)] shrink-0 overflow-hidden"
             >
               <div
                 className="flex h-full flex-col overflow-hidden rounded-2xl border border-hairline bg-surface shadow-panel"

@@ -22,17 +22,19 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const assistantEnabled = Boolean(process.env.GEMINI_API_KEY);
 
   // Trạng thái thu gọn Sidebar đọc từ cookie → render đúng ngay ở server, không giật khi tải lại.
-  const sidebarCollapsed = (await cookies()).get("sidebar_collapsed")?.value === "1";
+  // null = chưa chọn (để client quyết theo bề rộng); "1"/"0" = lựa chọn tường minh của người dùng.
+  const rawCollapsed = (await cookies()).get("sidebar_collapsed")?.value;
+  const collapsedCookie: "1" | "0" | null = rawCollapsed === "1" ? "1" : rawCollapsed === "0" ? "0" : null;
 
   return (
     <AssistantProvider>
-      <div className="flex min-h-screen bg-canvas text-ink">
+      <div className="flex min-h-[100dvh] bg-canvas text-ink">
         <RealtimeRefresh />
         <Sidebar
           isManager={isManager(staff.position)}
           name={staff.name}
           position={staff.position}
-          defaultCollapsed={sidebarCollapsed}
+          collapsedCookie={collapsedCookie}
         />
         <main className="min-w-0 flex-1 px-1 py-6">
           <div className="mx-auto w-full max-w-[1680px]">{children}</div>

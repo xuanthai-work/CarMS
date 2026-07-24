@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { logout } from "@/app/login/actions";
 
@@ -95,20 +95,26 @@ export default function Sidebar({
   isManager,
   name,
   position,
-  defaultCollapsed = false,
+  collapsedCookie = null,
 }: {
   isManager: boolean;
   name: string;
   position: string;
-  /** Trạng thái thu gọn ban đầu — layout đọc từ cookie để render đúng ngay từ server (không giật). */
-  defaultCollapsed?: boolean;
+  /** "1"/"0" = người dùng đã chọn tường minh (server đọc cookie); null = chưa chọn → client quyết theo bề rộng. */
+  collapsedCookie?: "1" | "0" | null;
 }) {
   const pathname = usePathname();
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   const links = LINKS.filter((l) => !l.managerOnly || isManager);
   const initial = (name.trim()[0] ?? "?").toUpperCase();
   const reduceMotion = useReducedMotion();
-  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  // SSR không biết viewport: render theo cookie nếu có, else mở rộng (desktop-default) rồi effect chỉnh.
+  const [collapsed, setCollapsed] = useState(collapsedCookie === "1");
+  // Chưa có cookie → mặc định theo thiết bị: < 1280px (iPad) thu gọn, >= 1280 mở rộng. Cookie có thì tôn trọng.
+  useEffect(() => {
+    if (collapsedCookie !== null) return;
+    setCollapsed(window.matchMedia("(max-width: 1279.98px)").matches);
+  }, [collapsedCookie]);
   // Bố cục 1 hàng dùng chung cho nav-link + nút đăng xuất (icon căn giữa khi thu gọn).
   const rowLayout = collapsed ? "justify-center px-0" : "gap-3 px-3";
 
@@ -123,7 +129,7 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`sticky top-3 m-3 flex h-[calc(100vh-1.5rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-sidebar text-slate-300 shadow-[0_8px_28px_-6px_rgba(15,23,42,0.35)] transition-[width] duration-200 ease-out ${
+      className={`sticky top-3 m-3 flex h-[calc(100dvh-1.5rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-sidebar text-slate-300 shadow-[0_8px_28px_-6px_rgba(15,23,42,0.35)] transition-[width] duration-200 ease-out ${
         collapsed ? "w-16" : "w-60"
       }`}
     >

@@ -167,7 +167,7 @@ export default function VehicleSchedule({
         </div>
       ) : (
         <DragScroll
-          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-hairline bg-surface shadow-panel"
+          className="no-scrollbar min-h-0 flex-1 overflow-auto rounded-2xl border border-hairline bg-surface shadow-panel [touch-action:pan-x_pan-y]"
           initialLeft={initialLeft}
           initialTop={initialTop}
         >

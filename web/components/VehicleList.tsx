@@ -31,21 +31,25 @@ export default function VehicleList({ vehicles }: { vehicles: Vehicle[] }) {
           Không tìm thấy xe khớp “{q}”.
         </div>
       ) : (
-        <div className="grid items-start gap-x-6 gap-y-4 lg:grid-cols-2">
-          <GroupColumn
-            title="Của công ty"
-            emoji="🏢"
-            items={own}
-            empty="Không có xe của công ty."
-            renderItem={(v) => <VehicleCard key={v.id} vehicle={v} />}
-          />
-          <GroupColumn
-            title="Cộng tác / thuê ngoài"
-            emoji="🤝"
-            items={partner}
-            empty="Không có xe cộng tác ngoài."
-            renderItem={(v) => <VehicleCard key={v.id} vehicle={v} />}
-          />
+        <div className="grid grid-cols-1 items-start gap-x-6 gap-y-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <GroupColumn
+              title="Của công ty"
+              emoji="🏢"
+              items={own}
+              empty="Không có xe của công ty."
+              renderItem={(v) => <VehicleCard key={v.id} vehicle={v} />}
+            />
+          </div>
+          <div className="min-w-0">
+            <GroupColumn
+              title="Cộng tác / thuê ngoài"
+              emoji="🤝"
+              items={partner}
+              empty="Không có xe cộng tác ngoài."
+              renderItem={(v) => <VehicleCard key={v.id} vehicle={v} />}
+            />
+          </div>
         </div>
       )}
     </div>

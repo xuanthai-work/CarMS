@@ -31,8 +31,8 @@ export default function RightRail() {
 
   return (
     // Wrapper cao full màn + items-center để canh rail (cao 90%) giữa theo chiều dọc; vẫn sticky.
-    <div className="sticky top-3 m-3 flex h-[calc(100vh-1.5rem)] shrink-0 items-center">
-      <aside className="flex h-[calc((100vh-1.5rem)*0.9)] w-14 flex-col items-center gap-2 rounded-2xl bg-sidebar py-3 text-slate-300 shadow-[0_8px_28px_-6px_rgba(15,23,42,0.35)]">
+    <div className="sticky top-3 m-3 flex h-[calc(100dvh-1.5rem)] shrink-0 items-center">
+      <aside className="flex h-[calc((100dvh-1.5rem)*0.9)] w-14 flex-col items-center gap-2 rounded-2xl bg-sidebar py-3 text-slate-300 shadow-[0_8px_28px_-6px_rgba(15,23,42,0.35)]">
       {extensions.map((ext) => {
         const Icon = ext.icon;
         return (

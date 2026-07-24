@@ -187,7 +187,8 @@ export default function RevenueScreen({
               trong tháng này.
             </div>
           ) : (
-            <table className="w-full table-fixed text-sm">
+            <div className="overflow-x-auto thin-scroll">
+            <table className="w-full min-w-[900px] table-fixed text-sm">
             <colgroup>
               <col style={{ width: "24%" }} />
               <col style={{ width: "10%" }} />
@@ -200,7 +201,7 @@ export default function RevenueScreen({
             </colgroup>
             <thead className="bg-canvas/70">
               <tr className="border-b border-hairline text-left text-xs font-semibold text-muted">
-                <th className="px-3 py-2.5">Khách</th>
+                <th className="sticky left-0 z-10 bg-canvas px-3 py-2.5">Khách</th>
                 <th className="px-3 py-2.5">Ngày đi</th>
                 <th className="px-3 py-2.5">Loại</th>
                 <th className="px-3 py-2.5 text-right">Giá</th>
@@ -215,9 +216,9 @@ export default function RevenueScreen({
                 <tr
                   key={trip.id}
                   onClick={() => setDetail(trip)}
-                  className="cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
+                  className="group cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
                 >
-                  <td className="px-3 py-2.5">
+                  <td className="sticky left-0 z-10 bg-surface px-3 py-2.5 group-hover:bg-canvas/60">
                     <div className="font-semibold text-ink">{trip.customerName}</div>
                     {trip.customerPhone && (
                       <div className="text-xs text-muted">{trip.customerPhone}</div>
@@ -254,6 +255,7 @@ export default function RevenueScreen({
               ))}
             </tbody>
             </table>
+            </div>
           )}
       </div>
 

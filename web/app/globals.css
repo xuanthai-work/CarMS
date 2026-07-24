@@ -86,3 +86,23 @@ body::-webkit-scrollbar {
     flex-basis: auto;
   }
 }
+
+/* ---- Nền cảm ứng / iOS Safari ---- */
+/* Bỏ nháy xám khi chạm; bỏ delay/double-tap-zoom cho phần tử bấm được. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a,
+[role="button"],
+label {
+  touch-action: manipulation;
+}
+/* Chống iOS tự phóng to khi focus input < 16px — chỉ áp trên thiết bị cảm ứng (giữ 14px trên desktop). */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}

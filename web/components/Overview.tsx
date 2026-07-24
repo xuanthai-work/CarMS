@@ -83,7 +83,7 @@ export default function Overview({
       </div>
 
       {/* KPI vận hành */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatTile
           label="Chuyến trong tháng"
           value={String(monthTrips.length)}

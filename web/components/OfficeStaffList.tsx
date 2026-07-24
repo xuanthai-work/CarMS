@@ -21,9 +21,11 @@ export default function OfficeStaffList({ staff, query }: { staff: OfficeStaff[]
           Không tìm thấy nhân sự khớp "{query}".
         </div>
       ) : (
-        <div className="grid items-start gap-x-6 gap-y-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-x-6 gap-y-4 sm:grid-cols-2">
           {filtered.map((p) => (
-            <OfficeStaffCard key={p.id} staff={p} />
+            <div key={p.id} className="min-w-0">
+              <OfficeStaffCard staff={p} />
+            </div>
           ))}
         </div>
       )}
