@@ -1,40 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { FileUIPart, SourceDocumentUIPart, SourceUrlUIPart, UIMessage } from "ai";
+import { DURATION, EASE } from "@/lib/motion";
+import { FileGlyph, LinkGlyph } from "@/components/assistant/icons";
 
 type ContentPart = UIMessage["parts"][number];
 type GroundingSourcePart = SourceUrlUIPart | SourceDocumentUIPart;
-
-/* ---- Icon set 2 nét, kế thừa currentColor — cùng vibe icon Sidebar ---- */
-const ICON = {
-  viewBox: "0 0 24 24",
-  fill: "none" as const,
-  stroke: "currentColor",
-  strokeWidth: 1.8,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-function FileGlyph({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <path d="M7 3.5h6.4L18 8.1V19.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
-      <path d="M13.2 3.5V8.1H18" />
-    </svg>
-  );
-}
-function LinkGlyph({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <path d="M10 6.5H7A2 2 0 0 0 5 8.5v8A2 2 0 0 0 7 18.5h8a2 2 0 0 0 2-2v-3" />
-      <path d="M13 5.5h5.5V11" />
-      <path d="M18.3 5.7 10.8 13.2" />
-    </svg>
-  );
-}
 
 /* ---- Markdown: không có @tailwindcss/typography → style tay từng thẻ ---- */
 const markdownComponents: Components = {
@@ -217,6 +192,40 @@ function TypingIndicator({ reduceMotion }: { reduceMotion: boolean | null }) {
   );
 }
 
+/** Một dòng hội thoại. memo theo tham chiếu `message`: khi stream token mới, các tin đã xong
+ *  (giữ nguyên tham chiếu) không render/parse markdown lại — chỉ tin đang stream mới render lại. */
+const MessageRow = memo(function MessageRow({
+  message,
+  reduceMotion,
+}: {
+  message: UIMessage;
+  reduceMotion: boolean | null;
+}) {
+  const isUser = message.role === "user";
+  const sources = collectSources(message.parts);
+  // Người dùng: bong bóng canh phải. Trợ lý: trải full-width, không bong bóng (kiểu chat hiện đại).
+  const motionProps = {
+    initial: reduceMotion ? false : { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: reduceMotion ? 0 : DURATION.enter, ease: EASE.out },
+  };
+  if (isUser) {
+    return (
+      <motion.div {...motionProps} className="flex justify-end">
+        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-dispatch-600 px-3.5 py-2.5 text-sm text-white sm:max-w-[80%]">
+          <div className="space-y-1.5">{message.parts.map((part, i) => renderContentPart(part, i, true))}</div>
+        </div>
+      </motion.div>
+    );
+  }
+  return (
+    <motion.div {...motionProps} className="w-full text-sm text-ink">
+      <div className="space-y-1.5">{message.parts.map((part, i) => renderContentPart(part, i, false))}</div>
+      {sources.length > 0 && <SourceList sources={sources} />}
+    </motion.div>
+  );
+});
+
 export default function Messages({ messages, status }: { messages: UIMessage[]; status: string }) {
   const reduceMotion = useReducedMotion();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -246,38 +255,7 @@ export default function Messages({ messages, status }: { messages: UIMessage[]; 
           </div>
         </div>
       ) : (
-        messages.map((m) => {
-          const isUser = m.role === "user";
-          const sources = collectSources(m.parts);
-          // Người dùng: bong bóng canh phải. Trợ lý: trải full-width, không bong bóng (kiểu chat hiện đại).
-          if (isUser) {
-            return (
-              <motion.div
-                key={m.id}
-                initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
-                className="flex justify-end"
-              >
-                <div className="max-w-[85%] rounded-2xl rounded-br-md bg-dispatch-600 px-3.5 py-2.5 text-sm text-white sm:max-w-[80%]">
-                  <div className="space-y-1.5">{m.parts.map((part, i) => renderContentPart(part, i, true))}</div>
-                </div>
-              </motion.div>
-            );
-          }
-          return (
-            <motion.div
-              key={m.id}
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
-              className="w-full text-sm text-ink"
-            >
-              <div className="space-y-1.5">{m.parts.map((part, i) => renderContentPart(part, i, false))}</div>
-              {sources.length > 0 && <SourceList sources={sources} />}
-            </motion.div>
-          );
-        })
+        messages.map((m) => <MessageRow key={m.id} message={m} reduceMotion={reduceMotion} />)
       )}
       {showTypingIndicator && <TypingIndicator reduceMotion={reduceMotion} />}
       <div ref={bottomRef} />

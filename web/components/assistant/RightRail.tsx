@@ -2,26 +2,7 @@
 
 import type { ComponentType } from "react";
 import { useAssistant } from "@/components/assistant/AssistantProvider";
-
-/* ---- Icon 2 nét, kế thừa currentColor — cùng vibe icon Sidebar/Composer ---- */
-type IconProps = { className?: string };
-const ICON = {
-  viewBox: "0 0 24 24",
-  fill: "none" as const,
-  stroke: "currentColor",
-  strokeWidth: 1.8,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-function ChatBubbleIcon({ className }: IconProps) {
-  return (
-    <svg {...ICON} className={className}>
-      <rect x="3.5" y="5" width="17" height="11.5" rx="3" />
-      <path d="M8 16.5v3l3.6-3" />
-      <path d="M7.8 9.3h8.4M7.8 12.3h5.6" />
-    </svg>
-  );
-}
+import { ChatBubbleIcon, type IconProps } from "@/components/assistant/icons";
 
 /**
  * Danh sách "extension" gắn trên rail — hiện chỉ có Trợ lý AI, nhưng khai báo dạng mảng

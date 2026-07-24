@@ -10,48 +10,7 @@ import { EASE } from "@/lib/motion";
 import Messages from "@/components/assistant/Messages";
 import Composer from "@/components/assistant/Composer";
 import InstructionsDialog from "@/components/assistant/InstructionsDialog";
-
-/* ---- Icon 2 nét, kế thừa currentColor — cùng vibe icon Sidebar/Composer ---- */
-const ICON = {
-  viewBox: "0 0 24 24",
-  fill: "none" as const,
-  stroke: "currentColor",
-  strokeWidth: 1.8,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <path d="M12 5.5v13M5.5 12h13" />
-    </svg>
-  );
-}
-function GearIcon({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M17.6 6.4l-1.5 1.5M7.9 16.1l-1.5 1.5M17.6 17.6l-1.5-1.5M7.9 7.9 6.4 6.4" />
-    </svg>
-  );
-}
-function CloseIcon({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <path d="M6 6l12 12M18 6 6 18" />
-    </svg>
-  );
-}
-/* Cùng hình tam giác cảnh báo với InstructionsDialog — giữ nhất quán vibe icon lỗi/cảnh báo. */
-function WarningGlyph({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <path d="M12 3.5 21 19.5H3L12 3.5Z" />
-      <path d="M12 9.5v4.2" />
-      <path d="M12 16.6v.1" />
-    </svg>
-  );
-}
+import { PlusIcon, GearIcon, CloseIcon, WarningGlyph } from "@/components/assistant/icons";
 
 /** Thông điệp lỗi thân thiện — không lộ chi tiết kỹ thuật/hạn mức ra người dùng. */
 const CHAT_ERROR_MESSAGE = "Đã có lỗi khi kết nối trợ lý. Thử lại?";
@@ -202,10 +161,11 @@ export default function Drawer() {
     </>
   );
 
-  if (isDesktop) {
-    // DOCKED: flex child trong luồng, chiếm chỗ đẩy <main> — không có lớp phủ (scrim).
-    return (
-      <>
+  // Docked (≥1280px): flex child đẩy <main>, không scrim. Hẹp hơn: overlay trượt phải + scrim.
+  // Dialog chỉ dẫn render 1 lần ngoài nhánh (không lặp ở cả hai).
+  return (
+    <>
+      {isDesktop ? (
         <AnimatePresence>
           {open && (
             <motion.aside
@@ -224,40 +184,34 @@ export default function Drawer() {
             </motion.aside>
           )}
         </AnimatePresence>
-        {settingsOpen && <InstructionsDialog onClose={() => setSettingsOpen(false)} />}
-      </>
-    );
-  }
-
-  // MOBILE/NARROW: overlay trượt từ phải + lớp phủ (đóng khi bấm ra ngoài/Esc, như trước).
-  return (
-    <>
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.16, ease: EASE.out }}
-              className="fixed inset-0 z-40 bg-slate-900/30"
-              onClick={() => setOpen(false)}
-            />
-            <motion.aside
-              role="dialog"
-              aria-modal="true"
-              aria-label="Trợ lý AI"
-              initial={reduceMotion ? false : { x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "tween", duration: reduceMotion ? 0 : 0.22, ease: EASE.out }}
-              className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-hairline bg-surface shadow-panel"
-            >
-              {panel}
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+      ) : (
+        <AnimatePresence>
+          {open && (
+            <>
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.16, ease: EASE.out }}
+                className="fixed inset-0 z-40 bg-slate-900/30"
+                onClick={() => setOpen(false)}
+              />
+              <motion.aside
+                role="dialog"
+                aria-modal="true"
+                aria-label="Trợ lý AI"
+                initial={reduceMotion ? false : { x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "tween", duration: reduceMotion ? 0 : 0.22, ease: EASE.out }}
+                className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-hairline bg-surface shadow-panel"
+              >
+                {panel}
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+      )}
       {settingsOpen && <InstructionsDialog onClose={() => setSettingsOpen(false)} />}
     </>
   );

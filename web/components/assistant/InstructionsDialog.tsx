@@ -4,25 +4,7 @@ import { useState } from "react";
 import Modal from "@/components/Modal";
 import { useAssistant } from "@/components/assistant/AssistantProvider";
 import { CancelButton } from "@/components/ui";
-
-/* ---- Icon 2 nét, kế thừa currentColor — cùng vibe icon Sidebar/Messages/Composer ---- */
-function WarningGlyph({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M12 3.5 21 19.5H3L12 3.5Z" />
-      <path d="M12 9.5v4.2" />
-      <path d="M12 16.6v.1" />
-    </svg>
-  );
-}
+import { WarningGlyph } from "@/components/assistant/icons";
 
 export default function InstructionsDialog({ onClose }: { onClose: () => void }) {
   const { instructions, setInstructions } = useAssistant();

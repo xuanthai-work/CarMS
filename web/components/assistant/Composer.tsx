@@ -3,49 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import FilterTabs from "@/components/FilterTabs";
 import ModelPicker from "@/components/assistant/ModelPicker";
+import { PlusIcon, ArrowUpIcon, CloseIcon, StopIcon } from "@/components/assistant/icons";
 
 /** Ảnh đính kèm vượt quá dung lượng này sẽ bị chặn kèm cảnh báo.
  *  3MB → base64 ~4MB, vẫn dưới hạn mức request-body ~4.5MB của Vercel serverless
  *  (route chạy runtime "nodejs"), còn dư khoảng trống cho các phần khác của payload. */
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
-
-/* ---- Icon set 2 nét, kế thừa currentColor — cùng vibe icon Sidebar/Messages ---- */
-const ICON = {
-  viewBox: "0 0 24 24",
-  fill: "none" as const,
-  stroke: "currentColor",
-  strokeWidth: 1.8,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <path d="M12 5.5v13M5.5 12h13" />
-    </svg>
-  );
-}
-function ArrowUpIcon({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <path d="M12 19V5M6 11l6-6 6 6" />
-    </svg>
-  );
-}
-function CloseIcon({ className }: { className?: string }) {
-  return (
-    <svg {...ICON} className={className}>
-      <path d="M6 6l12 12M18 6 6 18" />
-    </svg>
-  );
-}
-function StopIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className}>
-      <rect x="6.5" y="6.5" width="11" height="11" rx="2.5" fill="currentColor" />
-    </svg>
-  );
-}
 
 /** Ảnh đã chọn: giữ kèm object URL để hiện thumbnail, revoke khi không còn dùng nữa. */
 type Attachment = { id: string; file: File; url: string };

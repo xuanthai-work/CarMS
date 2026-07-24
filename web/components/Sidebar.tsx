@@ -109,6 +109,8 @@ export default function Sidebar({
   const initial = (name.trim()[0] ?? "?").toUpperCase();
   const reduceMotion = useReducedMotion();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
+  // Bố cục 1 hàng dùng chung cho nav-link + nút đăng xuất (icon căn giữa khi thu gọn).
+  const rowLayout = collapsed ? "justify-center px-0" : "gap-3 px-3";
 
   function toggleCollapsed() {
     setCollapsed((c) => {
@@ -159,9 +161,7 @@ export default function Sidebar({
                 href={l.href}
                 aria-current={active ? "page" : undefined}
                 title={collapsed ? l.label : undefined}
-                className={`relative flex items-center rounded-xl py-2.5 text-sm font-medium transition-all duration-150 active:scale-[0.99] ${
-                  collapsed ? "justify-center px-0" : "gap-3 px-3"
-                } ${active ? "text-white" : "text-slate-400 hover:bg-white/[0.06] hover:text-white"}`}
+                className={`relative flex items-center rounded-xl py-2.5 text-sm font-medium transition-all duration-150 active:scale-[0.99] ${rowLayout} ${active ? "text-white" : "text-slate-400 hover:bg-white/[0.06] hover:text-white"}`}
               >
                 {active && (
                   <motion.span
@@ -201,9 +201,7 @@ export default function Sidebar({
           <button
             type="submit"
             title={collapsed ? "Đăng xuất" : undefined}
-            className={`flex w-full items-center rounded-xl py-2.5 text-sm font-medium text-slate-400 transition-all duration-150 hover:bg-white/[0.06] hover:text-rose-300 active:scale-[0.99] ${
-              collapsed ? "justify-center px-0" : "gap-3 px-3"
-            }`}
+            className={`flex w-full items-center rounded-xl py-2.5 text-sm font-medium text-slate-400 transition-all duration-150 hover:bg-white/[0.06] hover:text-rose-300 active:scale-[0.99] ${rowLayout}`}
           >
             <LogoutIcon className="h-5 w-5 shrink-0" />
             {!collapsed && "Đăng xuất"}
