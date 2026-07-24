@@ -10,9 +10,14 @@ import { Field, Info, inputCls, CancelButton, SaveButton } from "@/components/ui
 import SelectMenu from "@/components/SelectMenu";
 import DatePicker from "@/components/DatePicker";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import Modal from "@/components/Modal";
 import { fmtDate } from "@/lib/format";
 import { useFormState } from "@/lib/useFormState";
 import type { Vehicle } from "@/lib/types";
+
+function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
+}
 
 const STATUS_TONE: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700",
@@ -21,7 +26,6 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
-  // Các trường qua component tự làm (dropdown / lịch) cần state; input thường vẫn để uncontrolled.
   const initialForm = () => ({
     seats: v.seats ? String(v.seats) : "16",
     status: v.status || "active",
@@ -30,6 +34,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     insuranceDue: v.insuranceDue ?? "",
   });
   const [editing, setEditing] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const reduceMotion = useReducedMotion();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
@@ -37,106 +42,107 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
   async function handleSave(fd: FormData) {
     await saveVehicle(fd);
     setEditing(false);
+    setDetailOpen(false);
   }
-  function cancel() {
+
+  function closeModal() {
     formRef.current?.reset();
     reset();
     setEditing(false);
+    setDetailOpen(false);
   }
 
-  // ---------- CHẾ ĐỘ XEM ----------
-  if (!editing) {
-    return (
-      <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-card">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-lg font-bold tracking-tight text-ink">{v.plate}</span>
-            <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
-              {seatLabel(v.seats)}
-            </span>
-            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_TONE[v.status] ?? STATUS_TONE.inactive}`}>
-              {statusLabel(v.status)}
-            </span>
-            <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-muted">
-              {ownerLabel(v.type)}
-            </span>
-          </div>
+  function onCardKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setDetailOpen(true);
+    }
+  }
 
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            aria-label="Chỉnh sửa"
-            title="Chỉnh sửa"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
-          >
-            <PencilSimple size={18} weight="regular" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-          {v.type === "partner" ? (
-            <Info label="SĐT / Zalo" value={v.phone || "—"} />
+  const editForm = (
+    <>
+      <form id={`veh-${v.id}`} ref={formRef} action={handleSave}>
+        <input type="hidden" name="id" value={v.id} />
+        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
+          <DetailCell><Field label="Biển số"><input name="plate" defaultValue={v.plate} className={inputCls} /></Field></DetailCell>
+          <DetailCell><Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field></DetailCell>
+          <DetailCell><Field label="Trạng thái"><SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} /></Field></DetailCell>
+          <DetailCell><Field label="Sở hữu"><SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} /></Field></DetailCell>
+          {form.type === "partner" ? (
+            <DetailCell><Field label="SĐT / Zalo"><input name="phone" defaultValue={v.phone ?? ""} placeholder="Số điện thoại / Zalo" className={inputCls} /></Field></DetailCell>
           ) : (
             <>
-              <Info label="Hạn đăng kiểm" value={fmtDate(v.inspectionDue)} />
-              <Info label="Hạn bảo hiểm" value={fmtDate(v.insuranceDue)} />
+              <DetailCell><Field label="Hạn đăng kiểm"><DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} /></Field></DetailCell>
+              <DetailCell><Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field></DetailCell>
             </>
           )}
+          <DetailCell className="sm:col-span-2"><Field label="Ghi chú"><input name="note" defaultValue={v.note} className={inputCls} /></Field></DetailCell>
+        </div>
+      </form>
+      <div className="mt-3 flex items-center justify-between">
+        <ConfirmDeleteButton action={deleteVehicle} id={v.id} label={`xe ${v.plate}`} />
+        <div className="flex gap-2"><CancelButton onClick={closeModal} /><SaveButton form={`veh-${v.id}`} /></div>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setDetailOpen(true)}
+        onKeyDown={onCardKeyDown}
+        className="cursor-pointer rounded-2xl border border-hairline bg-surface p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+        aria-label={`Xem đầy đủ thông tin xe ${v.plate}`}
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className="truncate text-lg font-bold tracking-tight text-ink" title={v.plate}>{v.plate}</span>
+          <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">{seatLabel(v.seats)}</span>
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_TONE[v.status] ?? STATUS_TONE.inactive}`}>{statusLabel(v.status)}</span>
+          <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-muted">{ownerLabel(v.type)}</span>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+          {v.type === "partner" ? <Info label="SĐT / Zalo" value={v.phone || "—"} /> : <>
+            <Info label="Hạn đăng kiểm" value={fmtDate(v.inspectionDue)} />
+            <Info label="Hạn bảo hiểm" value={fmtDate(v.insuranceDue)} />
+          </>}
           <Info label="Ghi chú" value={v.note || "—"} className="col-span-2 sm:col-span-1" />
         </div>
       </div>
-    );
-  }
 
-  // ---------- CHẾ ĐỘ CHỈNH SỬA ----------
-  return (
-    <motion.div
-      {...cardMotion(reduceMotion)}
-      className="rounded-2xl border border-brand-300 bg-surface p-5 ring-1 ring-brand-200"
-    >
-      <form id={`veh-${v.id}`} ref={formRef} action={handleSave}>
-        <input type="hidden" name="id" value={v.id} />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Biển số">
-            <input name="plate" defaultValue={v.plate} className={inputCls} />
-          </Field>
-          <Field label="Loại xe">
-            <SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} />
-          </Field>
-          <Field label="Trạng thái">
-            <SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} />
-          </Field>
-          <Field label="Sở hữu">
-            <SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} />
-          </Field>
-          {form.type === "partner" ? (
-            <Field label="SĐT / Zalo">
-              <input name="phone" defaultValue={v.phone ?? ""} placeholder="Số điện thoại / Zalo" className={inputCls} />
-            </Field>
+      {detailOpen && (
+        <Modal title={editing ? "Chỉnh sửa xe" : "Thông tin xe"} onClose={closeModal} maxWidthClass="max-w-2xl">
+          {editing ? (
+            <motion.div {...cardMotion(reduceMotion)}>{editForm}</motion.div>
           ) : (
             <>
-              <Field label="Hạn đăng kiểm">
-                <DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} />
-              </Field>
-              <Field label="Hạn bảo hiểm">
-                <DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} />
-              </Field>
+              <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
+                <DetailCell><Info label="Biển số" value={v.plate} size="md" /></DetailCell>
+                <DetailCell><Info label="Loại xe" value={seatLabel(v.seats)} size="md" /></DetailCell>
+                <DetailCell><Info label="Trạng thái" value={statusLabel(v.status)} size="md" /></DetailCell>
+                <DetailCell><Info label="Sở hữu" value={ownerLabel(v.type)} size="md" /></DetailCell>
+                {v.type === "partner" ? <DetailCell><Info label="SĐT / Zalo" value={v.phone || "—"} size="md" /></DetailCell> : <>
+                  <DetailCell><Info label="Hạn đăng kiểm" value={fmtDate(v.inspectionDue)} size="md" /></DetailCell>
+                  <DetailCell><Info label="Hạn bảo hiểm" value={fmtDate(v.insuranceDue)} size="md" /></DetailCell>
+                </>}
+                <DetailCell className={v.type === "partner" ? "" : "sm:col-span-2"}><Info label="Ghi chú" value={v.note || "—"} size="md" /></DetailCell>
+              </div>
+              <div className="mt-5 flex justify-end border-t border-hairline pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  aria-label="Chỉnh sửa"
+                  title="Chỉnh sửa"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
+                >
+                  <PencilSimple size={18} weight="regular" aria-hidden="true" />
+                </button>
+              </div>
             </>
           )}
-        </div>
-        <div className="mt-3">
-          <Field label="Ghi chú">
-            <input name="note" defaultValue={v.note} className={inputCls} />
-          </Field>
-        </div>
-      </form>
-
-      <div className="mt-3 flex items-center justify-between">
-        <ConfirmDeleteButton action={deleteVehicle} id={v.id} label={`xe ${v.plate}`} />
-        <div className="flex gap-2">
-          <CancelButton onClick={cancel} />
-          <SaveButton form={`veh-${v.id}`} />
-        </div>
-      </div>
-    </motion.div>
+        </Modal>
+      )}
+    </>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { ArrowUpRight } from "@phosphor-icons/react";
 import type { Trip, Vehicle, Driver } from "@/lib/types";
 import { tripMoney, summarize, revenueMonthKey, monthProfit } from "@/lib/revenue";
 import { fmtMoney, fmtMoneyUnit, tourTypeLabel, tripStatusLabel } from "@/lib/trips";
@@ -38,16 +39,29 @@ function Stat({
   const toneText = STAT_TONE[tone];
   const content = (
     <>
-      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
-      <div className={`mt-2 text-xl font-bold tracking-tight tabular-nums ${toneText}`}>{value}</div>
-      {hint && <div className="mt-1 text-xs text-muted">{hint}</div>}
+      <div className="flex items-start justify-between gap-2">
+        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
+        {onClick && hint && (
+          <ArrowUpRight size={18} weight="bold" className="shrink-0 text-muted" aria-hidden="true" />
+        )}
+      </div>
+      <div className={`mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 ${toneText}`}>
+        <span className="text-2xl font-bold leading-none tracking-tight tabular-nums">{value}</span>
+        {hint && !onClick && <span className="text-xs text-muted">{hint}</span>}
+      </div>
     </>
   );
-  const className = `w-full rounded-2xl border border-hairline bg-surface p-4 text-left shadow-card ${
+  const className = `w-full rounded-2xl border border-hairline bg-surface p-5 text-left shadow-card ${
     onClick ? "cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2" : ""
   }`;
   return onClick ? (
-    <button type="button" onClick={onClick} className={className}>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Xem chi tiết ${label.toLowerCase()}`}
+      title="Xem chi tiết"
+      className={className}
+    >
       {content}
     </button>
   ) : (
@@ -148,7 +162,7 @@ export default function RevenueScreen({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Stat label="Doanh thu" value={fmtMoneyUnit(summary.recognized)} />
         <Stat label="Đã thanh toán" value={fmtMoneyUnit(paidTotal)} />
         <Stat
@@ -190,9 +204,9 @@ export default function RevenueScreen({
             <div className="overflow-x-auto thin-scroll">
             <table className="w-full min-w-[900px] table-fixed text-sm">
             <colgroup>
-              <col style={{ width: "24%" }} />
-              <col style={{ width: "10%" }} />
-              <col style={{ width: "8%" }} />
+              <col style={{ width: "18%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "11%" }} />
               <col style={{ width: "11%" }} />
               <col style={{ width: "12%" }} />
               <col style={{ width: "10%" }} />
@@ -219,7 +233,9 @@ export default function RevenueScreen({
                   className="group cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
                 >
                   <td className="sticky left-0 z-10 bg-surface px-3 py-2.5 group-hover:bg-canvas/60">
-                    <div className="font-semibold text-ink">{trip.customerName}</div>
+                    <div className="truncate font-semibold text-ink" title={trip.customerName}>
+                      {trip.customerName}
+                    </div>
                     {trip.customerPhone && (
                       <div className="text-xs text-muted">{trip.customerPhone}</div>
                     )}

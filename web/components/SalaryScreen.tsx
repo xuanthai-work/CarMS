@@ -38,6 +38,7 @@ export default function SalaryScreen({
 }) {
   const [tab, setTab] = useState<"month" | "partner">("month");
   const [query, setQuery] = useState("");
+  const [addingPartnerPayout, setAddingPartnerPayout] = useState(false);
 
   const totalNet = rows.reduce((s, r) => s + r.net, 0);
   const paidNet = rows.filter((r) => r.paid).reduce((s, r) => s + r.net, 0);
@@ -81,6 +82,15 @@ export default function SalaryScreen({
           ] as const}
         />
         <SearchInput value={query} onChange={setQuery} placeholder="Tìm tên nhân sự, chức vụ..." />
+        {tab === "partner" && (
+          <button
+            type="button"
+            onClick={() => setAddingPartnerPayout(true)}
+            className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
+          >
+            ＋ Thêm phiếu trả công
+          </button>
+        )}
       </Toolbar>
 
       {tab === "month" ? (
@@ -95,7 +105,13 @@ export default function SalaryScreen({
           </SalaryGroup>
         </div>
       ) : (
-        <PartnerPayoutTable payouts={payouts} drivers={drivers} monthKey={monthKey} />
+        <PartnerPayoutTable
+          payouts={payouts}
+          drivers={drivers}
+          monthKey={monthKey}
+          adding={addingPartnerPayout}
+          onAddingChange={setAddingPartnerPayout}
+        />
       )}
     </div>
   );

@@ -9,7 +9,7 @@ export const LICENSE_OPTIONS: { value: string; label: string }[] = [
 
 export const DRIVER_TYPES = [
   { value: "own", label: "Của công ty" },
-  { value: "partner", label: "Cộng tác / thuê ngoài" },
+  { value: "partner", label: "Cộng tác" },
 ] as const;
 
 export function driverTypeLabel(type: string): string {

@@ -9,7 +9,7 @@ export const VEHICLE_STATUS = [
 // Sở hữu xe: của công ty hay cộng tác/thuê ngoài.
 export const OWNER_TYPES = [
   { value: "own", label: "Của công ty" },
-  { value: "partner", label: "Cộng tác / thuê ngoài" },
+  { value: "partner", label: "Cộng tác" },
 ] as const;
 
 export function ownerLabel(type: string): string {

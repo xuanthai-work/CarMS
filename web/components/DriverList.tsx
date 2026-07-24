@@ -34,7 +34,7 @@ export default function DriverList({ drivers, query }: { drivers: Driver[]; quer
           </div>
           <div className="min-w-0">
             <GroupColumn
-              title="Cộng tác / thuê ngoài"
+              title="Cộng tác"
               emoji="🤝"
               items={partner}
               empty="Không có lái xe cộng tác ngoài."

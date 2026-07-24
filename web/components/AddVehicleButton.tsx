@@ -9,6 +9,10 @@ import SelectMenu from "@/components/SelectMenu";
 import DatePicker from "@/components/DatePicker";
 import { useFormState } from "@/lib/useFormState";
 
+function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
+}
+
 export default function AddVehicleButton() {
   const [open, setOpen] = useState(false);
   const { form, set, reset } = useFormState(() => ({ seats: "16", status: "active", type: "own", inspectionDue: "", insuranceDue: "" }));
@@ -32,46 +36,30 @@ export default function AddVehicleButton() {
       {open && (
         <Modal title="Thêm xe" onClose={() => setOpen(false)}>
           <form action={handleAdd} className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Biển số *">
-                <input name="plate" required placeholder="VD: 29B-301.48" className={inputCls} />
-              </Field>
-              <Field label="Loại xe">
-                <SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} />
-              </Field>
-              <Field label="Trạng thái">
-                <SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} />
-              </Field>
-              <Field label="Sở hữu">
-                <SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} />
-              </Field>
+            <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
+              <DetailCell><Field label="Biển số *"><input name="plate" required placeholder="VD: 29B-301.48" className={inputCls} /></Field></DetailCell>
+              <DetailCell><Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field></DetailCell>
+              <DetailCell><Field label="Trạng thái"><SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} /></Field></DetailCell>
+              <DetailCell><Field label="Sở hữu"><SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} /></Field></DetailCell>
               {form.type === "partner" ? (
-                <Field label="SĐT / Zalo">
-                  <input name="phone" placeholder="Số điện thoại / Zalo" className={inputCls} />
-                </Field>
+                <DetailCell><Field label="SĐT / Zalo"><input name="phone" placeholder="Số điện thoại / Zalo" className={inputCls} /></Field></DetailCell>
               ) : (
                 <>
-                  <Field label="Hạn đăng kiểm">
-                    <DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} />
-                  </Field>
-                  <Field label="Hạn bảo hiểm">
-                    <DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} />
-                  </Field>
+                  <DetailCell><Field label="Hạn đăng kiểm"><DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} /></Field></DetailCell>
+                  <DetailCell><Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field></DetailCell>
                 </>
               )}
+              <DetailCell className="sm:col-span-2"><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
             </div>
-            <Field label="Ghi chú">
-              <input name="note" placeholder="Ghi chú" className={inputCls} />
-            </Field>
-            <div className="flex justify-end gap-2 pt-1">
+            <div className="flex justify-end gap-2 border-t border-hairline pt-3">
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
               >
                 Hủy
               </button>
-              <button className="rounded-md bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+              <button className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">
                 Thêm xe
               </button>
             </div>

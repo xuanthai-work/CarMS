@@ -38,7 +38,7 @@ function Stat({
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
         {label}
       </div>
-      <div className="mt-3 text-2xl font-bold tracking-tight tabular-nums">
+      <div className="mt-3 text-2xl font-bold leading-none tracking-tight tabular-nums">
         {value}
       </div>
     </div>
@@ -58,10 +58,11 @@ function VehicleFilterSelect({
   const ref = useRef<HTMLDivElement | null>(null);
   useDismiss(open, ref, () => setOpen(false));
   const reduceMotion = useReducedMotion();
+  const companyVehicles = vehicles.filter((vehicle) => vehicle.type !== "partner");
   const selectedLabel =
     value === "all"
       ? "Tất cả xe"
-      : (vehicles.find((v) => v.id === value)?.plate ?? "Tất cả xe");
+      : (companyVehicles.find((v) => v.id === value)?.plate ?? "Tất cả xe");
 
   return (
     <div className="relative" ref={ref}>
@@ -103,7 +104,7 @@ function VehicleFilterSelect({
             >
               Tất cả xe
             </button>
-            {vehicles.map((v) => (
+            {companyVehicles.map((v) => (
               <button
                 key={v.id}
                 type="button"
@@ -200,7 +201,7 @@ export default function FuelScreen({
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Tổng tiền dầu" value={fmtMoneyUnit(summary.total)} />
         <Stat
           label="Đã thanh toán"

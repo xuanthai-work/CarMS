@@ -43,7 +43,7 @@ export default function StatusSelect({
         {open && (
           <motion.div
             {...dropdownMotion(reduceMotion)}
-            className="absolute inset-x-0 top-full z-30 mt-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+            className="absolute right-0 top-full z-30 mt-1 w-max min-w-[150px] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
           >
           {TRIP_STATUSES.map((s) => {
             const active = s.value === current;
@@ -55,7 +55,7 @@ export default function StatusSelect({
                   if (!active) onPick(s.value);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition ${
+                className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-left text-sm transition ${
                   active ? "bg-brand-600 font-semibold text-white" : "text-slate-700 hover:bg-slate-100"
                 }`}
               >

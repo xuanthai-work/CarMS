@@ -15,6 +15,10 @@ import { fmtDate } from "@/lib/format";
 import { fmtMoney } from "@/lib/trips";
 import type { Driver, PartnerPayout } from "@/lib/types";
 
+function DetailCell({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-xl bg-surface px-3 py-3 shadow-sm">{children}</div>;
+}
+
 function PartnerPayoutForm({
   payout,
   drivers,
@@ -43,27 +47,17 @@ function PartnerPayoutForm({
   }
 
   return (
-    <form id={`pp-${payout?.id ?? "new"}`} action={submit} className="grid gap-3 sm:grid-cols-2">
+    <form id={`pp-${payout?.id ?? "new"}`} action={submit} className="space-y-2">
       {payout && <input type="hidden" name="id" value={payout.id} />}
-      <Field label="Lái xe đối tác">
-        <SelectMenu name="driverId" value={form.driverId} onChange={set("driverId")} options={options} placeholder="Chọn lái xe" />
-      </Field>
-      <Field label="Ngày làm">
-        <DatePicker name="workDate" value={form.workDate} onChange={set("workDate")} />
-      </Field>
-      <Field label="Số tiền">
-        <MoneyInput name="amount" defaultValue={payout?.amount ?? null} placeholder="VD: 800.000" />
-      </Field>
-      <Field label="Trạng thái">
-        <FuelPaymentStatusSelect name="paymentStatus" value={form.paymentStatus} onChange={set("paymentStatus")} />
-      </Field>
-      <Field label="Người trả">
-        <input name="payerName" defaultValue={payout?.payerName ?? ""} className={inputCls} />
-      </Field>
-      <Field label="Ghi chú">
-        <input name="note" defaultValue={payout?.note ?? ""} className={inputCls} />
-      </Field>
-      <div className="flex items-center justify-between sm:col-span-2">
+      <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
+        <DetailCell><Field label="Lái xe đối tác"><SelectMenu name="driverId" value={form.driverId} onChange={set("driverId")} options={options} placeholder="Chọn lái xe" /></Field></DetailCell>
+        <DetailCell><Field label="Ngày làm"><DatePicker name="workDate" value={form.workDate} onChange={set("workDate")} /></Field></DetailCell>
+        <DetailCell><Field label="Số tiền"><MoneyInput name="amount" defaultValue={payout?.amount ?? null} placeholder="VD: 800.000" /></Field></DetailCell>
+        <DetailCell><Field label="Trạng thái"><FuelPaymentStatusSelect name="paymentStatus" value={form.paymentStatus} onChange={set("paymentStatus")} /></Field></DetailCell>
+        <DetailCell><Field label="Người trả"><input name="payerName" defaultValue={payout?.payerName ?? ""} className={inputCls} /></Field></DetailCell>
+        <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={payout?.note ?? ""} className={inputCls} /></Field></DetailCell>
+      </div>
+      <div className="flex items-center justify-between border-t border-hairline pt-3">
         {payout ? (
           <ConfirmDeleteButton action={deletePartnerPayout} id={payout.id} label={`phiếu của lái xe`} />
         ) : (
@@ -82,40 +76,33 @@ export default function PartnerPayoutTable({
   payouts,
   drivers,
   monthKey,
+  adding,
+  onAddingChange,
 }: {
   payouts: PartnerPayout[];
   drivers: Driver[];
   monthKey: string;
+  adding: boolean;
+  onAddingChange: (adding: boolean) => void;
 }) {
   const router = useRouter();
-  const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const driverName = (id: string) => drivers.find((d) => d.id === id)?.name ?? "—";
   const defaultDate = `${monthKey}-01`;
 
   function done() {
-    setAdding(false);
+    onAddingChange(false);
     setEditingId(null);
     router.refresh();
   }
 
   function close() {
-    setAdding(false);
+    onAddingChange(false);
     setEditingId(null);
   } // đóng, KHÔNG refresh (huỷ/nền)
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => setAdding(true)}
-          className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
-        >
-          ＋ Thêm phiếu trả công
-        </button>
-      </div>
-
       <div className="relative rounded-2xl border border-hairline bg-surface shadow-panel">
         {!adding && payouts.length === 0 ? (
           <div className="p-12 text-center text-muted">Chưa có phiếu trả công đối tác trong tháng này.</div>

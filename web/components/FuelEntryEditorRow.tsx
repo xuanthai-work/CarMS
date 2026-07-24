@@ -10,6 +10,10 @@ import { deleteFuelEntry, saveFuelEntry } from "@/lib/actions";
 import { Field, inputCls } from "@/components/ui";
 import type { FuelEntry, Vehicle } from "@/lib/types";
 
+function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
+}
+
 /** Bề rộng cột bảng tiền dầu — DÙNG CHUNG cho header (FuelScreen). Giữ nguyên. */
 export const FuelColgroup = () => (
   <colgroup>
@@ -44,6 +48,7 @@ export default function FuelEntryForm({
   );
   const [paymentDate, setPaymentDate] = useState(entry?.paymentDate ?? entry?.refuelDate ?? defaultDate);
   const [err, setErr] = useState<string | null>(null);
+  const companyVehicles = vehicles.filter((vehicle) => vehicle.type !== "partner");
 
   function submitForm(fd: FormData) {
     if (!vehicleId) return setErr("Vui lòng chọn xe.");
@@ -69,47 +74,39 @@ export default function FuelEntryForm({
   return (
     <form action={submitForm} className="space-y-3">
       {entry && <input type="hidden" name="id" value={entry.id} />}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Ngày đổ">
-          <DatePicker name="refuelDate" value={refuelDate} onChange={setRefuelDate} />
-        </Field>
-        <Field label="Xe">
-          <Combobox
-            name="vehicleId"
-            value={vehicleId}
-            onChange={setVehicleId}
-            options={vehicles.map((v) => ({ id: v.id, label: v.plate }))}
-            placeholder="Chọn xe…"
-            emptyText="Không thấy xe"
-          />
-        </Field>
-        <Field label="Số tiền">
-          <MoneyInput name="amount" defaultValue={entry?.amount ?? null} required placeholder="Số tiền" />
-        </Field>
-        <Field label="Người đổ">
-          <input
-            name="payerName"
-            defaultValue={entry?.payerName ?? ""}
-            placeholder="Người đổ"
-            className={inputCls}
-          />
-        </Field>
-        <Field label="Trạng thái">
-          <FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} />
-        </Field>
-        <Field label="Ngày thanh toán">
-          <DatePicker
-            name="paymentDate"
-            value={paymentStatus === "paid" ? paymentDate : ""}
-            onChange={setPaymentDate}
-            disabled={paymentStatus !== "paid"}
-          />
-        </Field>
-        <div className="sm:col-span-2">
-          <Field label="Ghi chú">
-            <input name="note" defaultValue={entry?.note ?? ""} placeholder="Ghi chú" className={inputCls} />
+      <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
+        <DetailCell>
+          <Field label="Ngày đổ"><DatePicker name="refuelDate" value={refuelDate} onChange={setRefuelDate} /></Field>
+        </DetailCell>
+        <DetailCell>
+          <Field label="Xe">
+            <Combobox
+              name="vehicleId"
+              value={vehicleId}
+              onChange={setVehicleId}
+              options={companyVehicles.map((v) => ({ id: v.id, label: v.plate }))}
+              placeholder="Chọn xe…"
+              emptyText="Không thấy xe"
+            />
           </Field>
-        </div>
+        </DetailCell>
+        <DetailCell>
+          <Field label="Số tiền"><MoneyInput name="amount" defaultValue={entry?.amount ?? null} required placeholder="Số tiền" /></Field>
+        </DetailCell>
+        <DetailCell>
+          <Field label="Người đổ"><input name="payerName" defaultValue={entry?.payerName ?? ""} placeholder="Người đổ" className={inputCls} /></Field>
+        </DetailCell>
+        <DetailCell>
+          <Field label="Trạng thái"><FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} /></Field>
+        </DetailCell>
+        <DetailCell>
+          <Field label="Ngày thanh toán">
+            <DatePicker name="paymentDate" value={paymentStatus === "paid" ? paymentDate : ""} onChange={setPaymentDate} disabled={paymentStatus !== "paid"} />
+          </Field>
+        </DetailCell>
+        <DetailCell className="sm:col-span-2">
+          <Field label="Ghi chú"><input name="note" defaultValue={entry?.note ?? ""} placeholder="Ghi chú" className={inputCls} /></Field>
+        </DetailCell>
       </div>
       {err && <div className="text-sm font-medium text-rose-600">{err}</div>}
       <div className="flex items-center justify-between gap-2 border-t border-hairline pt-3">
