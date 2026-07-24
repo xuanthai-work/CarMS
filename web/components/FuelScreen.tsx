@@ -4,7 +4,9 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { dropdownMotion } from "@/lib/motion";
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import FuelEntryEditorRow, { FuelColgroup } from "@/components/FuelEntryEditorRow";
+import FuelEntryEditorRow, {
+  FuelColgroup,
+} from "@/components/FuelEntryEditorRow";
 import FilterTabs from "@/components/FilterTabs";
 import { useDismiss } from "@/lib/useDismiss";
 import { addMonth, fmtDate, monthLabel } from "@/lib/format";
@@ -29,9 +31,15 @@ function Stat({
     amber: "text-signal",
   } as const;
   return (
-    <div className={`rounded-2xl border border-hairline bg-surface p-5 shadow-card ${tones[tone]}`}>
-      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
-      <div className="mt-3 text-2xl font-bold tracking-tight tabular-nums">{value}</div>
+    <div
+      className={`rounded-2xl border border-hairline bg-surface p-5 shadow-card ${tones[tone]}`}
+    >
+      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+        {label}
+      </div>
+      <div className="mt-3 text-2xl font-bold tracking-tight tabular-nums">
+        {value}
+      </div>
     </div>
   );
 }
@@ -50,7 +58,9 @@ function VehicleFilterSelect({
   useDismiss(open, ref, () => setOpen(false));
   const reduceMotion = useReducedMotion();
   const selectedLabel =
-    value === "all" ? "Tất cả xe" : vehicles.find((v) => v.id === value)?.plate ?? "Tất cả xe";
+    value === "all"
+      ? "Tất cả xe"
+      : (vehicles.find((v) => v.id === value)?.plate ?? "Tất cả xe");
 
   return (
     <div className="relative" ref={ref}>
@@ -65,7 +75,11 @@ function VehicleFilterSelect({
         }`}
       >
         <span className="truncate">{selectedLabel}</span>
-        <span className={`text-xs text-muted transition ${open ? "rotate-180" : ""}`}>⌄</span>
+        <span
+          className={`text-xs text-muted transition ${open ? "rotate-180" : ""}`}
+        >
+          ⌄
+        </span>
       </button>
 
       <AnimatePresence>
@@ -74,37 +88,37 @@ function VehicleFilterSelect({
             {...dropdownMotion(reduceMotion)}
             className="absolute left-0 top-full z-30 mt-2 max-h-72 min-w-full overflow-auto rounded-xl border border-hairline bg-surface p-1.5 shadow-xl"
           >
-          <button
-            type="button"
-            onClick={() => {
-              onChange("all");
-              setOpen(false);
-            }}
-              className={`block w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-              value === "all"
-                ? "bg-brand-600 font-semibold text-white"
-                : "text-ink hover:bg-canvas"
-            }`}
-          >
-            Tất cả xe
-          </button>
-          {vehicles.map((v) => (
             <button
-              key={v.id}
               type="button"
               onClick={() => {
-                onChange(v.id);
+                onChange("all");
                 setOpen(false);
               }}
-              className={`mt-0.5 block w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                value === v.id
+              className={`block w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                value === "all"
                   ? "bg-brand-600 font-semibold text-white"
                   : "text-ink hover:bg-canvas"
               }`}
             >
-              {v.plate}
+              Tất cả xe
             </button>
-          ))}
+            {vehicles.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => {
+                  onChange(v.id);
+                  setOpen(false);
+                }}
+                className={`mt-0.5 block w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                  value === v.id
+                    ? "bg-brand-600 font-semibold text-white"
+                    : "text-ink hover:bg-canvas"
+                }`}
+              >
+                {v.plate}
+              </button>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
@@ -124,20 +138,29 @@ export default function FuelScreen({
   const router = useRouter();
   const [q, setQ] = useState("");
   const [vehicleFilter, setVehicleFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "unpaid">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "unpaid">(
+    "all",
+  );
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const vehicleMap = useMemo(() => new Map(vehicles.map((v) => [v.id, v])), [vehicles]);
+  const vehicleMap = useMemo(
+    () => new Map(vehicles.map((v) => [v.id, v])),
+    [vehicles],
+  );
   const nq = normalizeVn(q);
 
   const rows = useMemo(() => {
     return entries.filter((entry) => {
-      if (vehicleFilter !== "all" && entry.vehicleId !== vehicleFilter) return false;
-      if (statusFilter !== "all" && entry.paymentStatus !== statusFilter) return false;
+      if (vehicleFilter !== "all" && entry.vehicleId !== vehicleFilter)
+        return false;
+      if (statusFilter !== "all" && entry.paymentStatus !== statusFilter)
+        return false;
       if (!nq) return true;
       const plate = vehicleMap.get(entry.vehicleId)?.plate ?? "";
-      return [plate, entry.payerName, entry.note].some((v) => normalizeVn(v).includes(nq));
+      return [plate, entry.payerName, entry.note].some((v) =>
+        normalizeVn(v).includes(nq),
+      );
     });
   }, [entries, nq, statusFilter, vehicleFilter, vehicleMap]);
 
@@ -150,7 +173,7 @@ export default function FuelScreen({
         else acc.unpaid += row.amount;
         return acc;
       },
-      { total: 0, paid: 0, unpaid: 0, count: 0 }
+      { total: 0, paid: 0, unpaid: 0, count: 0 },
     );
   }, [rows]);
 
@@ -162,8 +185,12 @@ export default function FuelScreen({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Chi phí vận hành</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Tiền dầu</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+            Chi phí vận hành
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">
+            Tiền dầu
+          </h1>
         </div>
         <MonthNav
           label={monthLabel(monthKey)}
@@ -174,7 +201,11 @@ export default function FuelScreen({
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Tổng tiền dầu" value={fmtMoney(summary.total)} />
-        <Stat label="Đã thanh toán" value={fmtMoney(summary.paid)} tone="emerald" />
+        <Stat
+          label="Đã thanh toán"
+          value={fmtMoney(summary.paid)}
+          tone="emerald"
+        />
         <Stat label="Còn nợ" value={fmtMoney(summary.unpaid)} tone="amber" />
         <Stat label="Số lần đổ" value={String(summary.count)} />
       </div>
@@ -184,18 +215,24 @@ export default function FuelScreen({
           value={statusFilter}
           onChange={setStatusFilter}
           ariaLabel="Lọc trạng thái thanh toán"
-          options={[
-            ["all", "Tất cả"],
-            ["paid", "Đã thanh toán"],
-            ["unpaid", "Chưa thanh toán"],
-          ] as const}
+          options={
+            [
+              ["all", "Tất cả"],
+              ["paid", "Đã thanh toán"],
+              ["unpaid", "Chưa thanh toán"],
+            ] as const
+          }
         />
         <VehicleFilterSelect
           value={vehicleFilter}
           vehicles={vehicles}
           onChange={setVehicleFilter}
         />
-        <SearchInput value={q} onChange={setQ} placeholder="Tìm biển số, người đổ, ghi chú..." />
+        <SearchInput
+          value={q}
+          onChange={setQ}
+          placeholder="Tìm biển số, người đổ, ghi chú..."
+        />
         <button
           type="button"
           onClick={() => setAdding((open) => !open)}
@@ -207,17 +244,23 @@ export default function FuelScreen({
 
       <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-panel">
         {!adding && rows.length === 0 ? (
-            <div className="p-12 text-center text-slate-400">Không có phiếu dầu trong tháng này.</div>
-          ) : (
-            <table className="w-full table-fixed text-[14px]">
+          <div className="p-12 text-center text-slate-400">
+            Không có phiếu dầu trong tháng này.
+          </div>
+        ) : (
+          <table className="w-full table-fixed text-[14px]">
             <FuelColgroup />
             <thead className="bg-canvas/70">
               <tr className="border-b border-hairline text-left text-[12px] font-bold uppercase tracking-[0.02em] text-muted">
                 <th className="whitespace-nowrap px-4 py-3.5">Ngày đổ</th>
                 <th className="whitespace-nowrap px-4 py-3.5">Biển số</th>
-                <th className="whitespace-nowrap px-4 py-3.5 text-right">Số tiền</th>
+                <th className="whitespace-nowrap px-4 py-3.5 text-right">
+                  Số tiền
+                </th>
                 <th className="whitespace-nowrap px-4 py-3.5">Người đổ</th>
-                <th className="whitespace-nowrap px-4 py-3.5">Ngày thanh toán</th>
+                <th className="whitespace-nowrap px-4 py-3.5">
+                  Ngày thanh toán
+                </th>
                 <th className="whitespace-nowrap px-4 py-3.5">Trạng thái</th>
                 <th className="px-4 py-3.5">Ghi chú</th>
               </tr>
@@ -276,18 +319,20 @@ export default function FuelScreen({
                             : "bg-amber-100 text-amber-700"
                         }`}
                       >
-                        {entry.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
+                        {entry.paymentStatus === "paid"
+                          ? "Đã thanh toán"
+                          : "Chưa thanh toán"}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-[14px] leading-relaxed text-slate-700">
                       {entry.note || <span className="text-slate-300">—</span>}
                     </td>
                   </tr>
-                )
+                ),
               )}
             </tbody>
-            </table>
-          )}
+          </table>
+        )}
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ export default function SelectMenu({
         } ${selectedLabel ? "text-slate-800" : "text-slate-400"}`}
       >
         <span className="truncate">{selectedLabel || placeholder}</span>
-        <span className={`text-[10px] text-slate-500 transition ${open ? "rotate-180" : ""}`}>▼</span>
+        <span className={`text-xs text-slate-500 transition ${open ? "rotate-180" : ""}`}>⌄</span>
       </button>
 
       <AnimatePresence>

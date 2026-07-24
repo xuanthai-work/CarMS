@@ -11,7 +11,7 @@ import { useFormState } from "@/lib/useFormState";
 
 export default function AddVehicleButton() {
   const [open, setOpen] = useState(false);
-  const { form, set, reset } = useFormState(() => ({ seats: "16", status: "active", type: "own", phone: "", inspectionDue: "", insuranceDue: "" }));
+  const { form, set, reset } = useFormState(() => ({ seats: "16", status: "active", type: "own", inspectionDue: "", insuranceDue: "" }));
 
   async function handleAdd(fd: FormData) {
     await saveVehicle(fd);

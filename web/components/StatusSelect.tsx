@@ -36,7 +36,7 @@ export default function StatusSelect({
         )} ${open ? "ring-2 ring-brand-400" : "hover:brightness-95"}`}
       >
         <span className="truncate">{tripStatusLabel(status)}</span>
-        <span className={`text-[10px] text-slate-500 transition ${open ? "rotate-180" : ""}`}>▼</span>
+        <span className={`text-xs text-slate-500 transition ${open ? "rotate-180" : ""}`}>⌄</span>
       </button>
 
       <AnimatePresence>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getVehicles, getDrivers, getTrips } from "@/lib/db";
 import ScheduleGrid from "@/components/ScheduleGrid";
+import MonthNav from "@/components/MonthNav";
 import { daysInMonth, monthKeyOf, monthLabel, addMonth, todayStr } from "@/lib/format";
 
 export default async function LichPage({
@@ -26,21 +27,11 @@ export default async function LichPage({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Điều phối vận hành</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Lịch điều xe</h1>
         </div>
-        <div className="flex items-center gap-1.5 rounded-xl border border-hairline bg-surface p-1.5 shadow-sm">
-          <Link
-            href={`/lich?m=${addMonth(monthKey, -1)}`}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-canvas active:scale-95"
-          >
-            ←
-          </Link>
-          <span className="min-w-[132px] text-center text-sm font-semibold text-ink">{monthLabel(monthKey)}</span>
-          <Link
-            href={`/lich?m=${addMonth(monthKey, 1)}`}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition hover:bg-canvas active:scale-95"
-          >
-            →
-          </Link>
-        </div>
+        <MonthNav
+          label={monthLabel(monthKey)}
+          prevHref={`/lich?m=${addMonth(monthKey, -1)}`}
+          nextHref={`/lich?m=${addMonth(monthKey, 1)}`}
+        />
       </div>
 
       {vehicles.length === 0 ? (

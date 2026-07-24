@@ -64,7 +64,7 @@ export default function Overview({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-sidebar px-6 py-6 text-white shadow-[0_18px_45px_-24px_rgba(15,23,42,0.8)] sm:px-8">
+      <div className="relative overflow-hidden rounded-3xl bg-sidebar px-6 py-6 text-white shadow-hero sm:px-8">
         <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-dispatch-500/20 blur-3xl" />
         <div className="relative flex flex-wrap items-end justify-between gap-5">
           <div>
@@ -204,7 +204,7 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section className={`overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[0_10px_30px_-24px_rgba(15,23,42,0.7)] ${className}`}>
+    <section className={`overflow-hidden rounded-2xl border border-hairline bg-surface shadow-card ${className}`}>
       <div className="flex items-baseline justify-between gap-2 border-b border-hairline px-5 py-4">
         <h2 className="text-base font-bold tracking-tight text-ink">{title}</h2>
         {subtitle && <span className="text-xs font-medium text-muted tabular-nums">{subtitle}</span>}
@@ -233,7 +233,7 @@ function StatTile({
   accent?: keyof typeof ACCENT;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-hairline bg-surface p-5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.8)]">
+    <div className="relative overflow-hidden rounded-2xl border border-hairline bg-surface p-5 shadow-card">
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
       <div className="mt-3 flex items-baseline gap-1.5">
         <span className={`text-3xl font-bold leading-none tracking-tight tabular-nums ${ACCENT[accent]}`}>
