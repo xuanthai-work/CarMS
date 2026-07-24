@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/lib/motion";
 import { saveOfficeStaff, deleteOfficeStaff } from "@/lib/actions";
-import { Field, Info, inputCls } from "@/components/ui";
+import { Field, Info, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import MoneyInput from "@/components/MoneyInput";
 import DatePicker from "@/components/DatePicker";
 import SelectMenu from "@/components/SelectMenu";
@@ -39,7 +39,7 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
 
   if (!editing) {
     return (
-      <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.8)]">
+      <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-card">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-lg font-bold tracking-tight text-ink">{p.name}</span>
@@ -140,20 +140,8 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
       <div className="mt-3 flex items-center justify-between">
         <ConfirmDeleteButton action={deleteOfficeStaff} id={p.id} label={`nhân sự ${p.name}`} />
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={cancel}
-            className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
-          >
-            Hủy
-          </button>
-          <button
-            type="submit"
-            form={`os-${p.id}`}
-            className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
-          >
-            Lưu
-          </button>
+          <CancelButton onClick={cancel} />
+          <SaveButton form={`os-${p.id}`} />
         </div>
       </div>
     </motion.div>

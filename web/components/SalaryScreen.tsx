@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import FilterTabs from "@/components/FilterTabs";
 import SalaryMonthTable from "@/components/SalaryMonthTable";
 import PartnerPayoutTable from "@/components/PartnerPayoutTable";
@@ -10,6 +9,7 @@ import { fmtMoney } from "@/lib/trips";
 import type { SalaryRow } from "@/lib/salary";
 import type { Driver, PartnerPayout } from "@/lib/types";
 import { Toolbar, SearchInput } from "@/components/ui";
+import MonthNav from "@/components/MonthNav";
 
 function Tile({ label, value, tone = "ink" }: { label: string; value: string; tone?: "ink" | "amber" | "emerald" }) {
   const color = tone === "amber" ? "text-signal" : tone === "emerald" ? "text-emerald-600" : "text-ink";
@@ -56,11 +56,11 @@ export default function SalaryScreen({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Chi phí nhân sự</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Lương</h1>
         </div>
-        <div className="flex items-center gap-1.5 rounded-xl border border-hairline bg-surface p-1.5 shadow-sm">
-          <Link href={`/luong?m=${addMonth(monthKey, -1)}`} className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-canvas active:scale-95">←</Link>
-          <span className="min-w-[132px] text-center text-sm font-semibold text-ink">{monthLabel(monthKey)}</span>
-          <Link href={`/luong?m=${addMonth(monthKey, 1)}`} className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-canvas active:scale-95">→</Link>
-        </div>
+        <MonthNav
+          label={monthLabel(monthKey)}
+          prevHref={`/luong?m=${addMonth(monthKey, -1)}`}
+          nextHref={`/luong?m=${addMonth(monthKey, 1)}`}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

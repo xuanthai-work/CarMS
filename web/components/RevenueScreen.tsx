@@ -13,6 +13,7 @@ import StatusSelect from "@/components/StatusSelect";
 import { setTripStatus } from "@/lib/actions";
 import FilterTabs from "@/components/FilterTabs";
 import { Toolbar, SearchInput } from "@/components/ui";
+import MonthNav from "@/components/MonthNav";
 
 const STAT_TONE = {
   neutral: "text-ink",
@@ -140,25 +141,11 @@ export default function RevenueScreen({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Tài chính vận hành</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Doanh thu</h1>
         </div>
-        <div className="flex items-center gap-1.5 rounded-xl border border-hairline bg-surface p-1.5 shadow-sm">
-          <button
-            type="button"
-            onClick={() => setMonthKey((m) => addMonth(m, -1))}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-canvas active:scale-95"
-          >
-            ←
-          </button>
-          <span className="min-w-[132px] text-center text-sm font-semibold text-ink">
-            {monthLabel(monthKey)}
-          </span>
-          <button
-            type="button"
-            onClick={() => setMonthKey((m) => addMonth(m, 1))}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted transition-all duration-150 hover:bg-canvas active:scale-95"
-          >
-            →
-          </button>
-        </div>
+        <MonthNav
+          label={monthLabel(monthKey)}
+          onPrev={() => setMonthKey((m) => addMonth(m, -1))}
+          onNext={() => setMonthKey((m) => addMonth(m, 1))}
+        />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

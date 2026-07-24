@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveSalaryMonth, setSalaryPaid, setSalaryPaidDate } from "@/lib/actions";
-import { Field } from "@/components/ui";
+import { Field, CancelButton, SaveButton } from "@/components/ui";
 import MoneyInput from "@/components/MoneyInput";
 import DatePicker from "@/components/DatePicker";
 import { fmtMoney } from "@/lib/trips";
@@ -42,12 +42,8 @@ function EditorRow({
             <input name="note" defaultValue={row.note} className="w-full rounded-xl border border-hairline bg-surface px-3 py-2 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
           </Field>
           <div className="flex items-end justify-end gap-2">
-            <button type="button" onClick={onCancel} className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas">
-              Hủy
-            </button>
-            <button type="submit" className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
-              Lưu
-            </button>
+            <CancelButton onClick={onCancel} />
+            <SaveButton />
           </div>
         </form>
       </td>
@@ -125,7 +121,7 @@ export default function SalaryMonthTable({ rows, monthKey, query }: { rows: Sala
   }
 
   return (
-    <div className="relative rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]">
+    <div className="relative rounded-2xl border border-hairline bg-surface shadow-panel">
         {filteredRows.length === 0 ? (
           <div className="p-12 text-center text-muted">Không tìm thấy nhân sự phù hợp.</div>
         ) : (
@@ -177,7 +173,7 @@ export default function SalaryMonthTable({ rows, monthKey, query }: { rows: Sala
                 <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
                   <PaidToggle row={r} monthKey={monthKey} />
                 </td>
-                <td className="max-w-0 truncate px-4 py-2.5 text-slate-500" title={r.note || undefined}>
+                <td className="max-w-0 truncate px-4 py-2.5 text-muted" title={r.note || undefined}>
                   {r.note || "-"}
                 </td>
               </tr>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/lib/motion";
 import { savePartnerPayout, deletePartnerPayout } from "@/lib/actions";
-import { Field, inputCls } from "@/components/ui";
+import { Field, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
 import DatePicker from "@/components/DatePicker";
 import MoneyInput from "@/components/MoneyInput";
@@ -77,12 +77,8 @@ function EditorRow({
               <span />
             )}
             <div className="flex gap-2">
-              <button type="button" onClick={onCancel} className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas">
-                Hủy
-              </button>
-              <button type="submit" className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
-                Lưu
-              </button>
+              <CancelButton onClick={onCancel} />
+              <SaveButton />
             </div>
           </div>
         </form>
@@ -124,7 +120,7 @@ export default function PartnerPayoutTable({
         </button>
       </div>
 
-      <div className="relative rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]">
+      <div className="relative rounded-2xl border border-hairline bg-surface shadow-panel">
         {!adding && payouts.length === 0 ? (
           <div className="p-12 text-center text-muted">Chưa có phiếu trả công đối tác trong tháng này.</div>
         ) : (
