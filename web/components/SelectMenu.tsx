@@ -19,12 +19,15 @@ export default function SelectMenu({
   onChange,
   options,
   placeholder = "Chọn…",
+  placement = "down",
 }: {
   name: string;
   value: string;
   onChange: (v: string) => void;
   options: readonly Option[];
   placeholder?: string;
+  /** Hướng bung menu. "up" khi control nằm sát đáy (VD composer chat) để không tràn xuống dưới. */
+  placement?: "down" | "up";
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -53,7 +56,9 @@ export default function SelectMenu({
         {open && (
           <motion.div
             {...dropdownMotion(reduceMotion)}
-            className="absolute inset-x-0 top-full z-30 mt-1 max-h-60 overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
+            className={`absolute inset-x-0 z-30 max-h-60 overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl ${
+              placement === "up" ? "bottom-full mb-1" : "top-full mt-1"
+            }`}
           >
           {opts.map((opt) => {
             const active = opt.value === value;

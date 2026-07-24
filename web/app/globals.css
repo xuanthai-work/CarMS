@@ -75,3 +75,14 @@ body::-webkit-scrollbar {
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
+
+/* Toolbar lịch điều xe: đo BỀ RỘNG THẬT của vùng nội dung (container query, không theo viewport)
+   để chỉ tách dòng khi thật sự chật. Ngưỡng 1120px ≈ chỗ vừa đủ cho "Viền" nằm cùng dòng với
+   Trạng thái + cụm điều khiển; ≥ ngưỡng thì kéo "Viền" về 1 dòng, dưới ngưỡng để nó tụt xuống hàng.
+   Selector [data-slot] đặc hiệu hơn class utility nên thắng cascade mà không cần !important. */
+@container (min-width: 1120px) {
+  .sched-toolbar [data-slot="border-legend"] {
+    order: 0;
+    flex-basis: auto;
+  }
+}

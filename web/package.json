@@ -18,14 +18,19 @@
     "supabase:status": "npx --yes supabase status"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.23",
+    "@ai-sdk/react": "^4.0.40",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.7",
+    "ai": "^7.0.37",
     "framer-motion": "^12.42.2",
     "next": "^15.1.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

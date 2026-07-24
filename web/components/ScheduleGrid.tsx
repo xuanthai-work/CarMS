@@ -161,45 +161,55 @@ export default function ScheduleGrid({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      {/* Thanh công cụ: chú giải + chuyển view + thêm */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-hairline bg-surface p-2 shadow-card">
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
-          <span className="font-semibold text-ink">Trạng thái:</span>
-          {TRIP_STATUSES.map((s) => (
-            <span key={s.value} className="flex items-center gap-1">
-              <i className={`h-3 w-3 rounded ${s.swatch}`} /> {s.label}
-            </span>
-          ))}
-          <span aria-hidden className="mx-1 h-3.5 w-px bg-slate-200" />
-          <span className="font-semibold text-ink">Viền:</span>
-          <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-yellow-400" /> Trong ngày</span>
-          <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-blue-500" /> Lượt đi</span>
-          <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-amber-500" /> Lượt về</span>
-          <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-violet-400" /> Theo đoàn</span>
-          <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-slate-400" /> Một chiều</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {view === "xe" && (
-            <div className="relative z-[60] w-56">
-              <SelectMenu name="scheduleVehicle" value={vid} onChange={setVid} options={vehicleOptions} placeholder="Chọn xe" />
-            </div>
-          )}
-          <FilterTabs
-            value={view}
-            onChange={setView}
-            ariaLabel="Chuyển kiểu xem lịch"
-            options={[
-              ["xe", "Theo xe"],
-              ["tour", "Theo chuyến"],
-            ] as const}
-          />
-          <button
-            type="button"
-            onClick={() => setModal({ trip: null })}
-            className="h-9 rounded-lg bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
+      {/* Thanh công cụ — reflow theo BỀ RỘNG THẬT của vùng nội dung (container query), chỉ tách dòng
+          khi thật sự chật; đủ chỗ thì giữ 1 dòng dù panel mở hay đóng:
+          - vùng đủ rộng (≥ ngưỡng ở globals.css): 1 dòng — Trạng thái · Viền · (điều khiển dồn phải)
+          - vùng hẹp:                              2 dòng — Trạng thái + điều khiển; "Viền" xuống hàng dưới */}
+      <div className="[container-type:inline-size]">
+        <div className="sched-toolbar flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-hairline bg-surface p-2 text-xs text-slate-500 shadow-card">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <span className="font-semibold text-ink">Trạng thái:</span>
+            {TRIP_STATUSES.map((s) => (
+              <span key={s.value} className="flex items-center gap-1">
+                <i className={`h-3 w-3 rounded ${s.swatch}`} /> {s.label}
+              </span>
+            ))}
+          </div>
+          {/* Viền — mặc định (vùng hẹp) tụt xuống hàng riêng; @container ≥ ngưỡng kéo về 1 dòng. */}
+          <div
+            data-slot="border-legend"
+            className="order-last flex basis-full flex-wrap items-center gap-x-2.5 gap-y-1"
           >
-            + Thêm chuyến
-          </button>
+            <span className="font-semibold text-ink">Viền:</span>
+            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-yellow-400" /> Trong ngày</span>
+            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-blue-500" /> Lượt đi</span>
+            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-amber-500" /> Lượt về</span>
+            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-violet-400" /> Theo đoàn</span>
+            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-slate-400" /> Một chiều</span>
+          </div>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {view === "xe" && (
+              <div className="relative z-[60] w-56">
+                <SelectMenu name="scheduleVehicle" value={vid} onChange={setVid} options={vehicleOptions} placeholder="Chọn xe" />
+              </div>
+            )}
+            <FilterTabs
+              value={view}
+              onChange={setView}
+              ariaLabel="Chuyển kiểu xem lịch"
+              options={[
+                ["xe", "Theo xe"],
+                ["tour", "Theo chuyến"],
+              ] as const}
+            />
+            <button
+              type="button"
+              onClick={() => setModal({ trip: null })}
+              className="h-9 rounded-lg bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
+            >
+              + Thêm chuyến
+            </button>
+          </div>
         </div>
       </div>
 
