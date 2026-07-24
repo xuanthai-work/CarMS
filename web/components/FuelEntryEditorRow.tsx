@@ -1,18 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Trash } from "@phosphor-icons/react";
 import DatePicker from "@/components/DatePicker";
 import Combobox from "@/components/Combobox";
 import MoneyInput from "@/components/MoneyInput";
 import FuelPaymentStatusSelect from "@/components/FuelPaymentStatusSelect";
 import { deleteFuelEntry, saveFuelEntry } from "@/lib/actions";
-import { Field, inputCls } from "@/components/ui";
+import { companyVehicles } from "@/lib/vehicles";
+import { DetailCell, Field, inputCls } from "@/components/ui";
 import type { FuelEntry, Vehicle } from "@/lib/types";
-
-function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
-}
 
 /** Bề rộng cột bảng tiền dầu — DÙNG CHUNG cho header (FuelScreen). Giữ nguyên. */
 export const FuelColgroup = () => (
@@ -48,7 +45,10 @@ export default function FuelEntryForm({
   );
   const [paymentDate, setPaymentDate] = useState(entry?.paymentDate ?? entry?.refuelDate ?? defaultDate);
   const [err, setErr] = useState<string | null>(null);
-  const companyVehicles = vehicles.filter((vehicle) => vehicle.type !== "partner");
+  const vehicleOptions = useMemo(
+    () => companyVehicles(vehicles).map((v) => ({ id: v.id, label: v.plate })),
+    [vehicles],
+  );
 
   function submitForm(fd: FormData) {
     if (!vehicleId) return setErr("Vui lòng chọn xe.");
@@ -84,7 +84,7 @@ export default function FuelEntryForm({
               name="vehicleId"
               value={vehicleId}
               onChange={setVehicleId}
-              options={companyVehicles.map((v) => ({ id: v.id, label: v.plate }))}
+              options={vehicleOptions}
               placeholder="Chọn xe…"
               emptyText="Không thấy xe"
             />

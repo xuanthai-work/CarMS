@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PencilSimple } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 // Class dùng chung cho input/select trong các form.
@@ -38,6 +39,47 @@ export function Info({
       <div className={`font-medium text-muted ${size === "md" ? "text-sm" : "text-xs"}`}>{label}</div>
       <div className={`text-ink ${size === "md" ? "text-base" : "text-sm"}`}>{value}</div>
     </div>
+  );
+}
+
+/** Ô chứa một trường trong lưới form thêm/sửa (nền trắng, bo góc). */
+export function DetailCell({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
+}
+
+/** Huy hiệu trạng thái trả tiền (xanh = đã trả / hổ phách = chưa). Nhãn đổi theo ngữ cảnh. */
+export function PaymentStatusBadge({
+  paid,
+  paidLabel = "Đã trả",
+  unpaidLabel = "Chưa trả",
+}: {
+  paid: boolean;
+  paidLabel?: string;
+  unpaidLabel?: string;
+}) {
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+        paid ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+      }`}
+    >
+      {paid ? paidLabel : unpaidLabel}
+    </span>
+  );
+}
+
+/** Nút biểu tượng bút chì "Chỉnh sửa" ở chế độ xem chi tiết trong modal. */
+export function EditIconButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Chỉnh sửa"
+      title="Chỉnh sửa"
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
+    >
+      <PencilSimple size={18} weight="regular" aria-hidden="true" />
+    </button>
   );
 }
 

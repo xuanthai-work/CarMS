@@ -1,11 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { PencilSimple } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/lib/motion";
 import { saveOfficeStaff, deleteOfficeStaff } from "@/lib/actions";
-import { Field, Info, inputCls, CancelButton, SaveButton } from "@/components/ui";
+import { DetailCell, EditIconButton, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import MoneyInput from "@/components/MoneyInput";
 import DatePicker from "@/components/DatePicker";
 import SelectMenu from "@/components/SelectMenu";
@@ -14,11 +13,8 @@ import Modal from "@/components/Modal";
 import { fmtMoney } from "@/lib/trips";
 import { fmtDate } from "@/lib/format";
 import { GENDERS, officePositionOptions } from "@/lib/office";
+import { useFormState } from "@/lib/useFormState";
 import type { OfficeStaff } from "@/lib/types";
-
-function DetailCell({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl bg-surface px-3 py-3 shadow-sm">{children}</div>;
-}
 
 export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
   const initialForm = () => ({
@@ -30,8 +26,7 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
   const [editing, setEditing] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const reduceMotion = useReducedMotion();
-  const [form, setForm] = useState(initialForm);
-  const set = (k: keyof ReturnType<typeof initialForm>) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
 
   async function handleSave(fd: FormData) {
@@ -42,23 +37,19 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
 
   function closeModal() {
     formRef.current?.reset();
-    setForm(initialForm());
+    reset();
     setEditing(false);
     setDetailOpen(false);
-  }
-
-  function openFromCard() {
-    setDetailOpen(true);
   }
 
   function onCardKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      openFromCard();
+      setDetailOpen(true);
     }
   }
 
-  const editForm = (
+  const editForm = () => (
     <>
       <form id={`os-${p.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={p.id} />
@@ -93,7 +84,7 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
       <div
         role="button"
         tabIndex={0}
-        onClick={openFromCard}
+        onClick={() => setDetailOpen(true)}
         onKeyDown={onCardKeyDown}
         className="cursor-pointer rounded-2xl border border-hairline bg-surface p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         aria-label={`Xem đầy đủ thông tin nhân sự ${p.name}`}
@@ -121,7 +112,7 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
       {detailOpen && (
         <Modal title={editing ? "Chỉnh sửa nhân sự" : "Thông tin nhân sự"} onClose={closeModal} maxWidthClass="max-w-2xl">
           {editing ? (
-            <motion.div {...cardMotion(reduceMotion)}>{editForm}</motion.div>
+            <motion.div {...cardMotion(reduceMotion)}>{editForm()}</motion.div>
           ) : (
             <>
               <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
@@ -139,15 +130,7 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
                 <DetailCell><Info label="Ghi chú" value={p.note || "—"} size="md" /></DetailCell>
               </div>
               <div className="mt-5 flex justify-end border-t border-hairline pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  aria-label="Chỉnh sửa"
-                  title="Chỉnh sửa"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
-                >
-                  <PencilSimple size={18} weight="regular" aria-hidden="true" />
-                </button>
+                <EditIconButton onClick={() => setEditing(true)} />
               </div>
             </>
           )}

@@ -6,12 +6,8 @@ import Modal from "@/components/Modal";
 import MoneyInput from "@/components/MoneyInput";
 import DatePicker from "@/components/DatePicker";
 import SelectMenu from "@/components/SelectMenu";
-import { Field, inputCls } from "@/components/ui";
+import { DetailCell, Field, inputCls } from "@/components/ui";
 import { OFFICE_POSITIONS, GENDERS } from "@/lib/office";
-
-function DetailCell({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl bg-surface px-3 py-3 shadow-sm">{children}</div>;
-}
 
 const EMPTY_FORM = { startDate: "", position: "Nhân viên", dob: "", gender: "" };
 

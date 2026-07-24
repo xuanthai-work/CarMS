@@ -14,6 +14,7 @@ import { addMonth, fmtDate, monthLabel } from "@/lib/format";
 import { normalizeVn } from "@/lib/search";
 import { fmtMoney, fmtMoneyUnit } from "@/lib/trips";
 import type { FuelEntry, Vehicle } from "@/lib/types";
+import { companyVehicles } from "@/lib/vehicles";
 import { Toolbar, SearchInput } from "@/components/ui";
 import MonthNav from "@/components/MonthNav";
 
@@ -58,11 +59,11 @@ function VehicleFilterSelect({
   const ref = useRef<HTMLDivElement | null>(null);
   useDismiss(open, ref, () => setOpen(false));
   const reduceMotion = useReducedMotion();
-  const companyVehicles = vehicles.filter((vehicle) => vehicle.type !== "partner");
+  const companyList = useMemo(() => companyVehicles(vehicles), [vehicles]);
   const selectedLabel =
     value === "all"
       ? "Tất cả xe"
-      : (companyVehicles.find((v) => v.id === value)?.plate ?? "Tất cả xe");
+      : (companyList.find((v) => v.id === value)?.plate ?? "Tất cả xe");
 
   return (
     <div className="relative" ref={ref}>
@@ -104,7 +105,7 @@ function VehicleFilterSelect({
             >
               Tất cả xe
             </button>
-            {companyVehicles.map((v) => (
+            {companyList.map((v) => (
               <button
                 key={v.id}
                 type="button"

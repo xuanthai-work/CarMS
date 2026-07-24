@@ -1,12 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { PencilSimple } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/lib/motion";
 import { saveVehicle, deleteVehicle } from "@/lib/actions";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS, seatLabel, statusLabel, ownerLabel } from "@/lib/vehicles";
-import { Field, Info, inputCls, CancelButton, SaveButton } from "@/components/ui";
+import { DetailCell, EditIconButton, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
 import DatePicker from "@/components/DatePicker";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
@@ -14,10 +13,6 @@ import Modal from "@/components/Modal";
 import { fmtDate } from "@/lib/format";
 import { useFormState } from "@/lib/useFormState";
 import type { Vehicle } from "@/lib/types";
-
-function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
-}
 
 const STATUS_TONE: Record<string, string> = {
   active: "bg-emerald-100 text-emerald-700",
@@ -59,7 +54,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     }
   }
 
-  const editForm = (
+  const editForm = () => (
     <>
       <form id={`veh-${v.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={v.id} />
@@ -114,7 +109,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
       {detailOpen && (
         <Modal title={editing ? "Chỉnh sửa xe" : "Thông tin xe"} onClose={closeModal} maxWidthClass="max-w-2xl">
           {editing ? (
-            <motion.div {...cardMotion(reduceMotion)}>{editForm}</motion.div>
+            <motion.div {...cardMotion(reduceMotion)}>{editForm()}</motion.div>
           ) : (
             <>
               <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
@@ -129,15 +124,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
                 <DetailCell className={v.type === "partner" ? "" : "sm:col-span-2"}><Info label="Ghi chú" value={v.note || "—"} size="md" /></DetailCell>
               </div>
               <div className="mt-5 flex justify-end border-t border-hairline pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  aria-label="Chỉnh sửa"
-                  title="Chỉnh sửa"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
-                >
-                  <PencilSimple size={18} weight="regular" aria-hidden="true" />
-                </button>
+                <EditIconButton onClick={() => setEditing(true)} />
               </div>
             </>
           )}

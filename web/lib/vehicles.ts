@@ -1,3 +1,5 @@
+import type { Vehicle } from "@/lib/types";
+
 // Loại xe (enum theo số chỗ). Thêm/bớt tại đây khi cần.
 export const VEHICLE_TYPES = [4, 7, 16, 29, 35, 45] as const;
 
@@ -25,4 +27,9 @@ export const SEAT_OPTIONS = VEHICLE_TYPES.map((t) => ({ value: String(t), label:
 
 export function statusLabel(status: string): string {
   return VEHICLE_STATUS.find((s) => s.value === status)?.label ?? status;
+}
+
+/** Chỉ xe của công ty (loại trừ xe cộng tác/thuê ngoài). Dùng cho form phiếu dầu. */
+export function companyVehicles(vehicles: Vehicle[]): Vehicle[] {
+  return vehicles.filter((v) => v.type !== "partner");
 }

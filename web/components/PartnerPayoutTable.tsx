@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { savePartnerPayout, deletePartnerPayout } from "@/lib/actions";
-import { Field, inputCls, CancelButton, SaveButton } from "@/components/ui";
+import { DetailCell, PaymentStatusBadge, Field, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
 import DatePicker from "@/components/DatePicker";
 import MoneyInput from "@/components/MoneyInput";
@@ -14,10 +14,6 @@ import { useFormState } from "@/lib/useFormState";
 import { fmtDate } from "@/lib/format";
 import { fmtMoney } from "@/lib/trips";
 import type { Driver, PartnerPayout } from "@/lib/types";
-
-function DetailCell({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl bg-surface px-3 py-3 shadow-sm">{children}</div>;
-}
 
 function PartnerPayoutForm({
   payout,
@@ -138,9 +134,7 @@ export default function PartnerPayoutTable({
                     <td className="px-3 py-2.5 text-muted tabular-nums">{fmtDate(p.workDate)}</td>
                     <td className="px-3 py-2.5 text-right font-semibold text-ink tabular-nums">{fmtMoney(p.amount)}</td>
                     <td className="px-3 py-2.5">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${p.paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                        {p.paymentStatus === "paid" ? "Đã trả" : "Chưa trả"}
-                      </span>
+                      <PaymentStatusBadge paid={p.paymentStatus === "paid"} />
                     </td>
                     <td className="px-3 py-2.5 text-muted">{p.payerName || "-"}</td>
                     <td className="px-3 py-2.5 text-muted">{p.note || "-"}</td>

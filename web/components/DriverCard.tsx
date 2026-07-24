@@ -1,12 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { PencilSimple } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/lib/motion";
 import { saveDriver, deleteDriver } from "@/lib/actions";
 import { LICENSE_OPTIONS, DRIVER_TYPES, driverTypeLabel } from "@/lib/drivers";
-import { Field, Info, inputCls, CancelButton, SaveButton } from "@/components/ui";
+import { DetailCell, EditIconButton, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
 import MoneyInput from "@/components/MoneyInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
@@ -14,10 +13,6 @@ import Modal from "@/components/Modal";
 import { fmtMoney } from "@/lib/trips";
 import { useFormState } from "@/lib/useFormState";
 import type { Driver } from "@/lib/types";
-
-function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
-}
 
 export default function DriverCard({ driver: d }: { driver: Driver }) {
   const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own" });
@@ -47,7 +42,7 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
     }
   }
 
-  const editForm = (
+  const editForm = () => (
     <>
       <form id={`drv-${d.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={d.id} />
@@ -92,7 +87,7 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
       {detailOpen && (
         <Modal title={editing ? "Chỉnh sửa lái xe" : "Thông tin lái xe"} onClose={closeModal} maxWidthClass="max-w-xl">
           {editing ? (
-            <motion.div {...cardMotion(reduceMotion)}>{editForm}</motion.div>
+            <motion.div {...cardMotion(reduceMotion)}>{editForm()}</motion.div>
           ) : (
             <>
               <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
@@ -104,15 +99,7 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
                 <DetailCell className={d.type === "partner" ? "sm:col-span-2" : ""}><Info label="Ghi chú" value={d.note || "—"} size="md" /></DetailCell>
               </div>
               <div className="mt-5 flex justify-end border-t border-hairline pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  aria-label="Chỉnh sửa"
-                  title="Chỉnh sửa"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
-                >
-                  <PencilSimple size={18} weight="regular" aria-hidden="true" />
-                </button>
+                <EditIconButton onClick={() => setEditing(true)} />
               </div>
             </>
           )}

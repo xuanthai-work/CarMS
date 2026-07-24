@@ -4,14 +4,10 @@ import { useState } from "react";
 import { saveDriver } from "@/lib/actions";
 import Modal from "@/components/Modal";
 import { LICENSE_OPTIONS, DRIVER_TYPES } from "@/lib/drivers";
-import { Field, inputCls } from "@/components/ui";
+import { DetailCell, Field, inputCls } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
 import MoneyInput from "@/components/MoneyInput";
 import { useFormState } from "@/lib/useFormState";
-
-function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
-}
 
 export default function AddDriverButton() {
   const [open, setOpen] = useState(false);

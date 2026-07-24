@@ -4,14 +4,10 @@ import { useState } from "react";
 import { saveVehicle } from "@/lib/actions";
 import Modal from "@/components/Modal";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS } from "@/lib/vehicles";
-import { Field, inputCls } from "@/components/ui";
+import { DetailCell, Field, inputCls } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
 import DatePicker from "@/components/DatePicker";
 import { useFormState } from "@/lib/useFormState";
-
-function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
-}
 
 export default function AddVehicleButton() {
   const [open, setOpen] = useState(false);

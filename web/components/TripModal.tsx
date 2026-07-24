@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { PencilSimple } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import Modal from "@/components/Modal";
 import TripForm from "@/components/TripForm";
-import { Info } from "@/components/ui";
+import { EditIconButton, Info } from "@/components/ui";
 import { fmtDate, weekdayVn } from "@/lib/format";
 import { fmtMoney, tourTypeLabel, sameVehicleBothLegs, legRoute } from "@/lib/trips";
 import { seatLabel } from "@/lib/vehicles";
@@ -155,15 +154,7 @@ export default function TripModal({
 
         <div className="flex items-end justify-between gap-4 border-t border-hairline pt-4">
           <Info size="md" label="Ghi chú" value={t.note || "—"} className="min-w-0 flex-1" />
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            aria-label="Chỉnh sửa"
-            title="Chỉnh sửa"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
-          >
-            <PencilSimple size={18} weight="regular" aria-hidden="true" />
-          </button>
+          <EditIconButton onClick={() => setEditing(true)} />
         </div>
       </motion.div>
     </Modal>
