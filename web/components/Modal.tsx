@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, useReducedMotion } from "framer-motion";
 
 export default function Modal({
@@ -28,7 +29,7 @@ export default function Modal({
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
     <motion.div
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -58,6 +59,7 @@ export default function Modal({
           {children}
         </motion.div>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }

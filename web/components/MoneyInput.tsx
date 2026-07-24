@@ -62,6 +62,9 @@ export default function MoneyInput({
       inputMode="numeric"
       required={required}
       placeholder={placeholder}
+      autoComplete="off"
+      data-1p-ignore=""
+      data-lpignore="true"
       className={className ?? inputCls}
     />
   );
