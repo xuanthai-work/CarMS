@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Trash } from "@phosphor-icons/react";
 import Modal from "@/components/Modal";
 
 export default function ConfirmDeleteButton({
@@ -19,9 +20,11 @@ export default function ConfirmDeleteButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md border border-rose-300 px-4 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-50"
+        aria-label="Xóa"
+        title="Xóa"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-rose-300 text-rose-600 hover:bg-rose-50"
       >
-        Xoá
+        <Trash size={18} weight="regular" aria-hidden="true" />
       </button>
 
       {open && (
@@ -40,8 +43,12 @@ export default function ConfirmDeleteButton({
             </button>
             <form action={action}>
               <input type="hidden" name="id" value={id} />
-              <button className="rounded-md bg-rose-600 px-5 py-2 text-sm font-semibold text-white hover:bg-rose-700">
-                Xoá
+              <button
+                aria-label="Xóa"
+                title="Xóa"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-rose-600 text-white hover:bg-rose-700"
+              >
+                <Trash size={18} weight="regular" aria-hidden="true" />
               </button>
             </form>
           </div>

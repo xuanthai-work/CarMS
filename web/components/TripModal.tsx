@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PencilSimple } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import Modal from "@/components/Modal";
 import TripForm from "@/components/TripForm";
@@ -157,9 +158,11 @@ export default function TripModal({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="shrink-0 rounded-xl border border-hairline px-4 py-2 text-sm font-semibold text-muted transition hover:bg-canvas active:scale-[0.98]"
+            aria-label="Chỉnh sửa"
+            title="Chỉnh sửa"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
           >
-            Chỉnh sửa
+            <PencilSimple size={18} weight="regular" aria-hidden="true" />
           </button>
         </div>
       </motion.div>
