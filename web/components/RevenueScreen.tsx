@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import type { Trip, Vehicle, Driver } from "@/lib/types";
 import { tripMoney, summarize, revenueMonthKey, monthProfit } from "@/lib/revenue";
-import { fmtMoney, tourTypeLabel, tripStatusLabel } from "@/lib/trips";
+import { fmtMoney, fmtMoneyUnit, tourTypeLabel, tripStatusLabel } from "@/lib/trips";
 import { monthLabel, addMonth, fmtDate } from "@/lib/format";
 import { normalizeVn } from "@/lib/search";
 import { useRouter } from "next/navigation";
@@ -149,18 +149,18 @@ export default function RevenueScreen({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <Stat label="Doanh thu" value={fmtMoney(summary.recognized)} />
-        <Stat label="Đã thanh toán" value={fmtMoney(paidTotal)} />
+        <Stat label="Doanh thu" value={fmtMoneyUnit(summary.recognized)} />
+        <Stat label="Đã thanh toán" value={fmtMoneyUnit(paidTotal)} />
         <Stat
           label="Tổng chi phí tháng"
-          value={fmtMoney(totalCost)}
+          value={fmtMoneyUnit(totalCost)}
           hint="Bấm để xem chi tiết"
           onClick={() => setCostDetailOpen(true)}
         />
-        <Stat label="Còn phải thu" value={fmtMoney(summary.outstanding)} tone="amber" />
+        <Stat label="Còn phải thu" value={fmtMoneyUnit(summary.outstanding)} tone="amber" />
         <Stat
           label="Lợi nhuận"
-          value={fmtMoney(profit)}
+          value={fmtMoneyUnit(profit)}
           tone={profit >= 0 ? "emerald" : "rose"}
         />
         <Stat label="Số chuyến" value={String(summary.count)} hint={noPriceCount > 0 ? `${noPriceCount} chuyến chưa có giá` : undefined} />

@@ -52,8 +52,14 @@ export function legRoute(leg: { from: string; to: string }): string {
   return [leg.from, leg.to].map((x) => x?.trim()).filter(Boolean).join(" → ") || "—";
 }
 
-/** Tiền: 1500000 -> "1.500.000 ₫"; null -> "—". */
+/** Tiền: 1500000 -> "1.500.000"; null -> "—". Không kèm đơn vị (mặc định là VND, ai cũng hiểu). */
 export function fmtMoney(n: number | null | undefined): string {
+  if (n == null) return "—";
+  return n.toLocaleString("vi-VN");
+}
+
+/** Như fmtMoney nhưng kèm đơn vị ₫ — chỉ dùng cho thẻ số tổng quan (headline), không dùng trong bảng/thẻ chuyến. */
+export function fmtMoneyUnit(n: number | null | undefined): string {
   if (n == null) return "—";
   return `${n.toLocaleString("vi-VN")} ₫`;
 }

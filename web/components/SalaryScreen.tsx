@@ -5,7 +5,7 @@ import FilterTabs from "@/components/FilterTabs";
 import SalaryMonthTable from "@/components/SalaryMonthTable";
 import PartnerPayoutTable from "@/components/PartnerPayoutTable";
 import { monthLabel, addMonth } from "@/lib/format";
-import { fmtMoney } from "@/lib/trips";
+import { fmtMoneyUnit } from "@/lib/trips";
 import type { SalaryRow } from "@/lib/salary";
 import type { Driver, PartnerPayout } from "@/lib/types";
 import { Toolbar, SearchInput } from "@/components/ui";
@@ -64,10 +64,10 @@ export default function SalaryScreen({
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {isManager && <Tile label="Tổng lương tháng" value={fmtMoney(totalNet)} />}
-        <Tile label="Trả công đối tác" value={fmtMoney(payoutTotal)} />
-        {isManager && <Tile label="Đã trả" value={fmtMoney(paidTotal)} tone="emerald" />}
-        {isManager && <Tile label="Còn phải trả" value={fmtMoney(owing)} tone={owing > 0 ? "amber" : "ink"} />}
+        {isManager && <Tile label="Tổng lương tháng" value={fmtMoneyUnit(totalNet)} />}
+        <Tile label="Trả công đối tác" value={fmtMoneyUnit(payoutTotal)} />
+        {isManager && <Tile label="Đã trả" value={fmtMoneyUnit(paidTotal)} tone="emerald" />}
+        {isManager && <Tile label="Còn phải trả" value={fmtMoneyUnit(owing)} tone={owing > 0 ? "amber" : "ink"} />}
       </div>
 
       <Toolbar>
