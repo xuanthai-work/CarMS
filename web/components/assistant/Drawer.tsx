@@ -13,7 +13,7 @@ import InstructionsDialog from "@/components/assistant/InstructionsDialog";
 import { PlusIcon, GearIcon, CloseIcon, WarningGlyph } from "@/components/assistant/icons";
 
 /** Thông điệp lỗi thân thiện — không lộ chi tiết kỹ thuật/hạn mức ra người dùng. */
-const CHAT_ERROR_MESSAGE = "Đã có lỗi khi kết nối trợ lý. Thử lại?";
+const CHAT_ERROR_MESSAGE = "Đã có lỗi khi kết nối với Meow. Thử lại?";
 
 /** ≥1280px: panel đóng vai trò docked (đẩy nội dung), dưới ngưỡng này: overlay trượt từ phải.
  *  Chọn 1280 (không phải 1024) để khi docked, <main> còn đủ rộng, không bị bóp quá hẹp. */
@@ -91,7 +91,7 @@ export default function Drawer() {
       {/* Header 1 hàng: tiêu đề (trái) + Chat mới / cài đặt / đóng (phải).
           Đổi model đã chuyển xuống thanh nhập (Composer) nên không còn ở đây. */}
       <header className="flex items-center justify-between gap-2 border-b border-hairline px-4 py-3">
-        <span className="text-sm font-bold text-ink">Trợ lý</span>
+        <span className="text-sm font-bold text-ink">Meow</span>
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -113,7 +113,7 @@ export default function Drawer() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Đóng trợ lý"
+            aria-label="Đóng Meow"
             title="Đóng"
             className="shrink-0 rounded-lg p-1.5 text-muted transition-colors hover:bg-canvas hover:text-ink"
           >
@@ -199,7 +199,7 @@ export default function Drawer() {
               <motion.aside
                 role="dialog"
                 aria-modal="true"
-                aria-label="Trợ lý AI"
+                aria-label="Meow AI"
                 initial={reduceMotion ? false : { x: "100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}

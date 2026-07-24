@@ -127,7 +127,7 @@ export default function Composer({
             }
           }}
           rows={1}
-          placeholder="Hỏi trợ lý…"
+          placeholder="Hỏi Meow…"
           className="max-h-40 min-h-[36px] w-full resize-none bg-transparent px-1.5 py-1 text-sm text-ink outline-none placeholder:text-muted/70"
         />
 

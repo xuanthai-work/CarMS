@@ -19,7 +19,7 @@ export default function InstructionsDialog({ onClose }: { onClose: () => void })
     <Modal title="Chỉ dẫn tuỳ chỉnh" onClose={onClose} maxWidthClass="max-w-md">
       <div className="space-y-3">
         <p className="text-sm text-muted">
-          Trợ lý sẽ nhớ chỉ dẫn này ở mọi câu hỏi (lưu trên trình duyệt của bạn).
+          Meow sẽ nhớ chỉ dẫn này ở mọi câu hỏi (lưu trên trình duyệt của bạn).
         </p>
         <textarea
           value={draft}

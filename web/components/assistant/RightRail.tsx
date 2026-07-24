@@ -22,7 +22,7 @@ export default function RightRail() {
   const extensions: Extension[] = [
     {
       id: "chat",
-      label: "Trợ lý AI",
+      label: "Meow AI",
       icon: ChatBubbleIcon,
       active: open,
       onClick: () => setOpen(!open),

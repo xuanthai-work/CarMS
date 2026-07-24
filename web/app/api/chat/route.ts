@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return new Response("Chưa đăng nhập", { status: 401 });
   if (!process.env.GEMINI_API_KEY) {
-    return new Response("Trợ lý chưa được cấu hình (thiếu GEMINI_API_KEY).", { status: 503 });
+    return new Response("Meow chưa được cấu hình (thiếu GEMINI_API_KEY).", { status: 503 });
   }
 
   let body: ChatBody;
