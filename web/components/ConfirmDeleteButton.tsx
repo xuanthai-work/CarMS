@@ -29,9 +29,9 @@ export default function ConfirmDeleteButton({
 
       {open && (
         <Modal title="Xác nhận xoá" onClose={() => setOpen(false)}>
-          <p className="text-sm text-slate-600">
-            Bạn có chắc muốn xoá <span className="font-semibold text-slate-800">{label}</span>? Thao tác
-            này không thể hoàn tác.
+          <p className="text-sm text-slate-600">Đã nghĩ kĩ chưa mà chọn em? 🥺</p>
+          <p className="mt-1.5 text-xs text-muted">
+            Xoá <span className="font-semibold text-slate-800">{label}</span> — không hoàn tác được.
           </p>
           <div className="mt-5 flex justify-end gap-2">
             <button

@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Trash } from "@phosphor-icons/react";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import DatePicker from "@/components/DatePicker";
 import Combobox from "@/components/Combobox";
 import MoneyInput from "@/components/MoneyInput";
 import FuelPaymentStatusSelect from "@/components/FuelPaymentStatusSelect";
 import { deleteFuelEntry, saveFuelEntry } from "@/lib/actions";
 import { companyVehicles } from "@/lib/vehicles";
+import { fmtDate } from "@/lib/format";
 import { DetailCell, Field, inputCls } from "@/components/ui";
 import type { FuelEntry, Vehicle } from "@/lib/types";
 
@@ -61,16 +62,6 @@ export default function FuelEntryForm({
     });
   }
 
-  function remove() {
-    if (!entry) return;
-    const fd = new FormData();
-    fd.set("id", entry.id);
-    startTransition(async () => {
-      await deleteFuelEntry(fd);
-      onDone();
-    });
-  }
-
   return (
     <form action={submitForm} className="space-y-3">
       {entry && <input type="hidden" name="id" value={entry.id} />}
@@ -111,16 +102,11 @@ export default function FuelEntryForm({
       {err && <div className="text-sm font-medium text-rose-600">{err}</div>}
       <div className="flex items-center justify-between gap-2 border-t border-hairline pt-3">
         {entry ? (
-          <button
-            type="button"
-            onClick={remove}
-            disabled={isPending}
-            aria-label="Xóa"
-            title="Xóa"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-          >
-            <Trash size={18} weight="regular" aria-hidden="true" />
-          </button>
+          <ConfirmDeleteButton
+            action={deleteFuelEntry}
+            id={entry.id}
+            label={`phiếu dầu ngày ${fmtDate(entry.refuelDate)}`}
+          />
         ) : (
           <span />
         )}
