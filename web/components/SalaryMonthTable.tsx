@@ -7,14 +7,16 @@ import {
   setSalaryPaid,
   setSalaryPaidDate,
 } from "@/lib/actions";
-import { Field, CancelButton, SaveButton } from "@/components/ui";
+import { Field, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import MoneyInput from "@/components/MoneyInput";
 import DatePicker from "@/components/DatePicker";
+import Modal from "@/components/Modal";
 import { fmtMoney } from "@/lib/trips";
+import { fmtDate } from "@/lib/format";
 import { normalizeVn } from "@/lib/search";
 import type { SalaryRow } from "@/lib/salary";
 
-function EditorRow({
+function SalaryEditForm({
   row,
   monthKey,
   onDone,
@@ -25,87 +27,54 @@ function EditorRow({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  async function submit(fd: FormData) {
-    await saveSalaryMonth(fd);
-    onDone();
-  }
-  return (
-    <tr className="border-b border-brand-200 bg-brand-50/50 align-top">
-      <td colSpan={8} className="p-3">
-        <form
-          action={submit}
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
-        >
-          <input type="hidden" name="personType" value={row.personType} />
-          <input type="hidden" name="personId" value={row.personId} />
-          <input type="hidden" name="monthKey" value={monthKey} />
-          <Field label="Thưởng / phụ cấp (cộng)">
-            <MoneyInput
-              name="additions"
-              defaultValue={row.additions || null}
-              placeholder="0"
-            />
-          </Field>
-          <Field label="Tạm ứng / khấu trừ (trừ)">
-            <MoneyInput
-              name="deductions"
-              defaultValue={row.deductions || null}
-              placeholder="0"
-            />
-          </Field>
-          <Field label="Ghi chú">
-            <input
-              name="note"
-              defaultValue={row.note}
-              className="w-full rounded-xl border border-hairline bg-surface px-3 py-2 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
-          </Field>
-          <div className="flex items-end justify-end gap-2">
-            <CancelButton onClick={onCancel} />
-            <SaveButton />
-          </div>
-        </form>
-      </td>
-    </tr>
-  );
-}
+  const [isPending, start] = useTransition();
+  const [paidDate, setPaidDate] = useState(row.paidDate ?? "");
 
-function PaidDatePicker({
-  row,
-  monthKey,
-}: {
-  row: SalaryRow;
-  monthKey: string;
-}) {
-  const router = useRouter();
-  const [value, setValue] = useState(row.paidDate ?? "");
-  const [pending, start] = useTransition();
-
-  function change(next: string) {
-    setValue(next);
-    const fd = new FormData();
-    fd.set("personType", row.personType);
-    fd.set("personId", row.personId);
-    fd.set("monthKey", monthKey);
-    fd.set("paidDate", next);
+  function submit(fd: FormData) {
     start(async () => {
-      await setSalaryPaidDate(fd);
-      router.refresh();
+      await saveSalaryMonth(fd);
+      const pd = new FormData();
+      pd.set("personType", row.personType);
+      pd.set("personId", row.personId);
+      pd.set("monthKey", monthKey);
+      pd.set("paidDate", paidDate);
+      await setSalaryPaidDate(pd);
+      onDone();
     });
   }
 
   return (
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className={pending ? "opacity-60" : ""}
-    >
-      <DatePicker
-        name="paidDate"
-        value={value}
-        onChange={change}
-        disabled={pending}
-      />
-    </div>
+    <form action={submit} className="space-y-3">
+      <input type="hidden" name="personType" value={row.personType} />
+      <input type="hidden" name="personId" value={row.personId} />
+      <input type="hidden" name="monthKey" value={monthKey} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Thưởng / phụ cấp (cộng)">
+          <MoneyInput
+            name="additions"
+            defaultValue={row.additions || null}
+            placeholder="0"
+          />
+        </Field>
+        <Field label="Tạm ứng / khấu trừ (trừ)">
+          <MoneyInput
+            name="deductions"
+            defaultValue={row.deductions || null}
+            placeholder="0"
+          />
+        </Field>
+        <Field label="Ngày trả lương">
+          <DatePicker name="paidDate" value={paidDate} onChange={setPaidDate} />
+        </Field>
+        <Field label="Ghi chú">
+          <input name="note" defaultValue={row.note} className={inputCls} />
+        </Field>
+      </div>
+      <div className="flex justify-end gap-2 border-t border-hairline pt-3">
+        <CancelButton onClick={onCancel} />
+        <SaveButton>{isPending ? "Đang lưu…" : "Lưu"}</SaveButton>
+      </div>
+    </form>
   );
 }
 
@@ -176,49 +145,38 @@ export default function SalaryMonthTable({
           Không tìm thấy nhân sự phù hợp.
         </div>
       ) : (
-        <table className="w-full table-fixed text-sm">
-          <colgroup>
-            <col style={{ width: "17%" }} />
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "10%" }} />
-            <col style={{ width: "12%" }} />
-          </colgroup>
-          <thead className="bg-canvas/70">
-            <tr className="border-b border-hairline text-left text-xs font-semibold text-muted">
-              <th className="px-3 py-2.5">Nhân sự</th>
-              <th className="px-3 py-2.5 text-right">Cơ bản</th>
-              <th className="px-3 py-2.5 text-right">Điều chỉnh</th>
-              <th className="px-3 py-2.5 text-right">Thực nhận</th>
-              <th className="px-3 py-2.5">Ngày nhận lương</th>
-              <th className="px-4 py-2.5">Ngày trả lương</th>
-              <th className="px-4 py-2.5">Trạng thái</th>
-              <th className="px-4 py-2.5">Ghi chú</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRows.map((r) =>
-              editingKey === keyOf(r) ? (
-                <EditorRow
-                  key={keyOf(r)}
-                  row={r}
-                  monthKey={monthKey}
-                  onDone={() => {
-                    setEditingKey(null);
-                    router.refresh();
-                  }}
-                  onCancel={() => setEditingKey(null)}
-                />
-              ) : (
+        <div className="overflow-x-auto thin-scroll">
+          <table className="w-full min-w-[880px] table-fixed text-sm">
+            <colgroup>
+              <col style={{ width: "17%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "12%" }} />
+            </colgroup>
+            <thead className="bg-canvas/70">
+              <tr className="border-b border-hairline text-left text-xs font-semibold text-muted">
+                <th className="sticky left-0 z-10 bg-canvas px-3 py-2.5">Nhân sự</th>
+                <th className="px-3 py-2.5 text-right">Cơ bản</th>
+                <th className="px-3 py-2.5 text-right">Điều chỉnh</th>
+                <th className="px-3 py-2.5 text-right">Thực nhận</th>
+                <th className="px-3 py-2.5">Ngày nhận lương</th>
+                <th className="px-4 py-2.5">Ngày trả lương</th>
+                <th className="px-4 py-2.5">Trạng thái</th>
+                <th className="px-4 py-2.5">Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((r) => (
                 <tr
                   key={keyOf(r)}
                   onClick={() => setEditingKey(keyOf(r))}
-                  className="cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
+                  className="group cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
                 >
-                  <td className="px-3 py-2.5">
+                  <td className="sticky left-0 z-10 bg-surface px-3 py-2.5 group-hover:bg-canvas/60">
                     <div className="font-semibold text-ink">{r.name}</div>
                     <div className="text-xs text-muted">{r.role}</div>
                   </td>
@@ -248,7 +206,7 @@ export default function SalaryMonthTable({
                     {r.payday ? `Ngày ${r.payday}` : "-"}
                   </td>
                   <td className="px-4 py-2.5 text-muted tabular-nums">
-                    <PaidDatePicker row={r} monthKey={monthKey} />
+                    {fmtDate(r.paidDate)}
                   </td>
                   <td
                     className="px-4 py-2.5"
@@ -263,11 +221,34 @@ export default function SalaryMonthTable({
                     {r.note || "-"}
                   </td>
                 </tr>
-              ),
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
+
+      {editingKey &&
+        (() => {
+          const editing = filteredRows.find((r) => keyOf(r) === editingKey);
+          if (!editing) return null;
+          return (
+            <Modal
+              title={`Sửa lương — ${editing.name}`}
+              onClose={() => setEditingKey(null)}
+              maxWidthClass="max-w-lg"
+            >
+              <SalaryEditForm
+                row={editing}
+                monthKey={monthKey}
+                onDone={() => {
+                  setEditingKey(null);
+                  router.refresh();
+                }}
+                onCancel={() => setEditingKey(null)}
+              />
+            </Modal>
+          );
+        })()}
     </div>
   );
 }

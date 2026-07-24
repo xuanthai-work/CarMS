@@ -4,14 +4,15 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { dropdownMotion } from "@/lib/motion";
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import FuelEntryEditorRow, {
+import FuelEntryForm, {
   FuelColgroup,
 } from "@/components/FuelEntryEditorRow";
+import Modal from "@/components/Modal";
 import FilterTabs from "@/components/FilterTabs";
 import { useDismiss } from "@/lib/useDismiss";
 import { addMonth, fmtDate, monthLabel } from "@/lib/format";
 import { normalizeVn } from "@/lib/search";
-import { fmtMoney } from "@/lib/trips";
+import { fmtMoney, fmtMoneyUnit } from "@/lib/trips";
 import type { FuelEntry, Vehicle } from "@/lib/types";
 import { Toolbar, SearchInput } from "@/components/ui";
 import MonthNav from "@/components/MonthNav";
@@ -200,13 +201,13 @@ export default function FuelScreen({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Tổng tiền dầu" value={fmtMoney(summary.total)} />
+        <Stat label="Tổng tiền dầu" value={fmtMoneyUnit(summary.total)} />
         <Stat
           label="Đã thanh toán"
-          value={fmtMoney(summary.paid)}
+          value={fmtMoneyUnit(summary.paid)}
           tone="emerald"
         />
-        <Stat label="Còn nợ" value={fmtMoney(summary.unpaid)} tone="amber" />
+        <Stat label="Còn nợ" value={fmtMoneyUnit(summary.unpaid)} tone="amber" />
         <Stat label="Số lần đổ" value={String(summary.count)} />
       </div>
 
@@ -235,10 +236,10 @@ export default function FuelScreen({
         />
         <button
           type="button"
-          onClick={() => setAdding((open) => !open)}
+          onClick={() => setAdding(true)}
           className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
         >
-          {adding ? "Đóng phiếu mới" : "+ Thêm phiếu dầu"}
+          + Thêm phiếu dầu
         </button>
       </Toolbar>
 
@@ -248,11 +249,12 @@ export default function FuelScreen({
             Không có phiếu dầu trong tháng này.
           </div>
         ) : (
-          <table className="w-full table-fixed text-[14px]">
+          <div className="overflow-x-auto thin-scroll">
+          <table className="w-full min-w-[880px] table-fixed text-[14px]">
             <FuelColgroup />
             <thead className="bg-canvas/70">
               <tr className="border-b border-hairline text-left text-[12px] font-bold uppercase tracking-[0.02em] text-muted">
-                <th className="whitespace-nowrap px-4 py-3.5">Ngày đổ</th>
+                <th className="sticky left-0 z-10 bg-canvas whitespace-nowrap px-4 py-3.5">Ngày đổ</th>
                 <th className="whitespace-nowrap px-4 py-3.5">Biển số</th>
                 <th className="whitespace-nowrap px-4 py-3.5 text-right">
                   Số tiền
@@ -266,74 +268,80 @@ export default function FuelScreen({
               </tr>
             </thead>
             <tbody>
-              {adding && (
-                <FuelEntryEditorRow
-                  vehicles={vehicles}
-                  defaultDate={`${monthKey}-01`}
-                  onDone={() => {
-                    setAdding(false);
-                    router.refresh();
-                  }}
-                  onCancel={() => setAdding(false)}
-                />
-              )}
-              {rows.map((entry) =>
-                editingId === entry.id ? (
-                  <FuelEntryEditorRow
-                    key={entry.id}
-                    entry={entry}
-                    vehicles={vehicles}
-                    defaultDate={entry.refuelDate}
-                    onDone={() => {
-                      setEditingId(null);
-                      router.refresh();
-                    }}
-                    onCancel={() => setEditingId(null)}
-                  />
-                ) : (
-                  <tr
-                    key={entry.id}
-                    onClick={() => setEditingId(entry.id)}
-                    className="cursor-pointer border-b border-slate-100 transition hover:bg-slate-50"
-                  >
-                    <td className="whitespace-nowrap px-4 py-4 text-[15px] text-slate-700">
-                      {fmtDate(entry.refuelDate)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-[15px] font-bold text-slate-900">
-                      {vehicleMap.get(entry.vehicleId)?.plate ?? "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-right text-[15px] font-bold text-slate-800">
-                      {fmtMoney(entry.amount)}
-                    </td>
-                    <td className="truncate px-4 py-4 text-[15px] text-slate-700">
-                      {entry.payerName || "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-[14px] text-slate-500">
-                      {entry.paymentDate ? fmtDate(entry.paymentDate) : "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-4">
-                      <span
-                        className={`inline-flex w-fit rounded-full px-2.5 py-1 text-[12px] font-bold leading-none ${
-                          entry.paymentStatus === "paid"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {entry.paymentStatus === "paid"
-                          ? "Đã thanh toán"
-                          : "Chưa thanh toán"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-[14px] leading-relaxed text-slate-700">
-                      {entry.note || <span className="text-slate-300">—</span>}
-                    </td>
-                  </tr>
-                ),
-              )}
+              {rows.map((entry) => (
+                <tr
+                  key={entry.id}
+                  onClick={() => setEditingId(entry.id)}
+                  className="group cursor-pointer border-b border-slate-100 transition hover:bg-slate-50"
+                >
+                  <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-4 py-4 text-[15px] text-slate-700 group-hover:bg-slate-50">
+                    {fmtDate(entry.refuelDate)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-4 text-[15px] font-bold text-slate-900">
+                    {vehicleMap.get(entry.vehicleId)?.plate ?? "—"}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-4 text-right text-[15px] font-bold text-slate-800">
+                    {fmtMoney(entry.amount)}
+                  </td>
+                  <td className="truncate px-4 py-4 text-[15px] text-slate-700">
+                    {entry.payerName || "—"}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-4 text-[14px] text-slate-500">
+                    {entry.paymentDate ? fmtDate(entry.paymentDate) : "—"}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-4">
+                    <span
+                      className={`inline-flex w-fit rounded-full px-2.5 py-1 text-[12px] font-bold leading-none ${
+                        entry.paymentStatus === "paid"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {entry.paymentStatus === "paid"
+                        ? "Đã thanh toán"
+                        : "Chưa thanh toán"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-[14px] leading-relaxed text-slate-700">
+                    {entry.note || <span className="text-slate-300">—</span>}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
+
+      {(adding || editingId) && (() => {
+        const editing = editingId ? rows.find((e) => e.id === editingId) : undefined;
+        if (editingId && !editing) return null;
+        return (
+          <Modal
+            title={editing ? "Sửa phiếu dầu" : "Thêm phiếu dầu"}
+            onClose={() => {
+              setAdding(false);
+              setEditingId(null);
+            }}
+            maxWidthClass="max-w-2xl"
+          >
+            <FuelEntryForm
+              entry={editing}
+              vehicles={vehicles}
+              defaultDate={editing ? editing.refuelDate : `${monthKey}-01`}
+              onDone={() => {
+                setAdding(false);
+                setEditingId(null);
+                router.refresh();
+              }}
+              onCancel={() => {
+                setAdding(false);
+                setEditingId(null);
+              }}
+            />
+          </Modal>
+        );
+      })()}
     </div>
   );
 }

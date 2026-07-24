@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { cardMotion } from "@/lib/motion";
+import { Trash } from "@phosphor-icons/react";
 import DatePicker from "@/components/DatePicker";
 import Combobox from "@/components/Combobox";
 import MoneyInput from "@/components/MoneyInput";
 import FuelPaymentStatusSelect from "@/components/FuelPaymentStatusSelect";
 import { deleteFuelEntry, saveFuelEntry } from "@/lib/actions";
-import { inputCls } from "@/components/ui";
+import { Field, inputCls } from "@/components/ui";
 import type { FuelEntry, Vehicle } from "@/lib/types";
 
-/** Bề rộng cột bảng tiền dầu — DÙNG CHUNG cho header (FuelScreen) và hàng sửa để thẳng cột. */
+/** Bề rộng cột bảng tiền dầu — DÙNG CHUNG cho header (FuelScreen). Giữ nguyên. */
 export const FuelColgroup = () => (
   <colgroup>
     <col style={{ width: "14%" }} />
@@ -24,7 +23,7 @@ export const FuelColgroup = () => (
   </colgroup>
 );
 
-export default function FuelEntryEditorRow({
+export default function FuelEntryForm({
   entry,
   vehicles,
   defaultDate,
@@ -37,8 +36,6 @@ export default function FuelEntryEditorRow({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const formId = `fuel-row-${entry?.id ?? "new"}`;
-  const reduceMotion = useReducedMotion();
   const [isPending, startTransition] = useTransition();
   const [vehicleId, setVehicleId] = useState(entry?.vehicleId ?? "");
   const [refuelDate, setRefuelDate] = useState(entry?.refuelDate ?? defaultDate);
@@ -70,109 +67,89 @@ export default function FuelEntryEditorRow({
   }
 
   return (
-    <motion.tr
-      {...cardMotion(reduceMotion)}
-      className={`align-top ${entry ? "border-b border-hairline bg-brand-50/40" : "border-b border-brand-200 bg-brand-50/60"}`}
-    >
-      <td colSpan={7} className="p-0">
-        <form id={formId} action={submitForm}>
-          {entry && <input type="hidden" name="id" value={entry.id} />}
-          <table className="w-full table-fixed">
-            <FuelColgroup />
-            <tbody>
-              <tr>
-                <td className="px-4 py-3 align-top">
-                  <DatePicker name="refuelDate" value={refuelDate} onChange={setRefuelDate} />
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <Combobox
-                    name="vehicleId"
-                    value={vehicleId}
-                    onChange={setVehicleId}
-                    options={vehicles.map((v) => ({ id: v.id, label: v.plate }))}
-                    placeholder="Chọn xe…"
-                    emptyText="Không thấy xe"
-                  />
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <MoneyInput
-                    name="amount"
-                    defaultValue={entry?.amount ?? null}
-                    required
-                    placeholder={!entry ? "Số tiền" : undefined}
-                  />
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <input
-                    name="payerName"
-                    defaultValue={entry?.payerName ?? ""}
-                    placeholder={!entry ? "Người đổ" : undefined}
-                    className={inputCls}
-                  />
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <DatePicker
-                    name="paymentDate"
-                    value={paymentStatus === "paid" ? paymentDate : ""}
-                    onChange={setPaymentDate}
-                    disabled={paymentStatus !== "paid"}
-                  />
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <FuelPaymentStatusSelect
-                    name="paymentStatus"
-                    value={paymentStatus}
-                    onChange={setPaymentStatus}
-                  />
-                </td>
-                <td className="px-4 py-3 align-top">
-                  <div className="space-y-2">
-                    <input
-                      name="note"
-                      defaultValue={entry?.note ?? ""}
-                      placeholder={!entry ? "Ghi chú" : undefined}
-                      className={inputCls}
-                    />
-                    {err && <div className="text-right text-xs font-medium text-rose-600">{err}</div>}
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {entry && (
-                        <button
-                          type="button"
-                          onClick={remove}
-                          disabled={isPending}
-                          className="rounded-md border border-rose-300 px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-                        >
-                          Xóa
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={onCancel}
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-                      >
-                        Hủy
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isPending}
-                        className="rounded-md bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-                      >
-                        {isPending
-                          ? entry
-                            ? "Đang lưu…"
-                            : "Đang thêm…"
-                          : entry
-                          ? "Lưu"
-                          : "Thêm phiếu dầu"}
-                      </button>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </form>
-      </td>
-    </motion.tr>
+    <form action={submitForm} className="space-y-3">
+      {entry && <input type="hidden" name="id" value={entry.id} />}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Ngày đổ">
+          <DatePicker name="refuelDate" value={refuelDate} onChange={setRefuelDate} />
+        </Field>
+        <Field label="Xe">
+          <Combobox
+            name="vehicleId"
+            value={vehicleId}
+            onChange={setVehicleId}
+            options={vehicles.map((v) => ({ id: v.id, label: v.plate }))}
+            placeholder="Chọn xe…"
+            emptyText="Không thấy xe"
+          />
+        </Field>
+        <Field label="Số tiền">
+          <MoneyInput name="amount" defaultValue={entry?.amount ?? null} required placeholder="Số tiền" />
+        </Field>
+        <Field label="Người đổ">
+          <input
+            name="payerName"
+            defaultValue={entry?.payerName ?? ""}
+            placeholder="Người đổ"
+            className={inputCls}
+          />
+        </Field>
+        <Field label="Trạng thái">
+          <FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} />
+        </Field>
+        <Field label="Ngày thanh toán">
+          <DatePicker
+            name="paymentDate"
+            value={paymentStatus === "paid" ? paymentDate : ""}
+            onChange={setPaymentDate}
+            disabled={paymentStatus !== "paid"}
+          />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label="Ghi chú">
+            <input name="note" defaultValue={entry?.note ?? ""} placeholder="Ghi chú" className={inputCls} />
+          </Field>
+        </div>
+      </div>
+      {err && <div className="text-sm font-medium text-rose-600">{err}</div>}
+      <div className="flex items-center justify-between gap-2 border-t border-hairline pt-3">
+        {entry ? (
+          <button
+            type="button"
+            onClick={remove}
+            disabled={isPending}
+            aria-label="Xóa"
+            title="Xóa"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+          >
+            <Trash size={18} weight="regular" aria-hidden="true" />
+          </button>
+        ) : (
+          <span />
+        )}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
+          >
+            {isPending
+              ? entry
+                ? "Đang lưu…"
+                : "Đang thêm…"
+              : entry
+              ? "Lưu"
+              : "Thêm phiếu dầu"}
+          </button>
+        </div>
+      </div>
+    </form>
   );
 }

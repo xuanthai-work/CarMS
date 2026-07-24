@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
-import { cardMotion } from "@/lib/motion";
 import { savePartnerPayout, deletePartnerPayout } from "@/lib/actions";
 import { Field, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import SelectMenu from "@/components/SelectMenu";
@@ -11,12 +9,13 @@ import DatePicker from "@/components/DatePicker";
 import MoneyInput from "@/components/MoneyInput";
 import FuelPaymentStatusSelect from "@/components/FuelPaymentStatusSelect";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import Modal from "@/components/Modal";
 import { useFormState } from "@/lib/useFormState";
 import { fmtDate } from "@/lib/format";
 import { fmtMoney } from "@/lib/trips";
 import type { Driver, PartnerPayout } from "@/lib/types";
 
-function EditorRow({
+function PartnerPayoutForm({
   payout,
   drivers,
   defaultDate,
@@ -29,7 +28,6 @@ function EditorRow({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const reduceMotion = useReducedMotion();
   const { form, set } = useFormState(() => ({
     driverId: payout?.driverId ?? "",
     workDate: payout?.workDate ?? defaultDate,
@@ -45,45 +43,38 @@ function EditorRow({
   }
 
   return (
-    <motion.tr
-      {...cardMotion(reduceMotion)}
-      className="border-b border-brand-200 bg-brand-50/50 align-top"
-    >
-      <td colSpan={6} className="p-3">
-        <form id={`pp-${payout?.id ?? "new"}`} action={submit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {payout && <input type="hidden" name="id" value={payout.id} />}
-          <Field label="Lái xe đối tác">
-            <SelectMenu name="driverId" value={form.driverId} onChange={set("driverId")} options={options} placeholder="Chọn lái xe" />
-          </Field>
-          <Field label="Ngày làm">
-            <DatePicker name="workDate" value={form.workDate} onChange={set("workDate")} />
-          </Field>
-          <Field label="Số tiền">
-            <MoneyInput name="amount" defaultValue={payout?.amount ?? null} placeholder="VD: 800.000" />
-          </Field>
-          <Field label="Trạng thái">
-            <FuelPaymentStatusSelect name="paymentStatus" value={form.paymentStatus} onChange={set("paymentStatus")} />
-          </Field>
-          <Field label="Người trả">
-            <input name="payerName" defaultValue={payout?.payerName ?? ""} className={inputCls} />
-          </Field>
-          <Field label="Ghi chú">
-            <input name="note" defaultValue={payout?.note ?? ""} className={inputCls} />
-          </Field>
-          <div className="flex items-center justify-between sm:col-span-2 lg:col-span-3">
-            {payout ? (
-              <ConfirmDeleteButton action={deletePartnerPayout} id={payout.id} label={`phiếu của lái xe`} />
-            ) : (
-              <span />
-            )}
-            <div className="flex gap-2">
-              <CancelButton onClick={onCancel} />
-              <SaveButton />
-            </div>
-          </div>
-        </form>
-      </td>
-    </motion.tr>
+    <form id={`pp-${payout?.id ?? "new"}`} action={submit} className="grid gap-3 sm:grid-cols-2">
+      {payout && <input type="hidden" name="id" value={payout.id} />}
+      <Field label="Lái xe đối tác">
+        <SelectMenu name="driverId" value={form.driverId} onChange={set("driverId")} options={options} placeholder="Chọn lái xe" />
+      </Field>
+      <Field label="Ngày làm">
+        <DatePicker name="workDate" value={form.workDate} onChange={set("workDate")} />
+      </Field>
+      <Field label="Số tiền">
+        <MoneyInput name="amount" defaultValue={payout?.amount ?? null} placeholder="VD: 800.000" />
+      </Field>
+      <Field label="Trạng thái">
+        <FuelPaymentStatusSelect name="paymentStatus" value={form.paymentStatus} onChange={set("paymentStatus")} />
+      </Field>
+      <Field label="Người trả">
+        <input name="payerName" defaultValue={payout?.payerName ?? ""} className={inputCls} />
+      </Field>
+      <Field label="Ghi chú">
+        <input name="note" defaultValue={payout?.note ?? ""} className={inputCls} />
+      </Field>
+      <div className="flex items-center justify-between sm:col-span-2">
+        {payout ? (
+          <ConfirmDeleteButton action={deletePartnerPayout} id={payout.id} label={`phiếu của lái xe`} />
+        ) : (
+          <span />
+        )}
+        <div className="flex gap-2">
+          <CancelButton onClick={onCancel} />
+          <SaveButton />
+        </div>
+      </div>
+    </form>
   );
 }
 
@@ -108,15 +99,20 @@ export default function PartnerPayoutTable({
     router.refresh();
   }
 
+  function close() {
+    setAdding(false);
+    setEditingId(null);
+  } // đóng, KHÔNG refresh (huỷ/nền)
+
   return (
     <div className="space-y-3">
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={() => setAdding((o) => !o)}
+          onClick={() => setAdding(true)}
           className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
         >
-          {adding ? "Đóng phiếu mới" : "＋ Thêm phiếu trả công"}
+          ＋ Thêm phiếu trả công
         </button>
       </div>
 
@@ -124,39 +120,34 @@ export default function PartnerPayoutTable({
         {!adding && payouts.length === 0 ? (
           <div className="p-12 text-center text-muted">Chưa có phiếu trả công đối tác trong tháng này.</div>
         ) : (
-          <table className="w-full table-fixed text-sm">
-            <colgroup>
-              <col style={{ width: "22%" }} />
-              <col style={{ width: "14%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "16%" }} />
-            </colgroup>
-            <thead className="bg-canvas/70">
-              <tr className="border-b border-hairline text-left text-xs font-semibold text-muted">
-                <th className="px-3 py-2.5">Lái xe</th>
-                <th className="px-3 py-2.5">Ngày làm</th>
-                <th className="px-3 py-2.5 text-right">Số tiền</th>
-                <th className="px-3 py-2.5">Trạng thái</th>
-                <th className="px-3 py-2.5">Người trả</th>
-                <th className="px-3 py-2.5">Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody>
-              {adding && (
-                <EditorRow drivers={drivers} defaultDate={defaultDate} onDone={done} onCancel={() => setAdding(false)} />
-              )}
-              {payouts.map((p) =>
-                editingId === p.id ? (
-                  <EditorRow key={p.id} payout={p} drivers={drivers} defaultDate={defaultDate} onDone={done} onCancel={() => setEditingId(null)} />
-                ) : (
+          <div className="overflow-x-auto thin-scroll">
+            <table className="w-full min-w-[720px] table-fixed text-sm">
+              <colgroup>
+                <col style={{ width: "22%" }} />
+                <col style={{ width: "14%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "16%" }} />
+              </colgroup>
+              <thead className="bg-canvas/70">
+                <tr className="border-b border-hairline text-left text-xs font-semibold text-muted">
+                  <th className="sticky left-0 z-10 bg-canvas px-3 py-2.5">Lái xe</th>
+                  <th className="px-3 py-2.5">Ngày làm</th>
+                  <th className="px-3 py-2.5 text-right">Số tiền</th>
+                  <th className="px-3 py-2.5">Trạng thái</th>
+                  <th className="px-3 py-2.5">Người trả</th>
+                  <th className="px-3 py-2.5">Ghi chú</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payouts.map((p) => (
                   <tr
                     key={p.id}
                     onClick={() => setEditingId(p.id)}
-                    className="cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
+                    className="group cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
                   >
-                    <td className="px-3 py-2.5 font-semibold text-ink">{driverName(p.driverId)}</td>
+                    <td className="sticky left-0 z-10 bg-surface px-3 py-2.5 font-semibold text-ink group-hover:bg-canvas/60">{driverName(p.driverId)}</td>
                     <td className="px-3 py-2.5 text-muted tabular-nums">{fmtDate(p.workDate)}</td>
                     <td className="px-3 py-2.5 text-right font-semibold text-ink tabular-nums">{fmtMoney(p.amount)}</td>
                     <td className="px-3 py-2.5">
@@ -167,12 +158,22 @@ export default function PartnerPayoutTable({
                     <td className="px-3 py-2.5 text-muted">{p.payerName || "-"}</td>
                     <td className="px-3 py-2.5 text-muted">{p.note || "-"}</td>
                   </tr>
-                )
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
+
+      {(adding || editingId) && (() => {
+        const editing = editingId ? payouts.find((p) => p.id === editingId) : undefined;
+        if (editingId && !editing) return null; // bản ghi đã biến mất (VD sau khi xoá) → ẩn modal thay vì lật sang "Thêm"
+        return (
+          <Modal title={editing ? "Sửa phiếu trả công" : "Thêm phiếu trả công"} onClose={close} maxWidthClass="max-w-xl">
+            <PartnerPayoutForm payout={editing} drivers={drivers} defaultDate={defaultDate} onDone={done} onCancel={close} />
+          </Modal>
+        );
+      })()}
     </div>
   );
 }
