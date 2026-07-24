@@ -2,12 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import {
-  saveSalaryMonth,
-  setSalaryPaid,
-  setSalaryPaidDate,
-} from "@/lib/actions";
-import { Field, inputCls, CancelButton, SaveButton } from "@/components/ui";
+import { saveSalaryMonth } from "@/lib/actions";
+import { DetailCell, PaymentStatusBadge, Field, inputCls, CancelButton, SaveButton } from "@/components/ui";
 import MoneyInput from "@/components/MoneyInput";
 import DatePicker from "@/components/DatePicker";
 import FuelPaymentStatusSelect from "@/components/FuelPaymentStatusSelect";
@@ -16,10 +12,6 @@ import { fmtMoney } from "@/lib/trips";
 import { fmtDate } from "@/lib/format";
 import { normalizeVn } from "@/lib/search";
 import type { SalaryRow } from "@/lib/salary";
-
-function DetailCell({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
-}
 
 function SalaryEditForm({
   row,
@@ -38,19 +30,7 @@ function SalaryEditForm({
 
   function submit(fd: FormData) {
     start(async () => {
-      await saveSalaryMonth(fd);
-      const paid = new FormData();
-      paid.set("personType", row.personType);
-      paid.set("personId", row.personId);
-      paid.set("monthKey", monthKey);
-      paid.set("paid", String(paymentStatus === "paid"));
-      await setSalaryPaid(paid);
-      const pd = new FormData();
-      pd.set("personType", row.personType);
-      pd.set("personId", row.personId);
-      pd.set("monthKey", monthKey);
-      pd.set("paidDate", paidDate);
-      await setSalaryPaidDate(pd);
+      await saveSalaryMonth(fd); // form đã có paymentStatus + paidDate → 1 lần ghi
       onDone();
     });
   }
@@ -186,9 +166,7 @@ export default function SalaryMonthTable({
                     {fmtDate(r.paidDate)}
                   </td>
                   <td className="px-4 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${r.paid ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                      {r.paid ? "Đã trả" : "Chưa trả"}
-                    </span>
+                    <PaymentStatusBadge paid={r.paid} />
                   </td>
                   <td
                     className="max-w-0 truncate px-4 py-2.5 text-muted"
