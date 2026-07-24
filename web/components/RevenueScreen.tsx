@@ -12,12 +12,13 @@ import Modal from "@/components/Modal";
 import StatusSelect from "@/components/StatusSelect";
 import { setTripStatus } from "@/lib/actions";
 import FilterTabs from "@/components/FilterTabs";
+import { Toolbar, SearchInput } from "@/components/ui";
 
 const STAT_TONE = {
-  neutral: { box: "border-hairline bg-surface", text: "text-ink" },
-  amber: { box: "border-hairline bg-surface", text: "text-signal" },
-  emerald: { box: "border-hairline bg-surface", text: "text-emerald-700" },
-  rose: { box: "border-hairline bg-surface", text: "text-rose-700" },
+  neutral: "text-ink",
+  amber: "text-signal",
+  emerald: "text-emerald-700",
+  rose: "text-rose-700",
 } as const;
 
 function Stat({
@@ -33,15 +34,15 @@ function Stat({
   tone?: keyof typeof STAT_TONE;
   onClick?: () => void;
 }) {
-  const t = STAT_TONE[tone];
+  const toneText = STAT_TONE[tone];
   const content = (
     <>
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
-      <div className={`mt-2 text-xl font-bold tracking-tight tabular-nums ${t.text}`}>{value}</div>
+      <div className={`mt-2 text-xl font-bold tracking-tight tabular-nums ${toneText}`}>{value}</div>
       {hint && <div className="mt-1 text-xs text-muted">{hint}</div>}
     </>
   );
-  const className = `w-full rounded-2xl border p-4 text-left shadow-[0_10px_26px_-24px_rgba(15,23,42,0.8)] ${t.box} ${
+  const className = `w-full rounded-2xl border border-hairline bg-surface p-4 text-left shadow-card ${
     onClick ? "cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2" : ""
   }`;
   return onClick ? (
@@ -178,7 +179,7 @@ export default function RevenueScreen({
         <Stat label="Số chuyến" value={String(summary.count)} hint={noPriceCount > 0 ? `${noPriceCount} chuyến chưa có giá` : undefined} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-hairline bg-surface p-2.5 shadow-[0_10px_28px_-25px_rgba(15,23,42,0.8)]">
+      <Toolbar>
         <FilterTabs
           value={filter}
           onChange={setFilter}
@@ -189,17 +190,10 @@ export default function RevenueScreen({
             ["paid", "Đã thanh toán"],
           ] as const}
         />
-        <div className="relative min-w-[220px] flex-1">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm tên khách..."
-            className="h-9 w-full rounded-xl border border-hairline bg-canvas px-3.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand-500 focus:bg-surface focus:ring-1 focus:ring-brand-500"
-          />
-        </div>
-      </div>
+        <SearchInput value={q} onChange={setQ} placeholder="Tìm tên khách..." />
+      </Toolbar>
 
-      <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]">
+      <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-panel">
         {rows.length === 0 ? (
             <div className="p-12 text-center text-slate-400">
               Không có chuyến nào {filter === "owing" ? "còn nợ " : filter === "paid" ? "đã thanh toán " : ""}
@@ -317,7 +311,7 @@ export default function RevenueScreen({
             <CostLine label="Chi phí khác" value={summary.cost} />
             <CostLine label="Tiền dầu" value={fuelTotal} />
             <CostLine label="Chi phí lương" value={salaryCost} />
-            <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-base font-bold text-slate-900">
+            <div className="flex items-center justify-between border-t border-hairline pt-3 text-base font-bold text-ink">
               <span>Tổng chi phí tháng</span>
               <span>{fmtMoney(totalCost)}</span>
             </div>
@@ -330,9 +324,9 @@ export default function RevenueScreen({
 
 function CostLine({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
-      <span className="text-slate-600">{label}</span>
-      <span className="font-semibold text-slate-800">{fmtMoney(value)}</span>
+    <div className="flex items-center justify-between rounded-lg bg-canvas px-3 py-2.5 text-sm">
+      <span className="text-muted">{label}</span>
+      <span className="font-semibold text-ink">{fmtMoney(value)}</span>
     </div>
   );
 }

@@ -9,11 +9,12 @@ import { monthLabel, addMonth } from "@/lib/format";
 import { fmtMoney } from "@/lib/trips";
 import type { SalaryRow } from "@/lib/salary";
 import type { Driver, PartnerPayout } from "@/lib/types";
+import { Toolbar, SearchInput } from "@/components/ui";
 
 function Tile({ label, value, tone = "ink" }: { label: string; value: string; tone?: "ink" | "amber" | "emerald" }) {
   const color = tone === "amber" ? "text-signal" : tone === "emerald" ? "text-emerald-600" : "text-ink";
   return (
-    <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.8)]">
+    <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-card">
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
       <div className={`mt-3 text-2xl font-bold leading-none tracking-tight tabular-nums ${color}`}>{value}</div>
     </div>
@@ -69,7 +70,7 @@ export default function SalaryScreen({
         {isManager && <Tile label="Còn phải trả" value={fmtMoney(owing)} tone={owing > 0 ? "amber" : "ink"} />}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-hairline bg-surface p-2.5 shadow-[0_10px_28px_-25px_rgba(15,23,42,0.8)]">
+      <Toolbar>
         <FilterTabs
           value={tab}
           onChange={setTab}
@@ -79,15 +80,8 @@ export default function SalaryScreen({
             ["partner", "Trả công đối tác"],
           ] as const}
         />
-        <div className="relative min-w-[220px] flex-1">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tìm tên nhân sự, chức vụ..."
-            className="h-9 w-full rounded-xl border border-hairline bg-canvas px-3.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand-500 focus:bg-surface focus:ring-1 focus:ring-brand-500"
-          />
-        </div>
-      </div>
+        <SearchInput value={query} onChange={setQuery} placeholder="Tìm tên nhân sự, chức vụ..." />
+      </Toolbar>
 
       {tab === "month" ? (
         <div className="space-y-5">

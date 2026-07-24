@@ -41,6 +41,35 @@ export function Info({
   );
 }
 
+export function Toolbar({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-hairline bg-surface p-2.5 shadow-card">
+      {children}
+    </div>
+  );
+}
+
+export function SearchInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div className="relative min-w-[220px] flex-1">
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-9 w-full rounded-xl border border-hairline bg-canvas px-3.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand-500 focus:bg-surface focus:ring-1 focus:ring-brand-500"
+      />
+    </div>
+  );
+}
+
 export function LinkButton({
   href,
   children,

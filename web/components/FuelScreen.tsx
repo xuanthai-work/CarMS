@@ -11,6 +11,7 @@ import { addMonth, fmtDate, monthLabel } from "@/lib/format";
 import { normalizeVn } from "@/lib/search";
 import { fmtMoney } from "@/lib/trips";
 import type { FuelEntry, Vehicle } from "@/lib/types";
+import { Toolbar, SearchInput } from "@/components/ui";
 
 function Stat({
   label,
@@ -22,12 +23,12 @@ function Stat({
   tone?: "slate" | "emerald" | "amber";
 }) {
   const tones = {
-    slate: "border-hairline bg-surface text-ink",
-    emerald: "border-hairline bg-surface text-emerald-700",
-    amber: "border-hairline bg-surface text-signal",
+    slate: "text-ink",
+    emerald: "text-emerald-700",
+    amber: "text-signal",
   } as const;
   return (
-    <div className={`rounded-2xl border p-5 shadow-[0_10px_26px_-24px_rgba(15,23,42,0.8)] ${tones[tone]}`}>
+    <div className={`rounded-2xl border border-hairline bg-surface p-5 shadow-card ${tones[tone]}`}>
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
       <div className="mt-3 text-2xl font-bold tracking-tight tabular-nums">{value}</div>
     </div>
@@ -191,7 +192,7 @@ export default function FuelScreen({
         <Stat label="Số lần đổ" value={String(summary.count)} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-hairline bg-surface p-2.5 shadow-[0_10px_28px_-25px_rgba(15,23,42,0.8)]">
+      <Toolbar>
         <FilterTabs
           value={statusFilter}
           onChange={setStatusFilter}
@@ -207,14 +208,7 @@ export default function FuelScreen({
           vehicles={vehicles}
           onChange={setVehicleFilter}
         />
-        <div className="relative min-w-[220px] flex-1">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm biển số, người đổ, ghi chú..."
-            className="h-9 w-full rounded-xl border border-hairline bg-canvas px-3.5 text-sm text-ink outline-none transition placeholder:text-muted/70 focus:border-brand-500 focus:bg-surface focus:ring-1 focus:ring-brand-500"
-          />
-        </div>
+        <SearchInput value={q} onChange={setQ} placeholder="Tìm biển số, người đổ, ghi chú..." />
         <button
           type="button"
           onClick={() => setAdding((open) => !open)}
@@ -222,9 +216,9 @@ export default function FuelScreen({
         >
           {adding ? "Đóng phiếu mới" : "+ Thêm phiếu dầu"}
         </button>
-      </div>
+      </Toolbar>
 
-      <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[0_14px_34px_-28px_rgba(15,23,42,0.8)]">
+      <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-panel">
         {!adding && rows.length === 0 ? (
             <div className="p-12 text-center text-slate-400">Không có phiếu dầu trong tháng này.</div>
           ) : (
