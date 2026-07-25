@@ -1,0 +1,58 @@
+import Link from "next/link";
+import { getVehicles } from "@/services/vehicles";
+import { getDrivers } from "@/services/drivers";
+import { getTrips } from "@/services/trips";
+import ScheduleGrid from "@/components/schedule/ScheduleGrid";
+import MonthNav from "@/components/common/MonthNav";
+import { daysInMonth, monthKeyOf, monthLabel, addMonth, todayStr } from "@/utils/format";
+
+export default async function LichPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ m?: string }>;
+}) {
+  const sp = await searchParams;
+  const today = todayStr();
+  const monthKey = sp.m || monthKeyOf(today);
+  const days = daysInMonth(monthKey);
+  const [vehicles, drivers, trips] = await Promise.all([
+    getVehicles(),
+    getDrivers(),
+    getTrips(),
+  ]);
+
+  // Chiều cao trừ 3rem = padding dọc py-6 của <main> (xem (main)/layout.tsx) — đổi padding đó thì chỉnh theo.
+  return (
+    <div className="flex h-[calc(100dvh-3rem)] min-h-[420px] flex-col gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">Điều phối vận hành</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">Lịch điều xe</h1>
+        </div>
+        <MonthNav
+          label={monthLabel(monthKey)}
+          prevHref={`/lich?m=${addMonth(monthKey, -1)}`}
+          nextHref={`/lich?m=${addMonth(monthKey, 1)}`}
+        />
+      </div>
+
+      {vehicles.length === 0 ? (
+        <div className="rounded-2xl border border-hairline bg-surface p-12 text-center text-muted shadow-sm">
+          Chưa có xe nào.{" "}
+          <Link href="/xe" className="font-medium text-brand-600 hover:underline">
+            Thêm xe ở trang Quản lý xe
+          </Link>
+          .
+        </div>
+      ) : (
+        <ScheduleGrid
+          vehicles={vehicles}
+          drivers={drivers}
+          days={days}
+          today={today}
+          trips={trips}
+        />
+      )}
+    </div>
+  );
+}

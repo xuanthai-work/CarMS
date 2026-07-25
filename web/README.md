@@ -33,10 +33,28 @@ See `.env.example`.
 
 Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · Supabase Auth · Prisma 7 · Supabase Postgres.
 
+## Project structure
+
+Everything the app compiles lives under `src/`; the `@/*` path alias maps to `src/*`. Top level is by kind, and within each kind by domain (`vehicles`, `drivers`, `trips`/`schedule`, `fuel`, `salary`, `staff`).
+
+| Folder | Holds |
+| --- | --- |
+| `src/app/` | Routes only — pages, layouts and route handlers. |
+| `src/api/` | `"use server"` mutations, one file per domain. This is the boundary the client calls. |
+| `src/services/` | Server-side reads: Prisma queries, row↔model mappers, and the auth/role guards. |
+| `src/components/` | UI by domain, plus `common/` (Modal, pickers, inputs) and `layout/`. |
+| `src/hooks/` | Reusable client hooks. |
+| `src/states/` | Client-side global state (React context + localStorage). |
+| `src/lib/` | Configured third-party clients: Prisma and Supabase. |
+| `src/configs/` | App-level configuration (AI models, system prompt). |
+| `src/utils/` | Pure helpers and domain logic — no I/O, unit-tested, tests colocated. |
+| `src/types/` | Shared app models. |
+
+Mutations and reads are separate folders because Next.js only allows a `"use server"` module to export async functions, so actions cannot share a file with mappers or constants. Pure domain logic stays out of `services/` so its unit tests never have to load Prisma.
+
 ## Notes
 
-- Data access goes through `lib/db.ts` (Prisma queries + row↔model mappers); server mutations live in `lib/actions.ts`.
-- Prisma 7 connects via the `pg` driver adapter (`lib/prisma.ts`); use the Supabase transaction pooler for `DATABASE_URL` so it works on serverless.
-- Realtime: `components/RealtimeRefresh.tsx` subscribes to Postgres changes and calls `router.refresh()`, so all open clients re-fetch through the server (Prisma) without a full reload. `npm run db:realtime` enables Row Level Security (SELECT for authenticated), which both closes the anon PostgREST hole and lets Realtime deliver events; writes stay server-only through Prisma.
+- Prisma 7 connects via the `pg` driver adapter (`src/lib/prisma.ts`); use the Supabase transaction pooler for `DATABASE_URL` so it works on serverless.
+- Realtime: `src/components/layout/RealtimeRefresh.tsx` subscribes to Postgres changes and calls `router.refresh()`, so all open clients re-fetch through the server (Prisma) without a full reload. `npm run db:realtime` enables Row Level Security (SELECT for authenticated), which both closes the anon PostgREST hole and lets Realtime deliver events; writes stay server-only through Prisma.
 - Deploying to Vercel: set the environment variables in the project settings and run `npm run db:push` + `npm run db:realtime` (once) against your Supabase database. `prisma generate` runs automatically on install.
 - Do not run `npm run build` while `npm run dev` is active — they share the `.next` directory.

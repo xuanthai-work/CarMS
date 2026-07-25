@@ -1,9 +1,9 @@
-// Generates PWA PNG icons from public/icon-source.svg.
+// Generates PWA PNG icons from src/assets/icon-source.svg into public/.
 // Run: node scripts/gen-icons.mjs (from web/)
 import sharp from "sharp";
 import { readFileSync } from "node:fs";
 
-const svg = readFileSync("public/icon-source.svg");
+const svg = readFileSync("src/assets/icon-source.svg");
 const out = [
   ["public/icon-512.png", 512],
   ["public/icon-192.png", 192],

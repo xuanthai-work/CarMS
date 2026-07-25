@@ -1,11 +1,8 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./lib/**/*.{js,ts,jsx,tsx}", // statusBg/toneBorderClass… trả về class Tailwind từ đây
-  ],
+  // Quét cả src/utils vì statusBg/toneBorderClass… trả về class Tailwind từ đó.
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       fontFamily: {
