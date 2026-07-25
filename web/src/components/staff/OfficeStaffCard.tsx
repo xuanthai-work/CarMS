@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/utils/motion";
 import { saveOfficeStaff, deleteOfficeStaff } from "@/api/staff";
-import { DetailCell, EditIconButton, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import { DetailCell, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import EditIconButton from "@/components/common/EditIconButton";
 import MoneyInput from "@/components/common/MoneyInput";
 import DatePicker from "@/components/common/DatePicker";
 import SelectMenu from "@/components/common/SelectMenu";
@@ -14,6 +15,7 @@ import { fmtMoney } from "@/utils/trips";
 import { fmtDate } from "@/utils/format";
 import { GENDERS, officePositionOptions } from "@/utils/office";
 import { useFormState } from "@/hooks/common/useFormState";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { OfficeStaff } from "@/types";
 
 export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
@@ -23,6 +25,7 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
     dob: p.dob ?? "",
     gender: p.gender ?? "",
   });
+  const { canEdit } = usePermissions();
   const [editing, setEditing] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -53,15 +56,16 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
     <>
       <form id={`os-${p.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={p.id} />
+        {/* Thứ tự field phải khớp block xem ở dưới, lệch là bấm ✎ thấy field nhảy ô. */}
         <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
           <DetailCell><Field label="Họ tên"><input name="name" defaultValue={p.name} className={inputCls} /></Field></DetailCell>
+          <DetailCell><Field label="Chức vụ"><SelectMenu name="position" value={form.position} onChange={set("position")} options={officePositionOptions(p.position)} /></Field></DetailCell>
           <DetailCell><Field label="SĐT"><input name="phone" defaultValue={p.phone ?? ""} className={inputCls} /></Field></DetailCell>
           <DetailCell><Field label="Email"><input name="email" type="email" defaultValue={p.email ?? ""} className={inputCls} /></Field></DetailCell>
           <DetailCell><Field label="Giới tính"><SelectMenu name="gender" value={form.gender} onChange={set("gender")} options={GENDERS} placeholder="Chọn giới tính" /></Field></DetailCell>
           <DetailCell><Field label="Ngày sinh"><DatePicker name="dob" value={form.dob} onChange={set("dob")} /></Field></DetailCell>
           <DetailCell><Field label="CCCD"><input name="idNumber" defaultValue={p.idNumber ?? ""} className={inputCls} /></Field></DetailCell>
           <DetailCell><Field label="Số BHXH"><input name="socialInsurance" defaultValue={p.socialInsurance ?? ""} className={inputCls} /></Field></DetailCell>
-          <DetailCell><Field label="Chức vụ"><SelectMenu name="position" value={form.position} onChange={set("position")} options={officePositionOptions(p.position)} /></Field></DetailCell>
           <DetailCell><Field label="Lương cơ bản"><MoneyInput name="baseSalary" defaultValue={p.baseSalary} placeholder="0" /></Field></DetailCell>
           <DetailCell><Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} defaultValue={p.payday ?? ""} placeholder="VD: 5" className={inputCls} /></Field></DetailCell>
           <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
@@ -129,9 +133,11 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
                 <DetailCell><Info label="Ngày vào làm" value={fmtDate(p.startDate)} size="md" /></DetailCell>
                 <DetailCell><Info label="Ghi chú" value={p.note || "—"} size="md" /></DetailCell>
               </div>
-              <div className="mt-5 flex justify-end border-t border-hairline pt-4">
-                <EditIconButton onClick={() => setEditing(true)} />
-              </div>
+              {canEdit && (
+                <div className="mt-5 flex justify-end border-t border-hairline pt-4">
+                  <EditIconButton onClick={() => setEditing(true)} />
+                </div>
+              )}
             </>
           )}
         </Modal>

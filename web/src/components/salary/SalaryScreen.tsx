@@ -10,6 +10,7 @@ import type { SalaryRow } from "@/utils/salary";
 import type { Driver, PartnerPayout } from "@/types";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 function Tile({ label, value, tone = "ink" }: { label: string; value: string; tone?: "ink" | "amber" | "emerald" }) {
   const color = tone === "amber" ? "text-signal" : tone === "emerald" ? "text-emerald-600" : "text-ink";
@@ -36,6 +37,7 @@ export default function SalaryScreen({
   isManager: boolean;
   payoutTotal: number;
 }) {
+  const { canEdit } = usePermissions();
   const [tab, setTab] = useState<"month" | "partner">("month");
   const [query, setQuery] = useState("");
   const [addingPartnerPayout, setAddingPartnerPayout] = useState(false);
@@ -82,7 +84,7 @@ export default function SalaryScreen({
           ] as const}
         />
         <SearchInput value={query} onChange={setQuery} placeholder="Tìm tên nhân sự, chức vụ..." />
-        {tab === "partner" && (
+        {tab === "partner" && canEdit && (
           <button
             type="button"
             onClick={() => setAddingPartnerPayout(true)}

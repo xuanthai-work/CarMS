@@ -4,7 +4,9 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Modal from "@/components/common/Modal";
 import TripForm from "@/components/schedule/TripForm";
-import { EditIconButton, Info } from "@/components/common/ui";
+import { Info } from "@/components/common/ui";
+import EditIconButton from "@/components/common/EditIconButton";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import { fmtDate, weekdayVn } from "@/utils/format";
 import { fmtMoney, tourTypeLabel, sameVehicleBothLegs, legRoute } from "@/utils/trips";
 import { seatLabel } from "@/utils/vehicles";
@@ -77,6 +79,7 @@ export default function TripModal({
   drivers: Driver[];
   onClose: () => void;
 }) {
+  const { canEdit } = usePermissions();
   const [editing, setEditing] = useState(!trip); // thêm mới -> mở thẳng form
   const reduceMotion = useReducedMotion();
   const title = trip ? (editing ? "Sửa chuyến" : "Chi tiết chuyến") : "Thêm chuyến";
@@ -154,7 +157,7 @@ export default function TripModal({
 
         <div className="flex items-end justify-between gap-4 border-t border-hairline pt-4">
           <Info size="md" label="Ghi chú" value={t.note || "—"} className="min-w-0 flex-1" />
-          <EditIconButton onClick={() => setEditing(true)} />
+          {canEdit && <EditIconButton onClick={() => setEditing(true)} />}
         </div>
       </motion.div>
     </Modal>

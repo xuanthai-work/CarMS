@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireStaff, requireManager } from "@/services/auth";
+import { requireEditor, requireManagerEditor } from "@/services/auth";
 import { s, optStr, optNum, reqNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
@@ -19,8 +19,8 @@ async function lookupBaseSalary(personType: string, personId: string): Promise<n
 /** Sửa điều chỉnh lương tháng (thưởng/phụ cấp, tạm ứng/khấu trừ, ghi chú). Upsert theo (personType, personId, monthKey). */
 export async function saveSalaryMonth(fd: FormData): Promise<void> {
   const personType = s(fd, "personType");
-  if (personType === "office") await requireManager();
-  else await requireStaff();
+  if (personType === "office") await requireManagerEditor();
+  else await requireEditor();
 
   const personId = s(fd, "personId");
   const monthKey = s(fd, "monthKey");
@@ -52,7 +52,7 @@ export async function saveSalaryMonth(fd: FormData): Promise<void> {
 
 /** Tạo/sửa phiếu trả công lái xe đối tác. */
 export async function savePartnerPayout(fd: FormData): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   const id = s(fd, "id");
   const data = {
     driverId: s(fd, "driverId"),
@@ -69,7 +69,7 @@ export async function savePartnerPayout(fd: FormData): Promise<void> {
 }
 
 export async function deletePartnerPayout(fd: FormData): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   await prisma.partnerPayout.delete({ where: { id: s(fd, "id") } });
   revalidateAll();
 }

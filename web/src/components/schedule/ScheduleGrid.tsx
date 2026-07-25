@@ -9,6 +9,7 @@ import { fmtMoney, sameVehicleBothLegs, statusBg, packVariableHeight, TRIP_STATU
 import { CARD_HOVER, CARD_HOVER_GROUP } from "@/components/common/ui";
 import SelectMenu from "@/components/common/SelectMenu";
 import FilterTabs from "@/components/common/FilterTabs";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import { seatLabel } from "@/utils/vehicles";
 import type { Trip, Vehicle, Driver, Leg } from "@/types";
 
@@ -38,6 +39,7 @@ export default function ScheduleGrid({
   today: string;
   trips: Trip[];
 }) {
+  const { canEdit } = usePermissions();
   const [modal, setModal] = useState<{ trip: Trip | null; prefill?: { vehicleId?: string; date?: string } } | null>(null);
   const [view, setView] = useState<"xe" | "tour">("tour"); // theo tour (Gantt) mặc định | theo xe (1 xe, ngày×giờ)
   const [vid, setVid] = useState(vehicles[0]?.id ?? ""); // xe đang xem ở view "theo xe" (dropdown ở toolbar)
@@ -202,13 +204,15 @@ export default function ScheduleGrid({
                 ["tour", "Theo chuyến"],
               ] as const}
             />
-            <button
-              type="button"
-              onClick={() => setModal({ trip: null })}
-              className="h-9 rounded-lg bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
-            >
-              + Thêm chuyến
-            </button>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setModal({ trip: null })}
+                className="h-9 rounded-lg bg-brand-600 px-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
+              >
+                + Thêm chuyến
+              </button>
+            )}
           </div>
         </div>
       </div>

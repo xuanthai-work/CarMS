@@ -7,6 +7,7 @@ import { buildDayMeta, pad } from "@/utils/format";
 import { legMeta, statusBg, assignLanes, fmtMoney, legRoute, toneBorderClass } from "@/utils/trips";
 import { setLegEndTime } from "@/api/trips";
 import { CARD_HOVER_GROUP } from "@/components/common/ui";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Trip, Vehicle, Driver, Leg } from "@/types";
 
 const HOUR_H = 48; // chiều cao 1 giờ (trục Y)
@@ -69,6 +70,7 @@ export default function VehicleSchedule({
   vid: string;
   onOpen: (trip: Trip) => void;
 }) {
+  const { canEdit } = usePermissions();
   const selected = vehicles.find((v) => v.id === vid);
   const driverMap = useMemo(() => new Map(drivers.map((d) => [d.id, d])), [drivers]);
   const dayMeta = useMemo(() => buildDayMeta(days, today), [days, today]);
@@ -278,19 +280,21 @@ export default function VehicleSchedule({
                         )}
                       </button>
 
-                      {/* tay kéo mép dưới — đặt giờ đến */}
-                      <div
-                        onPointerDown={(e) => startResize(e, b)}
-                        onPointerMove={moveResize}
-                        onPointerUp={endResize}
-                        onPointerCancel={endResize}
-                        title="Kéo để đặt giờ đến"
-                        className={`absolute inset-x-0 bottom-0 flex h-3 cursor-ns-resize touch-none items-center justify-center rounded-b-md transition-opacity ${
-                          active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                        }`}
-                      >
-                        <span className="h-1 w-6 rounded-full bg-slate-600/50" />
-                      </div>
+                      {/* tay kéo mép dưới — đặt giờ đến (chỉ-xem thì không có) */}
+                      {canEdit && (
+                        <div
+                          onPointerDown={(e) => startResize(e, b)}
+                          onPointerMove={moveResize}
+                          onPointerUp={endResize}
+                          onPointerCancel={endResize}
+                          title="Kéo để đặt giờ đến"
+                          className={`absolute inset-x-0 bottom-0 flex h-3 cursor-ns-resize touch-none items-center justify-center rounded-b-md transition-opacity ${
+                            active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                          }`}
+                        >
+                          <span className="h-1 w-6 rounded-full bg-slate-600/50" />
+                        </div>
+                      )}
                     </div>
                   );
                 })}

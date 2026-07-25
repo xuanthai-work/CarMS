@@ -5,13 +5,15 @@ import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/utils/motion";
 import { saveVehicle, deleteVehicle } from "@/api/vehicles";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS, seatLabel, statusLabel, ownerLabel } from "@/utils/vehicles";
-import { DetailCell, EditIconButton, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import { DetailCell, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import EditIconButton from "@/components/common/EditIconButton";
 import SelectMenu from "@/components/common/SelectMenu";
 import DatePicker from "@/components/common/DatePicker";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import Modal from "@/components/common/Modal";
 import { fmtDate } from "@/utils/format";
 import { useFormState } from "@/hooks/common/useFormState";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Vehicle } from "@/types";
 
 const STATUS_TONE: Record<string, string> = {
@@ -28,6 +30,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     inspectionDue: v.inspectionDue ?? "",
     insuranceDue: v.insuranceDue ?? "",
   });
+  const { canEdit } = usePermissions();
   const [editing, setEditing] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -58,6 +61,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     <>
       <form id={`veh-${v.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={v.id} />
+        {/* Thứ tự + span phải khớp block xem ở dưới, lệch là bấm ✎ thấy field nhảy ô. */}
         <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
           <DetailCell><Field label="Biển số"><input name="plate" defaultValue={v.plate} className={inputCls} /></Field></DetailCell>
           <DetailCell><Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field></DetailCell>
@@ -71,7 +75,8 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
               <DetailCell><Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field></DetailCell>
             </>
           )}
-          <DetailCell className="sm:col-span-2"><Field label="Ghi chú"><input name="note" defaultValue={v.note} className={inputCls} /></Field></DetailCell>
+          {/* xe đối tác chỉ có 5 ô nên Ghi chú nằm gọn bên phải hàng 3; xe công ty có 6 ô nên phải giãn full-width */}
+          <DetailCell className={form.type === "partner" ? "" : "sm:col-span-2"}><Field label="Ghi chú"><input name="note" defaultValue={v.note} className={inputCls} /></Field></DetailCell>
         </div>
       </form>
       <div className="mt-3 flex items-center justify-between">
@@ -123,9 +128,11 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
                 </>}
                 <DetailCell className={v.type === "partner" ? "" : "sm:col-span-2"}><Info label="Ghi chú" value={v.note || "—"} size="md" /></DetailCell>
               </div>
-              <div className="mt-5 flex justify-end border-t border-hairline pt-4">
-                <EditIconButton onClick={() => setEditing(true)} />
-              </div>
+              {canEdit && (
+                <div className="mt-5 flex justify-end border-t border-hairline pt-4">
+                  <EditIconButton onClick={() => setEditing(true)} />
+                </div>
+              )}
             </>
           )}
         </Modal>

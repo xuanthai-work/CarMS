@@ -9,6 +9,7 @@ import DatePicker from "@/components/common/DatePicker";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import Modal from "@/components/common/Modal";
 import { fmtMoney } from "@/utils/trips";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import { fmtDate } from "@/utils/format";
 import { normalizeVn } from "@/utils/search";
 import type { SalaryRow } from "@/utils/salary";
@@ -82,6 +83,7 @@ export default function SalaryMonthTable({
   monthKey: string;
   query: string;
 }) {
+  const { canEdit } = usePermissions();
   const router = useRouter();
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const keyOf = (r: SalaryRow) => `${r.personType}:${r.personId}`;
@@ -133,8 +135,12 @@ export default function SalaryMonthTable({
               {filteredRows.map((r) => (
                 <tr
                   key={keyOf(r)}
-                  onClick={() => setEditingKey(keyOf(r))}
-                  className="group cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
+                  onClick={canEdit ? () => setEditingKey(keyOf(r)) : undefined}
+                  className={
+                    canEdit
+                      ? "group cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
+                      : "border-b border-hairline last:border-0"
+                  }
                 >
                   <td className="sticky left-0 z-10 bg-surface px-3 py-2.5 group-hover:bg-canvas/60">
                     <div className="font-semibold text-ink">{r.name}</div>

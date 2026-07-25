@@ -386,7 +386,14 @@ deno_version = 2
 # secret_key = "env(SECRET_VALUE)"
 
 [analytics]
-enabled = true
+# Tắt trên máy dev: bật lên thì CLI tạo thêm container vector + logflare, mà vector trên
+# Windows được cấu hình trỏ DOCKER_HOST vào host.docker.internal:2375 và KHÔNG mount
+# docker.sock. Docker Desktop mặc định không mở cổng 2375 → vector không liệt kê được
+# container → tự exit 0 → restart policy bật lại → loop vô tận mỗi ~60s.
+# Đổi lại thành true thì phải bật "Expose daemon on tcp://localhost:2375 without TLS"
+# trong Docker Desktop (đánh đổi: API Docker không xác thực mở trên localhost).
+# Xem log container vẫn dùng được: docker logs supabase_<service>_carms
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"

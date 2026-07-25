@@ -17,6 +17,7 @@ import type { FuelEntry, Vehicle } from "@/types";
 import { companyVehicles } from "@/utils/vehicles";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 function Stat({
   label,
@@ -138,6 +139,7 @@ export default function FuelScreen({
   vehicles: Vehicle[];
   monthKey: string;
 }) {
+  const { canEdit } = usePermissions();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [vehicleFilter, setVehicleFilter] = useState("all");
@@ -236,13 +238,15 @@ export default function FuelScreen({
           onChange={setQ}
           placeholder="Tìm biển số, người đổ, ghi chú..."
         />
-        <button
-          type="button"
-          onClick={() => setAdding(true)}
-          className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
-        >
-          + Thêm phiếu dầu
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => setAdding(true)}
+            className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
+          >
+            + Thêm phiếu dầu
+          </button>
+        )}
       </Toolbar>
 
       <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-panel">
@@ -273,8 +277,13 @@ export default function FuelScreen({
               {rows.map((entry) => (
                 <tr
                   key={entry.id}
-                  onClick={() => setEditingId(entry.id)}
-                  className="group cursor-pointer border-b border-slate-100 transition hover:bg-slate-50"
+                  onClick={canEdit ? () => setEditingId(entry.id) : undefined}
+                  // bỏ luôn "group" khi chỉ-xem, kẻo group-hover ở ô sticky sáng lẻ một mình
+                  className={
+                    canEdit
+                      ? "group cursor-pointer border-b border-slate-100 transition hover:bg-slate-50"
+                      : "border-b border-slate-100"
+                  }
                 >
                   <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-4 py-4 text-[15px] text-slate-700 group-hover:bg-slate-50">
                     {fmtDate(entry.refuelDate)}

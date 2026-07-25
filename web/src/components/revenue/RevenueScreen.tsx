@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import type { Trip, Vehicle, Driver } from "@/types";
 import { tripMoney, summarize, revenueMonthKey, monthProfit } from "@/utils/revenue";
-import { fmtMoney, fmtMoneyUnit, tourTypeLabel, tripStatusLabel } from "@/utils/trips";
+import { fmtMoney, fmtMoneyUnit, tourTypeLabel, tripStatusLabel, statusTextClass } from "@/utils/trips";
 import { monthLabel, addMonth, fmtDate } from "@/utils/format";
 import { normalizeVn } from "@/utils/search";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,7 @@ import { setTripStatus } from "@/api/trips";
 import FilterTabs from "@/components/common/FilterTabs";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 const STAT_TONE = {
   neutral: "text-ink",
@@ -84,6 +85,7 @@ export default function RevenueScreen({
   fuelTotalsByMonth: Record<string, number>;
   salaryCostByMonth: Record<string, number>;
 }) {
+  const { canEdit } = usePermissions();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [detail, setDetail] = useState<Trip | null>(null);
@@ -265,7 +267,13 @@ export default function RevenueScreen({
                     {money.outstanding > 0 ? fmtMoney(money.outstanding) : "—"}
                   </td>
                   <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
-                    <StatusSelect status={trip.status} onPick={(next) => setStatusChange({ trip, next })} />
+                    {canEdit ? (
+                      <StatusSelect status={trip.status} onPick={(next) => setStatusChange({ trip, next })} />
+                    ) : (
+                      <span className={`text-sm font-semibold ${statusTextClass(trip.status)}`}>
+                        {tripStatusLabel(trip.status)}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

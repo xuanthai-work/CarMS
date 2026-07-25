@@ -7,8 +7,10 @@ import AddVehicleButton from "@/components/vehicles/AddVehicleButton";
 import GroupColumn from "@/components/schedule/GroupColumn";
 import { normalizeVn } from "@/utils/search";
 import { Toolbar, SearchInput } from "@/components/common/ui";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 export default function VehicleList({ vehicles }: { vehicles: Vehicle[] }) {
+  const { canEdit } = usePermissions();
   const [q, setQ] = useState("");
   const nq = normalizeVn(q);
   const filtered = nq ? vehicles.filter((v) => normalizeVn(v.plate).includes(nq)) : vehicles;
@@ -24,7 +26,7 @@ export default function VehicleList({ vehicles }: { vehicles: Vehicle[] }) {
 
       {vehicles.length === 0 ? (
         <div className="rounded-2xl border border-hairline bg-surface p-10 text-center text-muted">
-          Chưa có xe nào — bấm “+ Thêm xe”.
+          {canEdit ? "Chưa có xe nào — bấm “+ Thêm xe”." : "Chưa có xe nào."}
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-hairline bg-surface p-10 text-center text-muted">

@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUser, getCurrentStaff } from "@/services/auth";
-import { isManager } from "@/utils/office";
+import { isManager, canEdit } from "@/utils/office";
 import Sidebar from "@/components/layout/Sidebar";
 import RealtimeRefresh from "@/components/layout/RealtimeRefresh";
 import AssistantProvider from "@/states/assistant/AssistantProvider";
+import PermissionsProvider from "@/states/permissions/PermissionsProvider";
 import RightRail from "@/components/assistant/RightRail";
 import Drawer from "@/components/assistant/Drawer";
 
@@ -27,25 +28,27 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const collapsedCookie: "1" | "0" | null = rawCollapsed === "1" ? "1" : rawCollapsed === "0" ? "0" : null;
 
   return (
-    <AssistantProvider>
-      <div className="flex min-h-[100dvh] bg-canvas text-ink">
-        <RealtimeRefresh />
-        <Sidebar
-          isManager={isManager(staff.position)}
-          name={staff.name}
-          position={staff.position}
-          collapsedCookie={collapsedCookie}
-        />
-        <main className="min-w-0 flex-1 px-1 py-6">
-          <div className="mx-auto w-full max-w-[1680px]">{children}</div>
-        </main>
-        {assistantEnabled && (
-          <>
-            <Drawer />
-            <RightRail />
-          </>
-        )}
-      </div>
-    </AssistantProvider>
+    <PermissionsProvider canEdit={canEdit(staff.position)}>
+      <AssistantProvider>
+        <div className="flex min-h-[100dvh] bg-canvas text-ink">
+          <RealtimeRefresh />
+          <Sidebar
+            isManager={isManager(staff.position)}
+            name={staff.name}
+            position={staff.position}
+            collapsedCookie={collapsedCookie}
+          />
+          <main className="min-w-0 flex-1 px-1 py-6">
+            <div className="mx-auto w-full max-w-[1680px]">{children}</div>
+          </main>
+          {assistantEnabled && (
+            <>
+              <Drawer />
+              <RightRail />
+            </>
+          )}
+        </div>
+      </AssistantProvider>
+    </PermissionsProvider>
   );
 }

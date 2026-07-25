@@ -1,6 +1,11 @@
 import Link from "next/link";
-import { PencilSimple } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+
+// KHÔNG import thư viện chỉ chạy được ở client vào file này (vd @phosphor-icons/react,
+// thứ gọi createContext ở top-level). ui.tsx cố ý KHÔNG có "use client" để Server
+// Component cũng dùng được (profile/page.tsx dùng <Info>); kéo dep client vào đây là
+// vỡ runtime ở phía server. Cần icon thì tách ra file riêng có "use client",
+// như EditIconButton.tsx.
 
 // Class dùng chung cho input/select trong các form.
 export const inputCls =
@@ -65,21 +70,6 @@ export function PaymentStatusBadge({
     >
       {paid ? paidLabel : unpaidLabel}
     </span>
-  );
-}
-
-/** Nút biểu tượng bút chì "Chỉnh sửa" ở chế độ xem chi tiết trong modal. */
-export function EditIconButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Chỉnh sửa"
-      title="Chỉnh sửa"
-      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-hairline text-muted transition hover:bg-canvas active:scale-[0.98]"
-    >
-      <PencilSimple size={18} weight="regular" aria-hidden="true" />
-    </button>
   );
 }
 

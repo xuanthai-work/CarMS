@@ -1,13 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireStaff } from "@/services/auth";
+import { requireEditor } from "@/services/auth";
 import { s, optStr, reqNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
 
 export async function saveFuelEntry(fd: FormData): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   const id = s(fd, "id");
   const paymentStatus = (s(fd, "paymentStatus") || "unpaid") as "paid" | "unpaid";
   const vehicleId = s(fd, "vehicleId");
@@ -33,7 +33,7 @@ export async function saveFuelEntry(fd: FormData): Promise<void> {
 }
 
 export async function deleteFuelEntry(fd: FormData): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   const id = s(fd, "id");
   await prisma.fuelEntry.delete({ where: { id } });
   revalidateAll();

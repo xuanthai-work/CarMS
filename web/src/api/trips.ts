@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireStaff, requireManager } from "@/services/auth";
+import { requireEditor, requireManagerEditor } from "@/services/auth";
 import { s, optStr, optNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { tourTypeFromDates } from "@/utils/trips";
@@ -24,7 +24,7 @@ function legFields(fd: FormData, prefix: string) {
 }
 
 export async function saveTrip(fd: FormData): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   const id = s(fd, "id");
   const hasReturn = s(fd, "hasReturn") === "on";
   const o = legFields(fd, "o");
@@ -67,7 +67,7 @@ export async function saveTrip(fd: FormData): Promise<void> {
 }
 
 export async function deleteTrip(fd: FormData): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   const id = s(fd, "id");
   await prisma.trip.delete({ where: { id } });
   revalidateAll();
@@ -79,7 +79,7 @@ export async function setLegEndTime(
   kind: "out" | "ret",
   endTime: string | null
 ): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   await prisma.trip.update({
     where: { id },
     data: kind === "ret" ? { returnEndTime: endTime } : { outboundEndTime: endTime },
@@ -89,7 +89,7 @@ export async function setLegEndTime(
 
 /** Đổi trạng thái 1 chuyến (từ dropdown trạng thái ở màn Doanh thu). */
 export async function setTripStatus(id: string, status: string): Promise<void> {
-  await requireManager();
+  await requireManagerEditor();
   await prisma.trip.update({ where: { id }, data: { status } });
   revalidateAll();
 }

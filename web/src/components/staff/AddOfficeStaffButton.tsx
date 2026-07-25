@@ -8,10 +8,12 @@ import DatePicker from "@/components/common/DatePicker";
 import SelectMenu from "@/components/common/SelectMenu";
 import { DetailCell, Field, inputCls } from "@/components/common/ui";
 import { OFFICE_POSITIONS, GENDERS } from "@/utils/office";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 const EMPTY_FORM = { startDate: "", position: "Nhân viên", dob: "", gender: "" };
 
 export default function AddOfficeStaffButton() {
+  const { canEdit } = usePermissions();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const set = (k: keyof typeof EMPTY_FORM) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
@@ -21,6 +23,8 @@ export default function AddOfficeStaffButton() {
     setForm(EMPTY_FORM);
     setOpen(false);
   }
+
+  if (!canEdit) return null;
 
   return (
     <>

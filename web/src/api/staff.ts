@@ -1,13 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireManager } from "@/services/auth";
+import { requireManagerEditor } from "@/services/auth";
 import { s, optStr, optNum, dayOfMonth } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
 
 export async function saveOfficeStaff(fd: FormData): Promise<void> {
-  await requireManager();
+  await requireManagerEditor();
   const id = s(fd, "id");
   const data = {
     name: s(fd, "name"),
@@ -40,7 +40,7 @@ export async function saveOfficeStaff(fd: FormData): Promise<void> {
 }
 
 export async function deleteOfficeStaff(fd: FormData): Promise<void> {
-  await requireManager();
+  await requireManagerEditor();
   const id = s(fd, "id");
   await prisma.officeStaff.delete({ where: { id } });
   revalidateAll();

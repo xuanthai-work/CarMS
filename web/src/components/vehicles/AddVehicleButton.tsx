@@ -8,8 +8,10 @@ import { DetailCell, Field, inputCls } from "@/components/common/ui";
 import SelectMenu from "@/components/common/SelectMenu";
 import DatePicker from "@/components/common/DatePicker";
 import { useFormState } from "@/hooks/common/useFormState";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 export default function AddVehicleButton() {
+  const { canEdit } = usePermissions();
   const [open, setOpen] = useState(false);
   const { form, set, reset } = useFormState(() => ({ seats: "16", status: "active", type: "own", inspectionDue: "", insuranceDue: "" }));
 
@@ -18,6 +20,8 @@ export default function AddVehicleButton() {
     setOpen(false);
     reset();
   }
+
+  if (!canEdit) return null;
 
   return (
     <>

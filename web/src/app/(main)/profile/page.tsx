@@ -44,20 +44,6 @@ export default async function ProfilePage() {
           </h2>
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
             <Info label="SĐT" value={p.phone || "—"} size="md" />
-            <Info
-              label="Email"
-              size="md"
-              className="min-w-0"
-              value={
-                p.email ? (
-                  <span className="block truncate" title={p.email}>
-                    {p.email}
-                  </span>
-                ) : (
-                  "—"
-                )
-              }
-            />
             <Info label="Giới tính" value={p.gender || "—"} size="md" />
             <Info label="Ngày sinh" value={fmtDate(p.dob)} size="md" />
             <Info label="CCCD" value={p.idNumber || "—"} size="md" />

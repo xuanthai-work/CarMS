@@ -2,7 +2,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getOfficeStaffByEmail } from "./staff";
-import { isManager } from "@/utils/office";
+import { isManager, canEdit } from "@/utils/office";
 import type { OfficeStaff } from "@/types";
 
 /**
@@ -47,5 +47,27 @@ export async function requireStaff(): Promise<OfficeStaff> {
 export async function requireManager(): Promise<OfficeStaff> {
   const staff = await requireStaff();
   if (!isManager(staff.position)) redirect("/lich");
+  return staff;
+}
+
+/**
+ * Guard cho MỌI hành động ghi (thêm/sửa/xoá).
+ * UI đã ẩn nút với chức vụ chỉ-xem, đây là lớp phòng vệ thứ hai cho trường hợp
+ * server action bị gọi trực tiếp — nên throw để lỗi hiện rõ, không redirect âm thầm.
+ */
+export async function requireEditor(): Promise<OfficeStaff> {
+  const staff = await requireStaff();
+  if (!canEdit(staff.position)) {
+    throw new Error(`Chức vụ ${staff.position} chỉ có quyền xem, không sửa được dữ liệu`);
+  }
+  return staff;
+}
+
+/** Ghi + phải là quản lý (nhân sự văn phòng, trạng thái chuyến, lương văn phòng). */
+export async function requireManagerEditor(): Promise<OfficeStaff> {
+  const staff = await requireManager();
+  if (!canEdit(staff.position)) {
+    throw new Error(`Chức vụ ${staff.position} chỉ có quyền xem, không sửa được dữ liệu`);
+  }
   return staff;
 }

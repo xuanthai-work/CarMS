@@ -3,8 +3,10 @@
 import type { OfficeStaff } from "@/types";
 import OfficeStaffCard from "@/components/staff/OfficeStaffCard";
 import { normalizeVn } from "@/utils/search";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 export default function OfficeStaffList({ staff, query }: { staff: OfficeStaff[]; query: string }) {
+  const { canEdit } = usePermissions();
   const nq = normalizeVn(query);
   const filtered = nq
     ? staff.filter((p) => normalizeVn(`${p.name} ${p.position}`).includes(nq))
@@ -14,7 +16,9 @@ export default function OfficeStaffList({ staff, query }: { staff: OfficeStaff[]
     <div className="space-y-4">
       {staff.length === 0 ? (
         <div className="rounded-2xl border border-hairline bg-surface p-10 text-center text-muted">
-          Chưa có nhân sự văn phòng — bấm "+ Thêm nhân sự văn phòng".
+          {canEdit
+            ? 'Chưa có nhân sự văn phòng — bấm "+ Thêm nhân sự văn phòng".'
+            : "Chưa có nhân sự văn phòng."}
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-hairline bg-surface p-10 text-center text-muted">

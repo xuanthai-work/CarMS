@@ -5,17 +5,20 @@ import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/utils/motion";
 import { saveDriver, deleteDriver } from "@/api/drivers";
 import { LICENSE_OPTIONS, DRIVER_TYPES, driverTypeLabel } from "@/utils/drivers";
-import { DetailCell, EditIconButton, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import { DetailCell, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import EditIconButton from "@/components/common/EditIconButton";
 import SelectMenu from "@/components/common/SelectMenu";
 import MoneyInput from "@/components/common/MoneyInput";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import Modal from "@/components/common/Modal";
 import { fmtMoney } from "@/utils/trips";
 import { useFormState } from "@/hooks/common/useFormState";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Driver } from "@/types";
 
 export default function DriverCard({ driver: d }: { driver: Driver }) {
   const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own" });
+  const { canEdit } = usePermissions();
   const [editing, setEditing] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -46,13 +49,15 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
     <>
       <form id={`drv-${d.id}`} ref={formRef} action={handleSave}>
         <input type="hidden" name="id" value={d.id} />
+        {/* Thứ tự + span phải khớp block xem ở dưới, lệch là bấm ✎ thấy field nhảy ô. */}
         <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
           <DetailCell><Field label="Họ tên"><input name="name" defaultValue={d.name} className={inputCls} /></Field></DetailCell>
+          <DetailCell><Field label="Loại"><SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} /></Field></DetailCell>
           <DetailCell><Field label="SĐT / Zalo"><input name="phone" defaultValue={d.phone ?? ""} className={inputCls} /></Field></DetailCell>
           <DetailCell><Field label="Hạng bằng"><SelectMenu name="licenseClass" value={form.licenseClass} onChange={set("licenseClass")} options={LICENSE_OPTIONS} /></Field></DetailCell>
-          <DetailCell><Field label="Loại"><SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} /></Field></DetailCell>
           {form.type === "own" && <DetailCell><Field label="Lương tháng"><MoneyInput name="baseSalary" defaultValue={d.baseSalary} placeholder="VD: 12.000.000" /></Field></DetailCell>}
-          <DetailCell className={d.type === "partner" ? "sm:col-span-2" : ""}><Field label="Ghi chú"><input name="note" defaultValue={d.note} className={inputCls} /></Field></DetailCell>
+          {/* form.type (không phải d.type): đổi Loại ngay trong form thì Lương tháng ẩn đi, span phải giãn theo cùng lúc */}
+          <DetailCell className={form.type === "partner" ? "sm:col-span-2" : ""}><Field label="Ghi chú"><input name="note" defaultValue={d.note} className={inputCls} /></Field></DetailCell>
         </div>
       </form>
       <div className="mt-3 flex items-center justify-between">
@@ -98,9 +103,11 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
                 {d.type === "own" && <DetailCell><Info label="Lương tháng" value={fmtMoney(d.baseSalary)} size="md" /></DetailCell>}
                 <DetailCell className={d.type === "partner" ? "sm:col-span-2" : ""}><Info label="Ghi chú" value={d.note || "—"} size="md" /></DetailCell>
               </div>
-              <div className="mt-5 flex justify-end border-t border-hairline pt-4">
-                <EditIconButton onClick={() => setEditing(true)} />
-              </div>
+              {canEdit && (
+                <div className="mt-5 flex justify-end border-t border-hairline pt-4">
+                  <EditIconButton onClick={() => setEditing(true)} />
+                </div>
+              )}
             </>
           )}
         </Modal>

@@ -13,6 +13,7 @@ import Modal from "@/components/common/Modal";
 import { useFormState } from "@/hooks/common/useFormState";
 import { fmtDate } from "@/utils/format";
 import { fmtMoney } from "@/utils/trips";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Driver, PartnerPayout } from "@/types";
 
 function PartnerPayoutForm({
@@ -81,6 +82,7 @@ export default function PartnerPayoutTable({
   adding: boolean;
   onAddingChange: (adding: boolean) => void;
 }) {
+  const { canEdit } = usePermissions();
   const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const driverName = (id: string) => drivers.find((d) => d.id === id)?.name ?? "—";
@@ -127,8 +129,12 @@ export default function PartnerPayoutTable({
                 {payouts.map((p) => (
                   <tr
                     key={p.id}
-                    onClick={() => setEditingId(p.id)}
-                    className="group cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
+                    onClick={canEdit ? () => setEditingId(p.id) : undefined}
+                    className={
+                      canEdit
+                        ? "group cursor-pointer border-b border-hairline last:border-0 transition hover:bg-canvas/60"
+                        : "border-b border-hairline last:border-0"
+                    }
                   >
                     <td className="sticky left-0 z-10 bg-surface px-3 py-2.5 font-semibold text-ink group-hover:bg-canvas/60">{driverName(p.driverId)}</td>
                     <td className="px-3 py-2.5 text-muted tabular-nums">{fmtDate(p.workDate)}</td>

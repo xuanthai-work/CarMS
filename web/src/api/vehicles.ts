@@ -1,13 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireStaff } from "@/services/auth";
+import { requireEditor } from "@/services/auth";
 import { s, optStr } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
 
 export async function saveVehicle(fd: FormData): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   const id = s(fd, "id");
   const data = {
     plate: s(fd, "plate"),
@@ -28,7 +28,7 @@ export async function saveVehicle(fd: FormData): Promise<void> {
 }
 
 export async function deleteVehicle(fd: FormData): Promise<void> {
-  await requireStaff();
+  await requireEditor();
   const id = s(fd, "id");
   await prisma.vehicle.delete({ where: { id } });
   revalidateAll();
@@ -36,7 +36,7 @@ export async function deleteVehicle(fd: FormData): Promise<void> {
 
 /** Tạo nhanh 1 xe (chỉ biển số) từ combobox trong form chuyến — mặc định "cộng tác ngoài"; sửa sau ở trang Xe. */
 export async function quickCreateVehicle(plate: string): Promise<{ id: string; label: string }> {
-  await requireStaff();
+  await requireEditor();
   const p = plate.trim();
   const id = newId("v");
   await prisma.vehicle.create({ data: { id, plate: p, status: "active", type: "partner" } });

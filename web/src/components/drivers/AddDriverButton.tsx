@@ -8,8 +8,10 @@ import { DetailCell, Field, inputCls } from "@/components/common/ui";
 import SelectMenu from "@/components/common/SelectMenu";
 import MoneyInput from "@/components/common/MoneyInput";
 import { useFormState } from "@/hooks/common/useFormState";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 export default function AddDriverButton() {
+  const { canEdit } = usePermissions();
   const [open, setOpen] = useState(false);
   const { form, set, reset } = useFormState(() => ({ licenseClass: "", type: "own" }));
 
@@ -18,6 +20,8 @@ export default function AddDriverButton() {
     setOpen(false);
     reset();
   }
+
+  if (!canEdit) return null;
 
   return (
     <>

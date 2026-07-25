@@ -9,7 +9,7 @@ Internal fleet-dispatch application for a chauffeured car-rental business. Built
 - **Revenue** — monthly receivables, cost/profit KPIs and per-trip status (managers only).
 - **Fuel costs** — per-vehicle fuel entries with payment tracking, feeding the revenue view.
 - **Vehicles & staff** — vehicle CRUD; staff split into Drivers and Office staff tabs.
-- **Authentication & roles** — Supabase-backed login; accounts link to an office-staff record by email. Managers (CEO/COO) see everything; regular staff are restricted (no Revenue; Staff shows Drivers only). Enforced at the app layer on nav, pages, and server actions.
+- **Authentication & roles** — Supabase-backed login; accounts link to an office-staff record by email. Permissions are two independent axes: **what you can see** (`isManager` — CEO/COO see everything; regular staff get no Revenue and Drivers-only Staff) and **what you can change** (`canEdit` — CEO is view-only; COO and regular staff keep their existing write access). Enforced at the app layer on nav, pages, and server actions.
 
 ## Getting started
 
