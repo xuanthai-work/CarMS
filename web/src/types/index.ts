@@ -65,7 +65,6 @@ export type Trip = {
   status?: "pending" | "info_sent" | "completed_paid";
   heldThroughTour: boolean; // giữ xe suốt tour (chỉ có nghĩa khi cùng 1 xe cả đi & về)
   note: string;
-  fuelCost: number | null; // xăng dầu
   tollCost: number | null; // VETC / cầu đường
   partnerCost: number | null; // tiền thuê đối tác
   otherCost: number | null; // chi phí khác

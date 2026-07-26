@@ -17,7 +17,6 @@ function toTrip(r: TripRow): Trip {
     status: r.status as Trip["status"],
     heldThroughTour: r.heldThroughTour,
     note: r.note ?? "",
-    fuelCost: r.fuelCost,
     tollCost: r.tollCost,
     partnerCost: r.partnerCost,
     otherCost: r.otherCost,

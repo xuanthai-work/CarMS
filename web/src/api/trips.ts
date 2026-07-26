@@ -35,7 +35,6 @@ export async function saveTrip(fd: FormData): Promise<void> {
     tourType: tourTypeFromDates(o.date, r?.date ?? null),
     price: optNum(fd, "price"),
     deposit: optNum(fd, "deposit"),
-    fuelCost: optNum(fd, "fuelCost"),
     tollCost: optNum(fd, "tollCost"),
     partnerCost: optNum(fd, "partnerCost"),
     otherCost: optNum(fd, "otherCost"),

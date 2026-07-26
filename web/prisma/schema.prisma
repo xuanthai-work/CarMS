@@ -75,7 +75,7 @@ model Trip {
   returnDriver      Driver?  @relation("ReturnDriver", fields: [returnDriverId], references: [id])
 
   // ----- Chi phí (để tính lợi nhuận) -----
-  fuelCost    Float? // xăng dầu
+  // Xăng dầu KHÔNG nằm ở đây: theo dõi riêng theo xe ở bảng FuelEntry (theo refuelDate).
   tollCost    Float? // VETC / cầu đường
   partnerCost Float? // tiền thuê đối tác
   otherCost   Float? // chi phí khác

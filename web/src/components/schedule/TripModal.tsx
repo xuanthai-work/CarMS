@@ -148,7 +148,6 @@ export default function TripModal({
           <div className="mt-4 flex flex-wrap items-start gap-x-8 gap-y-4">
             <FinanceMetric label="Tiền chuyến" value={fmtMoney(t.price)} />
             <FinanceMetric label="Đã cọc" value={fmtMoney(t.deposit)} />
-            {t.fuelCost != null && <FinanceMetric label="Xăng dầu" value={fmtMoney(t.fuelCost)} />}
             {t.tollCost != null && <FinanceMetric label="VETC / Cầu đường" value={fmtMoney(t.tollCost)} />}
             {t.partnerCost != null && <FinanceMetric label="Tiền thuê đối tác" value={fmtMoney(t.partnerCost)} />}
             {t.otherCost != null && <FinanceMetric label="Chi phí khác" value={fmtMoney(t.otherCost)} />}
