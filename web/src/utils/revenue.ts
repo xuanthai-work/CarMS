@@ -1,4 +1,4 @@
-import type { Trip } from "@/types";
+import type { Trip } from "../types";
 import { monthKeyOf } from "./format";
 
 /** Tiền của một chuyến, suy từ price/deposit/status (không đổi schema). */
@@ -33,9 +33,13 @@ export function tripMoney(trip: Trip): TripMoney {
   };
 }
 
-/** Tháng gán doanh thu = tháng của ngày đi. "2026-07-15" -> "2026-07". */
+/**
+ * Tháng ghi nhận doanh thu = tháng chuyến hoàn tất:
+ * - Có lượt về: dùng ngày lượt về.
+ * - Một chiều: dùng ngày lượt đi.
+ */
 export function revenueMonthKey(trip: Trip): string {
-  return monthKeyOf(trip.outbound.date);
+  return monthKeyOf(trip.return?.date ?? trip.outbound.date);
 }
 
 /** Class chữ cho số lợi nhuận: lãi ≥ 0 → xanh, lỗ < 0 → đỏ. */
