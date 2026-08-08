@@ -4,6 +4,7 @@ import {
   salariedPeople,
   buildSalaryRows,
   partnerPayoutMonthTotal,
+  salaryCostBreakdownForMonth,
   salaryCostForMonth,
   visibleSalaryRows,
   type SalaryRow,
@@ -63,6 +64,24 @@ describe("salaryCostForMonth", () => {
     ];
     const payouts = [{ workDate: "2026-07-10", amount: 1_500_000 }];
     expect(salaryCostForMonth(rows, payouts, "2026-07")).toBe(33_500_000);
+  });
+
+  it("tách đúng lương nhân viên, lái xe tháng và lái xe ngày", () => {
+    const rows: SalaryRow[] = [
+      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, note: "", paid: false, net: 20_000_000 },
+      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, note: "", paid: false, net: 12_000_000 },
+    ];
+    const payouts = [
+      { workDate: "2026-07-10", amount: 1_500_000 },
+      { workDate: "2026-08-01", amount: 700_000 },
+    ];
+
+    expect(salaryCostBreakdownForMonth(rows, payouts, "2026-07")).toEqual({
+      office: 20_000_000,
+      monthlyDrivers: 12_000_000,
+      dailyDrivers: 1_500_000,
+      total: 33_500_000,
+    });
   });
 });
 

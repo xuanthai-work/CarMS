@@ -103,7 +103,7 @@ export default function PartnerPayoutTable({
     <div className="space-y-3">
       <div className="relative rounded-2xl border border-hairline bg-surface shadow-panel">
         {!adding && payouts.length === 0 ? (
-          <div className="p-12 text-center text-muted">Chưa có phiếu trả công đối tác trong tháng này.</div>
+          <div className="p-12 text-center text-muted">Chưa có phiếu lương ngày trong tháng này.</div>
         ) : (
           <div className="overflow-x-auto thin-scroll">
             <table className="w-full min-w-[720px] table-fixed text-sm">

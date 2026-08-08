@@ -68,7 +68,7 @@ export default function SalaryScreen({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {isManager && <Tile label="Tổng lương tháng" value={fmtMoneyUnit(totalNet)} />}
-        <Tile label="Trả công đối tác" value={fmtMoneyUnit(payoutTotal)} />
+        <Tile label="Lương ngày" value={fmtMoneyUnit(payoutTotal)} />
         {isManager && <Tile label="Đã trả" value={fmtMoneyUnit(paidTotal)} tone="emerald" />}
         {isManager && <Tile label="Còn phải trả" value={fmtMoneyUnit(owing)} tone={owing > 0 ? "amber" : "ink"} />}
       </div>
@@ -80,7 +80,7 @@ export default function SalaryScreen({
           ariaLabel="Chọn nhóm lương"
           options={[
             ["month", "Lương tháng"],
-            ["partner", "Trả công đối tác"],
+            ["partner", "Lương ngày"],
           ] as const}
         />
         <SearchInput value={query} onChange={setQuery} placeholder="Tìm tên nhân sự, chức vụ..." />

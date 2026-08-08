@@ -14,6 +14,17 @@ export function tripOtherCost(trip: Trip): number {
   return (trip.tollCost ?? 0) + (trip.partnerCost ?? 0) + (trip.otherCost ?? 0);
 }
 
+/** Tách chi phí thuê xe đối tác khỏi các chi phí còn lại gắn trên chuyến. */
+export function tripCostBreakdown(trips: Trip[]): { other: number; partner: number } {
+  return trips.reduce(
+    (total, trip) => ({
+      other: total.other + (trip.tollCost ?? 0) + (trip.otherCost ?? 0),
+      partner: total.partner + (trip.partnerCost ?? 0),
+    }),
+    { other: 0, partner: 0 }
+  );
+}
+
 /**
  * Quy tắc tiền:
  * - completed_paid  -> đã thu đủ price
@@ -73,4 +84,33 @@ export function summarize(items: TripMoney[]): RevenueSummary {
 
 export function monthProfit(summary: RevenueSummary, fuelTotal: number, salaryCost = 0): number {
   return summary.recognized - summary.cost - fuelTotal - salaryCost;
+}
+
+/**
+ * Tổng hợp tài chính một tháng bằng một đường tính duy nhất để tránh cộng trùng
+ * giữa doanh thu chuyến, chi phí chuyến, dầu và lương.
+ */
+export function buildMonthFinance(
+  trips: Trip[],
+  monthKey: string,
+  fuelTotal: number,
+  salaryCost: number
+) {
+  const rows = trips
+    .filter((trip) => revenueMonthKey(trip) === monthKey)
+    .map((trip) => ({ trip, money: tripMoney(trip) }));
+  const summary = summarize(rows.map((row) => row.money));
+  const tripCosts = tripCostBreakdown(rows.map((row) => row.trip));
+  const paidTotal = rows
+    .filter((row) => row.trip.status === "completed_paid")
+    .reduce((total, row) => total + row.money.recognized, 0);
+
+  return {
+    rows,
+    summary,
+    tripCosts,
+    paidTotal,
+    totalCost: summary.cost + fuelTotal + salaryCost,
+    profit: monthProfit(summary, fuelTotal, salaryCost),
+  };
 }

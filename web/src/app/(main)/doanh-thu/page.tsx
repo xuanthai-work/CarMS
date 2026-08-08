@@ -7,7 +7,7 @@ import { getSalaryMonths, getPartnerPayouts } from "@/services/salary";
 import RevenueScreen from "@/components/revenue/RevenueScreen";
 import { monthKeyOf, todayStr } from "@/utils/format";
 import { requireManager } from "@/services/auth";
-import { salariedPeople, buildSalaryRows, salaryCostForMonth } from "@/utils/salary";
+import { salariedPeople, buildSalaryRows, salaryCostBreakdownForMonth } from "@/utils/salary";
 
 export default async function DoanhThuPage() {
   await requireManager();
@@ -25,10 +25,10 @@ export default async function DoanhThuPage() {
 
   const people = salariedPeople(office, drivers);
   const salaryMonths = new Set([defaultMonthKey, ...months.map((month) => month.monthKey), ...payouts.map((payout) => payout.workDate.slice(0, 7))]);
-  const salaryCostByMonth = Object.fromEntries(
+  const salaryCostBreakdownByMonth = Object.fromEntries(
     Array.from(salaryMonths, (monthKey) => {
       const rows = buildSalaryRows(people, months.filter((month) => month.monthKey === monthKey));
-      return [monthKey, salaryCostForMonth(rows, payouts, monthKey)];
+      return [monthKey, salaryCostBreakdownForMonth(rows, payouts, monthKey)];
     })
   );
 
@@ -39,7 +39,7 @@ export default async function DoanhThuPage() {
       drivers={drivers}
       defaultMonthKey={defaultMonthKey}
       fuelTotalsByMonth={Object.fromEntries(fuelMonthMap)}
-      salaryCostByMonth={salaryCostByMonth}
+      salaryCostBreakdownByMonth={salaryCostBreakdownByMonth}
     />
   );
 }

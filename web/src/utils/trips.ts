@@ -1,4 +1,4 @@
-import type { Trip, TourType } from "@/types";
+import type { Trip, TourType, Vehicle } from "@/types";
 
 /** Loại tour + số ngày (calendar day) tour trải qua. */
 export const TOUR_TYPES = [
@@ -29,6 +29,16 @@ export function tourTypeFromDates(outboundDate: string, returnDate: string | nul
   if (nights === 1) return "2n1d";
   if (nights === 2) return "3n2d";
   return "4n3d"; // 3+ đêm: gộp về mức cao nhất trong enum
+}
+
+/** Chỉ xe thuê ngoài mới phát sinh ô nhập tiền thuê đối tác; loại tài xế không ảnh hưởng. */
+export function hasPartnerVehicle(
+  vehicleIds: Array<string | null | undefined>,
+  vehicles: Array<Pick<Vehicle, "id" | "type">>
+): boolean {
+  return vehicleIds.some(
+    (vehicleId) => !!vehicleId && vehicles.find((vehicle) => vehicle.id === vehicleId)?.type === "partner"
+  );
 }
 
 /** Cùng 1 xe chạy cả lượt đi lẫn về? (⇒ "trọn gói") */

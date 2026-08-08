@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import type { Trip, Vehicle, Driver } from "@/types";
-import { tripMoney, summarize, revenueMonthKey, monthProfit } from "@/utils/revenue";
+import { buildMonthFinance } from "@/utils/revenue";
 import { fmtMoney, fmtMoneyUnit, tourTypeLabel, tripStatusLabel, statusTextClass } from "@/utils/trips";
 import { monthLabel, addMonth, fmtDate } from "@/utils/format";
 import { normalizeVn } from "@/utils/search";
@@ -16,6 +16,7 @@ import FilterTabs from "@/components/common/FilterTabs";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
+import type { SalaryCostBreakdown } from "@/utils/salary";
 
 const STAT_TONE = {
   neutral: "text-ink",
@@ -76,14 +77,14 @@ export default function RevenueScreen({
   drivers,
   defaultMonthKey,
   fuelTotalsByMonth,
-  salaryCostByMonth,
+  salaryCostBreakdownByMonth,
 }: {
   trips: Trip[];
   vehicles: Vehicle[];
   drivers: Driver[];
   defaultMonthKey: string;
   fuelTotalsByMonth: Record<string, number>;
-  salaryCostByMonth: Record<string, number>;
+  salaryCostBreakdownByMonth: Record<string, SalaryCostBreakdown>;
 }) {
   const { canEdit } = usePermissions();
   const router = useRouter();
@@ -93,28 +94,21 @@ export default function RevenueScreen({
   const [statusChange, setStatusChange] = useState<{ trip: Trip; next: string } | null>(null);
   const [monthKey, setMonthKey] = useState(defaultMonthKey);
 
-  const monthTrips = useMemo(
-    () => trips.filter((t) => revenueMonthKey(t) === monthKey),
-    [trips, monthKey]
-  );
-  // Tính tiền 1 lần cho cả tháng; summary + rows dùng lại (khỏi map tripMoney lại mỗi lần gõ/lọc).
-  const monthMoney = useMemo(
-    () => monthTrips.map((t) => ({ trip: t, money: tripMoney(t) })),
-    [monthTrips]
-  );
-  const summary = useMemo(() => summarize(monthMoney.map((r) => r.money)), [monthMoney]);
   const fuelTotal = fuelTotalsByMonth[monthKey] ?? 0;
-  const salaryCost = salaryCostByMonth[monthKey] ?? 0;
-  const totalCost = summary.cost + fuelTotal + salaryCost;
-  const profit = monthProfit(summary, fuelTotal, salaryCost);
-  // "Đã thanh toán" = tiền các chuyến có trạng thái completed_paid (theo status, không tính cọc).
-  const paidTotal = useMemo(
-    () =>
-      monthMoney
-        .filter((r) => r.trip.status === "completed_paid")
-        .reduce((s, r) => s + r.money.recognized, 0),
-    [monthMoney]
+  const salaryCosts = salaryCostBreakdownByMonth[monthKey] ?? {
+    office: 0,
+    monthlyDrivers: 0,
+    dailyDrivers: 0,
+    total: 0,
+  };
+  const salaryCost = salaryCosts.total;
+  // Tất cả số liệu trên thẻ và bảng dùng chung một phép tổng hợp để không cộng trùng.
+  const finance = useMemo(
+    () => buildMonthFinance(trips, monthKey, fuelTotal, salaryCost),
+    [trips, monthKey, fuelTotal, salaryCost]
   );
+  const { rows: monthMoney, summary, tripCosts, paidTotal, totalCost, profit } = finance;
+  const monthTrips = useMemo(() => monthMoney.map((row) => row.trip), [monthMoney]);
   const noPriceCount = useMemo(() => monthTrips.filter((t) => t.price == null).length, [monthTrips]);
 
   const [filter, setFilter] = useState<"all" | "owing" | "paid">("all");
@@ -321,9 +315,10 @@ export default function RevenueScreen({
       {costDetailOpen && (
         <Modal title="Chi tiết tổng chi phí tháng" onClose={() => setCostDetailOpen(false)} maxWidthClass="max-w-md">
           <div className="space-y-3">
-            <CostLine label="Chi phí khác" value={summary.cost} />
+            <CostLine label="Chi phí khác" value={tripCosts.other} />
+            <CostLine label="Tiền thuê đối tác" value={tripCosts.partner} />
             <CostLine label="Tiền dầu" value={fuelTotal} />
-            <CostLine label="Chi phí lương" value={salaryCost} />
+            <SalaryCostLine value={salaryCost} breakdown={salaryCosts} />
             <div className="flex items-center justify-between border-t border-hairline pt-3 text-base font-bold text-ink">
               <span>Tổng chi phí tháng</span>
               <span>{fmtMoney(totalCost)}</span>
@@ -340,6 +335,31 @@ function CostLine({ label, value }: { label: string; value: number }) {
     <div className="flex items-center justify-between rounded-lg bg-canvas px-3 py-2.5 text-sm">
       <span className="text-muted">{label}</span>
       <span className="font-semibold text-ink">{fmtMoney(value)}</span>
+    </div>
+  );
+}
+
+function SalaryCostLine({ value, breakdown }: { value: number; breakdown: SalaryCostBreakdown }) {
+  return (
+    <div className="rounded-lg bg-canvas px-3 py-2.5 text-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-muted">Chi phí lương</span>
+        <span className="font-semibold text-ink">{fmtMoney(value)}</span>
+      </div>
+      <div className="mt-2 space-y-1 border-t border-hairline pt-2 text-xs">
+        <SalarySubLine label="Lương nhân viên" value={breakdown.office} />
+        <SalarySubLine label="Lương lái xe tháng" value={breakdown.monthlyDrivers} />
+        <SalarySubLine label="Lương lái xe ngày" value={breakdown.dailyDrivers} />
+      </div>
+    </div>
+  );
+}
+
+function SalarySubLine({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-muted">{label}</span>
+      <span className="font-medium tabular-nums text-ink">{fmtMoney(value)}</span>
     </div>
   );
 }

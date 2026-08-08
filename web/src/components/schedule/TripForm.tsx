@@ -11,7 +11,7 @@ import TimePicker from "@/components/common/TimePicker";
 import Combobox from "@/components/common/Combobox";
 import MoneyInput from "@/components/common/MoneyInput";
 import SelectMenu from "@/components/common/SelectMenu";
-import { tourTypeLabel, tourTypeFromDates, TRIP_STATUSES } from "@/utils/trips";
+import { hasPartnerVehicle, tourTypeLabel, tourTypeFromDates, TRIP_STATUSES } from "@/utils/trips";
 import { seatLabel, VEHICLE_TYPES } from "@/utils/vehicles";
 import { fmtDateFull } from "@/utils/format";
 import type { Trip, Vehicle, Driver, Leg } from "@/types";
@@ -129,13 +129,11 @@ export default function TripForm({
   const [rDrvId, setRDrvId] = useState(trip?.return?.driverId ?? "");
   const [status, setStatus] = useState<string>(trip?.status ?? "pending");
 
-  // Chỉ hiện ô "Tiền thuê đối tác" khi chuyến có dùng xe HOẶC lái xe của đối tác.
-  const isPartnerVehId = (id: string) => !!id && vehicles.find((v) => v.id === id)?.type === "partner";
-  const isPartnerDrvId = (id: string) => !!id && drivers.find((d) => d.id === id)?.type === "partner";
-  const usesPartner =
-    isPartnerVehId(oVehId) ||
-    isPartnerDrvId(oDrvId) ||
-    (hasReturn && (isPartnerVehId(rVehId) || isPartnerDrvId(rDrvId)));
+  // Tiền thuê đối tác là chi phí thuê xe ngoài, không phụ thuộc tài xế là công ty hay cộng tác.
+  const usesPartnerVehicle = hasPartnerVehicle(
+    [oVehId, hasReturn ? rVehId : null],
+    vehicles
+  );
 
   function changeODate(v: string) {
     setODate(v);
@@ -221,7 +219,7 @@ export default function TripForm({
             <Field label="VETC / Cầu đường">
               <MoneyInput name="tollCost" defaultValue={trip?.tollCost ?? null} placeholder="0" />
             </Field>
-            {usesPartner && (
+            {usesPartnerVehicle && (
               <Field label="Tiền thuê đối tác">
                 <MoneyInput name="partnerCost" defaultValue={trip?.partnerCost ?? null} placeholder="0" />
               </Field>

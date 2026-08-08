@@ -32,6 +32,13 @@ type MonthLike = {
 };
 type PayoutLike = { workDate: string; amount: number };
 
+export type SalaryCostBreakdown = {
+  office: number;
+  monthlyDrivers: number;
+  dailyDrivers: number;
+  total: number;
+};
+
 /** Thực nhận = lương cơ bản + cộng (thưởng/phụ cấp) − trừ (tạm ứng/khấu trừ). */
 export function salaryNet(x: { baseSalary: number; additions: number; deductions: number }): number {
   return x.baseSalary + x.additions - x.deductions;
@@ -87,10 +94,30 @@ export function partnerPayoutMonthTotal(payouts: PayoutLike[], monthKey: string)
     .reduce((sum, p) => sum + p.amount, 0);
 }
 
-/** Chi phí lương tháng (nối lợi nhuận) = Σ thực nhận + Σ phiếu đối tác trong tháng. */
+/** Tách chi phí lương theo nhân viên, lái xe tháng và lái xe nhận công theo ngày. */
+export function salaryCostBreakdownForMonth(
+  rows: SalaryRow[],
+  payouts: PayoutLike[],
+  monthKey: string
+): SalaryCostBreakdown {
+  const office = rows
+    .filter((row) => row.personType === "office")
+    .reduce((sum, row) => sum + row.net, 0);
+  const monthlyDrivers = rows
+    .filter((row) => row.personType === "driver")
+    .reduce((sum, row) => sum + row.net, 0);
+  const dailyDrivers = partnerPayoutMonthTotal(payouts, monthKey);
+  return {
+    office,
+    monthlyDrivers,
+    dailyDrivers,
+    total: office + monthlyDrivers + dailyDrivers,
+  };
+}
+
+/** Chi phí lương tháng (nối lợi nhuận) = tổng của ba nhóm lương. */
 export function salaryCostForMonth(rows: SalaryRow[], payouts: PayoutLike[], monthKey: string): number {
-  const salaried = rows.reduce((sum, r) => sum + r.net, 0);
-  return salaried + partnerPayoutMonthTotal(payouts, monthKey);
+  return salaryCostBreakdownForMonth(rows, payouts, monthKey).total;
 }
 
 /** Nhân viên thường chỉ thấy dòng lương lái xe; quản lý thấy tất cả. */

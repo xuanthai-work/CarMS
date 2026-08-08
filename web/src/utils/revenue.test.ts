@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Trip } from "../types";
-import { revenueMonthKey } from "./revenue";
+import { revenueMonthKey, tripCostBreakdown } from "./revenue";
 
 function tripWithDates(outboundDate: string, returnDate: string | null): Trip {
   const leg = (date: string) => ({
@@ -49,5 +49,19 @@ describe("revenueMonthKey", () => {
     const trip = tripWithDates("2026-07-10", "2026-07-12");
 
     expect(revenueMonthKey(trip)).toBe("2026-07");
+  });
+});
+
+describe("tripCostBreakdown", () => {
+  it("tách tiền thuê xe đối tác khỏi các chi phí chuyến khác", () => {
+    const trip = tripWithDates("2026-08-01", null);
+    trip.tollCost = 200_000;
+    trip.partnerCost = 3_000_000;
+    trip.otherCost = 400_000;
+
+    expect(tripCostBreakdown([trip])).toEqual({
+      other: 600_000,
+      partner: 3_000_000,
+    });
   });
 });
