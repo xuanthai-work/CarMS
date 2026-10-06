@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/services/auth";
 import { planChatRoute } from "@/configs/ai";
 import { buildLanguageModel, buildWebSearchTools, hasGeminiKey, hasOpencodeKey } from "@/services/ai";
 import { hasTavilyKey } from "@/services/tavily";
+import { systemReadTools } from "@/services/systemTools";
 import { buildSystemPrompt } from "@/configs/systemPrompt";
 
 export const runtime = "nodejs";
@@ -52,8 +53,12 @@ export async function POST(req: Request) {
   const system = buildSystemPrompt(body.customInstructions, VN_DATETIME.format(new Date()));
   const model = buildLanguageModel(plan);
 
-  // Web search: Tavily (mọi model) hoặc grounding Google Search (chỉ Gemini) — tuỳ kế hoạch.
-  const tools = buildWebSearchTools(plan);
+  // System Read Tools luôn sẵn sàng cho AI; Web Search Tools cấp thêm nếu lượt này bật web.
+  const webTools = buildWebSearchTools(plan);
+  const tools = {
+    ...systemReadTools(),
+    ...(webTools ?? {}),
+  };
 
   const result = streamText({
     model,
