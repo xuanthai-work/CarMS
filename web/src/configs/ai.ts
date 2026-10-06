@@ -67,6 +67,13 @@ export function providerOf(id: string | null | undefined): ProviderId {
   return findModel(id)?.provider ?? findModel(DEFAULT_MODEL_ID)!.provider;
 }
 
+/**
+ * Cách chạy tìm kiếm web của một lượt chat:
+ *  - "tavily": function tool gọi Tavily API → chạy được trên MỌI model.
+ *  - "google": grounding Google Search của Gemini → chỉ model Gemini.
+ */
+export type WebSearchTool = "tavily" | "google";
+
 export type ChatPlan = {
   /** Provider gọi trước. */
   primaryProvider: ProviderId;
@@ -74,8 +81,10 @@ export type ChatPlan = {
   /** Provider tự động chuyển sang khi provider chính lỗi (null = không có). */
   fallbackProvider: ProviderId | null;
   fallbackModelId: string | null;
-  /** Có thực sự bật grounding Google Search không (chỉ Gemini mới chạy được). */
+  /** Có thực sự bật tìm kiếm web không (đã tính cả chuyện thiếu key). */
   webSearch: boolean;
+  /** Cách chạy tìm kiếm web; null = lượt này không tìm kiếm web. */
+  webSearchTool: WebSearchTool | null;
 };
 
 export type ChatPlanInput = {
@@ -83,21 +92,26 @@ export type ChatPlanInput = {
   webSearch: boolean;
   hasOpencodeKey: boolean;
   hasGeminiKey: boolean;
+  /** Có TAVILY_API_KEY → web search chạy trên mọi model, khỏi ép sang Gemini. */
+  hasTavilyKey?: boolean;
 };
 
 /**
  * Quyết định provider/model cho một lượt chat (thuần, dễ test):
  *  1. Mặc định bám model người dùng chọn (OpenCode).
- *  2. Grounding Google Search chỉ Gemini làm được → ép sang Gemini khi bật web search.
+ *  2. Bật web search: có Tavily thì giữ nguyên model người dùng chọn (Tavily là
+ *     function tool, model nào cũng gọi được); không có Tavily thì grounding Google
+ *     Search chỉ Gemini làm được → ép sang Gemini.
  *  3. Thiếu key provider mong muốn thì rơi về provider còn lại.
  *  4. Provider chính là OpenCode → Gemini là fallback tự động.
  */
 export function planChatRoute(input: ChatPlanInput): ChatPlan {
   const requested = resolveModelId(input.modelId);
   const requestedProvider = providerOf(requested);
+  const useTavily = Boolean(input.hasTavilyKey);
 
-  // Muốn Gemini nếu người dùng chọn Gemini hoặc bật web search.
-  const wantsGemini = input.webSearch || requestedProvider === "gemini";
+  // Muốn Gemini nếu người dùng chọn Gemini, hoặc bật web search mà không có Tavily.
+  const wantsGemini = (input.webSearch && !useTavily) || requestedProvider === "gemini";
 
   let primaryProvider: ProviderId;
   let primaryModelId: string;
@@ -109,7 +123,8 @@ export function planChatRoute(input: ChatPlanInput): ChatPlan {
     primaryProvider = "opencode";
     primaryModelId = requestedProvider === "opencode" ? requested : DEFAULT_MODEL_ID;
   } else if (input.hasOpencodeKey) {
-    // Muốn Gemini (web search) nhưng thiếu key → đành dùng OpenCode, bỏ grounding.
+    // Muốn Gemini nhưng thiếu key → dùng OpenCode. Mất grounding Google, nhưng nếu có
+    // Tavily thì web search vẫn chạy được (webSearchTool bên dưới tính theo Tavily).
     primaryProvider = "opencode";
     primaryModelId = DEFAULT_MODEL_ID;
   } else if (input.hasGeminiKey) {
@@ -121,11 +136,21 @@ export function planChatRoute(input: ChatPlanInput): ChatPlan {
     primaryModelId = DEFAULT_MODEL_ID;
   }
 
+  // Có Tavily thì dùng Tavily cho mọi provider; không có thì chỉ Gemini grounding chạy được.
+  const webSearchTool: WebSearchTool | null = !input.webSearch
+    ? null
+    : useTavily
+      ? "tavily"
+      : primaryProvider === "gemini"
+        ? "google"
+        : null;
+
   return {
     primaryProvider,
     primaryModelId,
     fallbackProvider: primaryProvider === "opencode" && input.hasGeminiKey ? "gemini" : null,
     fallbackModelId: primaryProvider === "opencode" && input.hasGeminiKey ? FALLBACK_MODEL_ID : null,
-    webSearch: primaryProvider === "gemini" && input.webSearch,
+    webSearch: webSearchTool !== null,
+    webSearchTool,
   };
 }

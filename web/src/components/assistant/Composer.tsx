@@ -25,7 +25,7 @@ export default function Composer({
   onStop,
 }: {
   webSearch: boolean;
-  /** Đổi chế độ trả lời: false = thường, true = có tìm web (grounding). */
+  /** Đổi chế độ trả lời: false = thường, true = có tìm web (Tavily, hoặc grounding nếu là Gemini). */
   onWebSearchChange: (v: boolean) => void;
   onSend: (text: string, files?: FileList) => void;
   /** Đang chờ/nhận phản hồi — khi bật, nút gửi đổi thành nút Dừng. */

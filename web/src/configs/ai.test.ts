@@ -92,5 +92,47 @@ describe("planChatRoute", () => {
     expect(plan.primaryModelId).toBe(DEFAULT_MODEL_ID);
     expect(plan.fallbackProvider).toBeNull();
     expect(plan.webSearch).toBe(false);
+    expect(plan.webSearchTool).toBeNull();
+  });
+
+  it("có Tavily thì bật web search mà GIỮ NGUYÊN model OpenCode người dùng chọn", () => {
+    const plan = planChatRoute({ modelId: "deepseek-v4-pro", webSearch: true, ...both, hasTavilyKey: true });
+    expect(plan.primaryProvider).toBe("opencode");
+    expect(plan.primaryModelId).toBe("deepseek-v4-pro");
+    expect(plan.fallbackProvider).toBe("gemini");
+    expect(plan.webSearch).toBe(true);
+    expect(plan.webSearchTool).toBe("tavily");
+  });
+
+  it("có Tavily + model Gemini → vẫn dùng Tavily cho đồng nhất", () => {
+    const plan = planChatRoute({ modelId: "gemini-pro-latest", webSearch: true, ...both, hasTavilyKey: true });
+    expect(plan.primaryProvider).toBe("gemini");
+    expect(plan.primaryModelId).toBe("gemini-pro-latest");
+    expect(plan.webSearchTool).toBe("tavily");
+  });
+
+  it("có Tavily nhưng tắt web search → không gắn tool nào", () => {
+    const plan = planChatRoute({ modelId: "kimi-k3", webSearch: false, ...both, hasTavilyKey: true });
+    expect(plan.webSearch).toBe(false);
+    expect(plan.webSearchTool).toBeNull();
+  });
+
+  it("không có Tavily → giữ nguyên hành vi cũ: grounding Google trên Gemini", () => {
+    const plan = planChatRoute({ modelId: "kimi-k3", webSearch: true, ...both, hasTavilyKey: false });
+    expect(plan.primaryProvider).toBe("gemini");
+    expect(plan.webSearchTool).toBe("google");
+  });
+
+  it("có Tavily nhưng thiếu key OpenCode → vẫn tìm kiếm được bằng Tavily", () => {
+    const plan = planChatRoute({
+      modelId: "kimi-k3",
+      webSearch: true,
+      hasOpencodeKey: false,
+      hasGeminiKey: true,
+      hasTavilyKey: true,
+    });
+    expect(plan.primaryProvider).toBe("gemini");
+    expect(plan.webSearch).toBe(true);
+    expect(plan.webSearchTool).toBe("tavily");
   });
 });

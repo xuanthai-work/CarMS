@@ -1,7 +1,8 @@
-import { streamText, convertToModelMessages, type UIMessage, type ToolSet } from "ai";
+import { streamText, convertToModelMessages, stepCountIs, type UIMessage } from "ai";
 import { getCurrentUser } from "@/services/auth";
 import { planChatRoute } from "@/configs/ai";
-import { buildLanguageModel, googleSearchTools, hasGeminiKey, hasOpencodeKey } from "@/services/ai";
+import { buildLanguageModel, buildWebSearchTools, hasGeminiKey, hasOpencodeKey } from "@/services/ai";
+import { hasTavilyKey } from "@/services/tavily";
 import { buildSystemPrompt } from "@/configs/systemPrompt";
 
 export const runtime = "nodejs";
@@ -46,18 +47,22 @@ export async function POST(req: Request) {
     webSearch: Boolean(body.webSearch),
     hasOpencodeKey: opencodeKey,
     hasGeminiKey: geminiKey,
+    hasTavilyKey: hasTavilyKey(),
   });
   const system = buildSystemPrompt(body.customInstructions, VN_DATETIME.format(new Date()));
   const model = buildLanguageModel(plan);
 
-  // Grounding Google Search chỉ khi thực sự chạy model Gemini (provider-executed tool).
-  const tools: ToolSet | undefined = plan.webSearch ? googleSearchTools() : undefined;
+  // Web search: Tavily (mọi model) hoặc grounding Google Search (chỉ Gemini) — tuỳ kế hoạch.
+  const tools = buildWebSearchTools(plan);
 
   const result = streamText({
     model,
     system,
     messages: await convertToModelMessages(body.messages),
     tools,
+    // Cho model tự gọi tool rồi tổng hợp câu trả lời: bước 1 gọi search, bước 2 trả lời
+    // (chừa dư 1 bước nếu model muốn tra cứu thêm). Mặc định AI SDK chỉ chạy 1 bước.
+    stopWhen: stepCountIs(3),
     abortSignal: req.signal,
   });
 

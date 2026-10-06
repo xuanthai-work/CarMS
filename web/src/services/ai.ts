@@ -2,6 +2,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { wrapLanguageModel, type LanguageModel, type LanguageModelMiddleware, type ToolSet } from "ai";
 import type { ChatPlan } from "@/configs/ai";
+import { hasTavilyKey, tavilySearchTool } from "@/services/tavily";
 
 // Kiểu model V4 mà cả hai provider trả về (suy ra, khỏi phụ thuộc trực tiếp @ai-sdk/provider).
 type OpencodeModel = ReturnType<ReturnType<typeof createOpenAICompatible>>;
@@ -133,4 +134,18 @@ export function buildLanguageModel(plan: ChatPlan): LanguageModel {
 /** Grounding Google Search chỉ chạy với model Gemini. */
 export function googleSearchTools(): ToolSet {
   return { google_search: geminiProvider().tools.googleSearch({}) };
+}
+
+/**
+ * Tool tìm kiếm web theo kế hoạch đã tính:
+ *  - "tavily": function tool Tavily — chạy trên mọi model (kể cả OpenCode DeepSeek/Qwen).
+ *  - "google": grounding Google Search — chỉ Gemini.
+ * Trả undefined khi lượt này không bật web search (hoặc key đã bị gỡ sau lúc lập kế hoạch).
+ */
+export function buildWebSearchTools(plan: ChatPlan): ToolSet | undefined {
+  if (plan.webSearchTool === "tavily") {
+    return hasTavilyKey() ? { tavily_search: tavilySearchTool() } : undefined;
+  }
+  if (plan.webSearchTool === "google") return googleSearchTools();
+  return undefined;
 }
