@@ -81,3 +81,71 @@ export function tavilySearchTool() {
     execute: async ({ query }) => searchTavily(query),
   });
 }
+
+// Cổng thông tin pháp luật chính thống của Việt Nam — khoá phạm vi tìm kiếm luật.
+export const VIETNAM_LAW_DOMAINS = [
+  "thuvienphapluat.vn",
+  "luatvietnam.vn",
+  "chinhphu.vn",
+  "mt.gov.vn", // Bộ Giao thông Vận tải
+  "csgt.vn", // Cục Cảnh sát Giao thông
+];
+
+/**
+ * Tìm kiếm văn bản quy phạm pháp luật, nghị định, mức phạt giao thông...
+ * Khóa chặt phạm vi tìm kiếm trong các cổng thông tin pháp luật chính thống của Việt Nam.
+ */
+export async function searchVietnamLaw(query: string, maxResults = 5): Promise<string> {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey) {
+    return "Không thể tra cứu luật: Chưa cấu hình TAVILY_API_KEY.";
+  }
+
+  try {
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: apiKey,
+        query,
+        search_depth: "advanced",
+        include_domains: VIETNAM_LAW_DOMAINS,
+        max_results: maxResults,
+        include_answer: false,
+      }),
+    });
+
+    if (!res.ok) {
+      return `Lỗi tra cứu luật Tavily (HTTP ${res.status}): ${await res.text()}`;
+    }
+
+    const data = (await res.json()) as TavilySearchResponse;
+    const items = data.results ?? [];
+    if (items.length === 0) {
+      return `Không tìm thấy văn bản quy định pháp luật phù hợp cho từ khoá: "${query}".`;
+    }
+
+    return items
+      .map(
+        (item, idx) =>
+          `[${idx + 1}] Văn bản/Tiêu đề: ${item.title}\nNguồn chính thống: ${item.url}\nNội dung trích dẫn: ${item.content}`
+      )
+      .join("\n\n---\n\n");
+  } catch (err) {
+    return `Lỗi kết nối tra cứu luật: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+/**
+ * AI SDK Tool chuyên tra cứu luật pháp, mức phạt, nghị định giao thông và vận tải Việt Nam.
+ */
+export function vietnamLawSearchTool() {
+  return tool({
+    description:
+      "Chuyên tra cứu quy định pháp luật Việt Nam, luật giao thông đường bộ, nghị định xử phạt vi phạm hành chính, điều kiện kinh doanh xe hợp đồng, bằng lái, đăng kiểm xe từ các cổng luật chính thống (thuvienphapluat, luatvietnam, chinhphu.vn, mt.gov.vn, csgt.vn). Dùng công cụ này khi người dùng hỏi về luật lệ, quy chuẩn hoặc mức phạt.",
+    inputSchema: z.object({
+      query: z.string().describe("Từ khoá pháp luật, số hiệu nghị định/thông tư hoặc hành vi vi phạm cần tra cứu"),
+    }),
+    execute: async ({ query }) => searchVietnamLaw(query),
+  });
+}

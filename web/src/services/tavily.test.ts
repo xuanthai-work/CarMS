@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { hasTavilyKey, searchTavily, tavilySearchTool } from "./tavily";
+import { hasTavilyKey, searchTavily, tavilySearchTool, searchVietnamLaw, vietnamLawSearchTool, VIETNAM_LAW_DOMAINS } from "./tavily";
 
 const KEY = "TAVILY_API_KEY";
 
@@ -131,5 +131,92 @@ describe("tavilySearchTool", () => {
     );
 
     expect(out).toBe("[1] Tiêu đề: T\nNguồn: https://x.vn\nNội dung: C");
+  });
+});
+
+describe("searchVietnamLaw", () => {
+  it("thiếu key → báo lỗi và KHÔNG gọi mạng", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await searchVietnamLaw("mức phạt nồng độ cồn");
+
+    expect(out).toBe("Không thể tra cứu luật: Chưa cấu hình TAVILY_API_KEY.");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("khoá phạm vi tìm kiếm vào các cổng luật chính thống, dùng search_depth advanced", async () => {
+    process.env[KEY] = "tvly-test";
+    const fetchMock = vi.fn(async () =>
+      fakeResponse({ results: [{ title: "Nghị định 100", url: "https://thuvienphapluat.vn/nd100", content: "Mức phạt." }] })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await searchVietnamLaw("nghị định 100", 3);
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://api.tavily.com/search");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body as string)).toEqual({
+      api_key: "tvly-test",
+      query: "nghị định 100",
+      search_depth: "advanced",
+      include_domains: VIETNAM_LAW_DOMAINS,
+      max_results: 3,
+      include_answer: false,
+    });
+  });
+
+  it("format đầu ra có văn bản/tiêu đề, nguồn chính thống và nội dung trích dẫn", async () => {
+    process.env[KEY] = "tvly-test";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        fakeResponse({
+          results: [
+            { title: "Luật Giao thông", url: "https://luatvietnam.vn/luat-gt", content: "Điều 1 quy định..." },
+          ],
+        })
+      )
+    );
+
+    const out = await searchVietnamLaw("luật giao thông");
+
+    expect(out).toBe(
+      "[1] Văn bản/Tiêu đề: Luật Giao thông\n" +
+        "Nguồn chính thống: https://luatvietnam.vn/luat-gt\n" +
+        "Nội dung trích dẫn: Điều 1 quy định..."
+    );
+  });
+
+  it("không có kết quả → thông báo không tìm thấy", async () => {
+    process.env[KEY] = "tvly-test";
+    vi.stubGlobal("fetch", vi.fn(async () => fakeResponse({ results: [] })));
+
+    const out = await searchVietnamLaw("từ khoá luật không tồn tại");
+
+    expect(out).toBe('Không tìm thấy văn bản quy định pháp luật phù hợp cho từ khoá: "từ khoá luật không tồn tại".');
+  });
+});
+
+describe("vietnamLawSearchTool", () => {
+  it("execute trả về kết quả luật đã format cho LLM đọc", async () => {
+    process.env[KEY] = "tvly-test";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        fakeResponse({ results: [{ title: "Thông tư 12", url: "https://mt.gov.vn/tt12", content: "Quy chuẩn." }] })
+      )
+    );
+
+    const execute = vietnamLawSearchTool().execute!;
+    const out = await execute(
+      { query: "thông tư 12" },
+      { toolCallId: "call-2", messages: [] } as unknown as Parameters<typeof execute>[1]
+    );
+
+    expect(out).toBe(
+      "[1] Văn bản/Tiêu đề: Thông tư 12\nNguồn chính thống: https://mt.gov.vn/tt12\nNội dung trích dẫn: Quy chuẩn."
+    );
   });
 });

@@ -2,7 +2,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { wrapLanguageModel, type LanguageModel, type LanguageModelMiddleware, type ToolSet } from "ai";
 import type { ChatPlan } from "@/configs/ai";
-import { hasTavilyKey, tavilySearchTool } from "@/services/tavily";
+import { hasTavilyKey, tavilySearchTool, vietnamLawSearchTool } from "@/services/tavily";
 
 // Kiểu model V4 mà cả hai provider trả về (suy ra, khỏi phụ thuộc trực tiếp @ai-sdk/provider).
 type OpencodeModel = ReturnType<ReturnType<typeof createOpenAICompatible>>;
@@ -144,7 +144,11 @@ export function googleSearchTools(): ToolSet {
  */
 export function buildWebSearchTools(plan: ChatPlan): ToolSet | undefined {
   if (plan.webSearchTool === "tavily") {
-    return hasTavilyKey() ? { tavily_search: tavilySearchTool() } : undefined;
+    if (!hasTavilyKey()) return undefined;
+    return {
+      tavily_search: tavilySearchTool(),
+      vietnam_law_search: vietnamLawSearchTool(),
+    };
   }
   if (plan.webSearchTool === "google") return googleSearchTools();
   return undefined;
