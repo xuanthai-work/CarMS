@@ -20,7 +20,8 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   if (!staff) redirect("/no-access");
 
   // Chỉ đọc key ở server; chỉ boolean này băng qua client — key không bao giờ lọt vào bundle.
-  const assistantEnabled = Boolean(process.env.GEMINI_API_KEY);
+  // Bật trợ lý khi có key OpenCode (chính) hoặc Gemini (dự phòng).
+  const assistantEnabled = Boolean(process.env.OPENCODE_API_KEY || process.env.GEMINI_API_KEY);
 
   // Trạng thái thu gọn Sidebar đọc từ cookie → render đúng ngay ở server, không giật khi tải lại.
   // null = chưa chọn (để client quyết theo bề rộng); "1"/"0" = lựa chọn tường minh của người dùng.

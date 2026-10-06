@@ -1,7 +1,7 @@
 import { streamText, convertToModelMessages, type UIMessage, type ToolSet } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { getCurrentUser } from "@/services/auth";
-import { resolveModelId } from "@/configs/ai";
+import { planChatRoute } from "@/configs/ai";
+import { buildLanguageModel, googleSearchTools, hasGeminiKey, hasOpencodeKey } from "@/services/ai";
 import { buildSystemPrompt } from "@/configs/systemPrompt";
 
 export const runtime = "nodejs";
@@ -24,8 +24,14 @@ const VN_DATETIME = new Intl.DateTimeFormat("vi-VN", {
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return new Response("Chưa đăng nhập", { status: 401 });
-  if (!process.env.GEMINI_API_KEY) {
-    return new Response("Meow chưa được cấu hình (thiếu GEMINI_API_KEY).", { status: 503 });
+
+  // OpenCode Zen là provider chính; Gemini dự phòng (và lo web search). Cần ít nhất 1 key.
+  const opencodeKey = hasOpencodeKey();
+  const geminiKey = hasGeminiKey();
+  if (!opencodeKey && !geminiKey) {
+    return new Response("Meow chưa được cấu hình (thiếu OPENCODE_API_KEY và GEMINI_API_KEY).", {
+      status: 503,
+    });
   }
 
   let body: ChatBody;
@@ -35,22 +41,20 @@ export async function POST(req: Request) {
     return new Response("Body không hợp lệ", { status: 400 });
   }
 
-  const modelId = resolveModelId(body.model);
+  const plan = planChatRoute({
+    modelId: body.model,
+    webSearch: Boolean(body.webSearch),
+    hasOpencodeKey: opencodeKey,
+    hasGeminiKey: geminiKey,
+  });
   const system = buildSystemPrompt(body.customInstructions, VN_DATETIME.format(new Date()));
+  const model = buildLanguageModel(plan);
 
-  // Provider riêng với apiKey lấy từ GEMINI_API_KEY (mặc định SDK đọc
-  // GOOGLE_GENERATIVE_AI_API_KEY, tên biến khác của dự án nên phải set tay).
-  const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-
-  // Grounding Google Search chỉ khi webSearch = true (mặc định tắt → giữ free).
-  // AI SDK v7 + @ai-sdk/google v4: không còn model setting `useSearchGrounding`,
-  // grounding bật qua tool provider-executed `google.tools.googleSearch()`.
-  const tools: ToolSet | undefined = body.webSearch
-    ? { google_search: google.tools.googleSearch({}) }
-    : undefined;
+  // Grounding Google Search chỉ khi thực sự chạy model Gemini (provider-executed tool).
+  const tools: ToolSet | undefined = plan.webSearch ? googleSearchTools() : undefined;
 
   const result = streamText({
-    model: google(modelId),
+    model,
     system,
     messages: await convertToModelMessages(body.messages),
     tools,

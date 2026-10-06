@@ -1,19 +1,131 @@
-// Danh sách model Gemini cho phép chọn.
-// Ưu tiên alias "-latest" của Google: chúng luôn trỏ tới bản được hỗ trợ hiện hành, nên
-// không bị lỗi 404 "no longer available" khi một version cụ thể (vd gemini-2.5-flash) bị khai tử.
-// Kèm 1 bản version cố định (3.6 Flash) cho ai muốn hành vi ổn định, không đổi theo alias.
-// (Đã xác minh 200 với API key hiện tại; kiểm lại tại Google AI Studio nếu Google đổi tên.)
-// Nhãn ngắn để vừa "pill" đổi model trong composer (trigger truncate nếu dài).
-export const AI_MODELS: { id: string; label: string }[] = [
-  { id: "gemini-flash-latest", label: "Flash" },
-  { id: "gemini-pro-latest", label: "Pro" },
-  { id: "gemini-flash-lite-latest", label: "Flash-Lite" },
-  { id: "gemini-3.6-flash", label: "3.6 Flash" },
+// Danh mục model trợ lý AI, chia theo provider.
+//
+// - OpenCode Zen là provider CHÍNH (model mặc định). Gọi qua endpoint
+//   OpenAI-compatible https://opencode.ai/zen/v1/chat/completions nên chỉ khai
+//   báo những model dùng @ai-sdk/openai-compatible (xem docs: /docs/zen).
+// - Gemini là provider DỰ PHÒNG: khi model chính lỗi (401/429/model không khả
+//   dụng...) route tự chuyển sang Gemini. Gemini cũng là provider duy nhất có
+//   grounding Google Search.
+//
+// File này chỉ chứa dữ liệu thuần (không import server) để client dùng cho picker.
+
+export type ProviderId = "opencode" | "gemini";
+
+export type AIModel = {
+  /** Model id gửi cho provider (vd "deepseek-v4.1-flash"). */
+  id: string;
+  /** Nhãn ngắn hiển thị trong pill đổi model. */
+  label: string;
+  provider: ProviderId;
+};
+
+// OpenCode Zen — provider chính (OpenAI-compatible, /chat/completions).
+export const OPENCODE_MODELS: AIModel[] = [
+  { id: "space-bunny-free", label: "Space Bunny (free)", provider: "opencode" },
+  { id: "deepseek-v4.1-flash", label: "DeepSeek 4.1 Flash", provider: "opencode" },
+  { id: "deepseek-v4-flash", label: "DeepSeek 4 Flash", provider: "opencode" },
+  { id: "deepseek-v4-pro", label: "DeepSeek 4 Pro", provider: "opencode" },
+  { id: "qwen3.8-max", label: "Qwen3.8 Max", provider: "opencode" },
+  { id: "minimax-m3", label: "MiniMax M3", provider: "opencode" },
+  { id: "glm-5.3", label: "GLM 5.3", provider: "opencode" },
+  { id: "glm-5.3-flash", label: "GLM 5.3 Flash", provider: "opencode" },
+  { id: "kimi-k3", label: "Kimi K3", provider: "opencode" },
+  { id: "big-pickle", label: "Big Pickle (free)", provider: "opencode" },
 ];
 
-export const DEFAULT_MODEL_ID = "gemini-flash-latest";
+// Gemini — provider dự phòng (fallback tự động) + grounding web search.
+// Ưu tiên alias "-latest" của Google: luôn trỏ bản được hỗ trợ hiện hành nên
+// không bị 404 "no longer available" khi một version cụ thể bị khai tử.
+export const GEMINI_MODELS: AIModel[] = [
+  { id: "gemini-flash-latest", label: "Flash", provider: "gemini" },
+  { id: "gemini-pro-latest", label: "Pro", provider: "gemini" },
+  { id: "gemini-flash-lite-latest", label: "Flash-Lite", provider: "gemini" },
+];
 
-/** Chỉ nhận id trong danh sách; id lạ/null → mặc định. Dùng cả client (picker) lẫn server (chặn id tuỳ ý). */
+/** Tất cả model hợp lệ (dùng để resolve id, kể cả giá trị cũ trong localStorage). */
+export const ALL_MODELS: AIModel[] = [...OPENCODE_MODELS, ...GEMINI_MODELS];
+
+/** Danh sách cho picker: chỉ model chính (OpenCode); Gemini là fallback ẩn. */
+export const AI_MODELS: AIModel[] = OPENCODE_MODELS;
+
+export const DEFAULT_MODEL_ID = "space-bunny-free";
+
+/** Model dự phòng khi provider chính lỗi. */
+export const FALLBACK_MODEL_ID = "gemini-flash-latest";
+
+export function findModel(id: string | null | undefined): AIModel | undefined {
+  return ALL_MODELS.find((m) => m.id === id);
+}
+
+/** Chỉ nhận id trong danh mục; id lạ/null → mặc định. Dùng cả client (picker) lẫn server (chặn id tuỳ ý). */
 export function resolveModelId(id: string | null | undefined): string {
-  return AI_MODELS.some((m) => m.id === id) ? (id as string) : DEFAULT_MODEL_ID;
+  return findModel(id)?.id ?? DEFAULT_MODEL_ID;
+}
+
+/** Provider của một model id; id lạ → provider của model mặc định. */
+export function providerOf(id: string | null | undefined): ProviderId {
+  return findModel(id)?.provider ?? findModel(DEFAULT_MODEL_ID)!.provider;
+}
+
+export type ChatPlan = {
+  /** Provider gọi trước. */
+  primaryProvider: ProviderId;
+  primaryModelId: string;
+  /** Provider tự động chuyển sang khi provider chính lỗi (null = không có). */
+  fallbackProvider: ProviderId | null;
+  fallbackModelId: string | null;
+  /** Có thực sự bật grounding Google Search không (chỉ Gemini mới chạy được). */
+  webSearch: boolean;
+};
+
+export type ChatPlanInput = {
+  modelId: string | null | undefined;
+  webSearch: boolean;
+  hasOpencodeKey: boolean;
+  hasGeminiKey: boolean;
+};
+
+/**
+ * Quyết định provider/model cho một lượt chat (thuần, dễ test):
+ *  1. Mặc định bám model người dùng chọn (OpenCode).
+ *  2. Grounding Google Search chỉ Gemini làm được → ép sang Gemini khi bật web search.
+ *  3. Thiếu key provider mong muốn thì rơi về provider còn lại.
+ *  4. Provider chính là OpenCode → Gemini là fallback tự động.
+ */
+export function planChatRoute(input: ChatPlanInput): ChatPlan {
+  const requested = resolveModelId(input.modelId);
+  const requestedProvider = providerOf(requested);
+
+  // Muốn Gemini nếu người dùng chọn Gemini hoặc bật web search.
+  const wantsGemini = input.webSearch || requestedProvider === "gemini";
+
+  let primaryProvider: ProviderId;
+  let primaryModelId: string;
+
+  if (wantsGemini && input.hasGeminiKey) {
+    primaryProvider = "gemini";
+    primaryModelId = requestedProvider === "gemini" ? requested : FALLBACK_MODEL_ID;
+  } else if (!wantsGemini && input.hasOpencodeKey) {
+    primaryProvider = "opencode";
+    primaryModelId = requestedProvider === "opencode" ? requested : DEFAULT_MODEL_ID;
+  } else if (input.hasOpencodeKey) {
+    // Muốn Gemini (web search) nhưng thiếu key → đành dùng OpenCode, bỏ grounding.
+    primaryProvider = "opencode";
+    primaryModelId = DEFAULT_MODEL_ID;
+  } else if (input.hasGeminiKey) {
+    primaryProvider = "gemini";
+    primaryModelId = requestedProvider === "gemini" ? requested : FALLBACK_MODEL_ID;
+  } else {
+    // Không có key nào; route đã chặn trước đó — giữ giá trị hợp lệ để không crash.
+    primaryProvider = "opencode";
+    primaryModelId = DEFAULT_MODEL_ID;
+  }
+
+  return {
+    primaryProvider,
+    primaryModelId,
+    fallbackProvider: primaryProvider === "opencode" && input.hasGeminiKey ? "gemini" : null,
+    fallbackModelId: primaryProvider === "opencode" && input.hasGeminiKey ? FALLBACK_MODEL_ID : null,
+    webSearch: primaryProvider === "gemini" && input.webSearch,
+  };
 }
