@@ -14,6 +14,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-004** | 2026-10-06 | Tích hợp System Read Tools (Prisma Read-Only) | AI Assistant / Core System |  **Đã xong** | [TASK-004](tasks/TASK-004-tich-hop-system-read-tools.md) |
 | **TASK-005** | 2026-10-07 | Sửa Lệch Doanh Thu & Bổ Sung Tool Tổng Hợp Tháng | AI Assistant / Financial Analytics |  **Đã xong** | [TASK-005](tasks/TASK-005-sua-lech-doanh-thu-va-tool-thang.md) |
 | **TASK-006** | 2026-10-07 | Redesign Giao Diện Chat Meow (Tasteful UI & Cat Avatar) | AI Assistant / Frontend UX-UI |  **Đã xong** | [TASK-006](tasks/TASK-006-redesign-ui-chat-meow.md) |
+| **TASK-007** | 2026-10-07 | Thêm Thinking & Tool Execution Indicator Cho Meow | AI Assistant / Frontend UX-Streaming |  **Đã xong** | [TASK-007](tasks/TASK-007-thinking-va-tool-indicator.md) |
 
 ---
 

@@ -17,6 +17,8 @@ export default function ModelPicker({ placement = "down" }: { placement?: "down"
         onChange={setModel}
         options={MODEL_OPTIONS}
         placement={placement}
+        variant="pill"
+        leadingDotClassName="bg-indigo-500"
       />
     </div>
   );

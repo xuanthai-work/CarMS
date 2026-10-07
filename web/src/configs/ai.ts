@@ -21,7 +21,7 @@ export type AIModel = {
 
 // OpenCode Zen — provider chính (OpenAI-compatible, /chat/completions).
 export const OPENCODE_MODELS: AIModel[] = [
-  { id: "space-bunny-free", label: "Space Bunny (free)", provider: "opencode" },
+  { id: "space-bunny-free", label: "Space Bunny", provider: "opencode" },
   { id: "deepseek-v4.1-flash", label: "DeepSeek 4.1 Flash", provider: "opencode" },
   { id: "deepseek-v4-flash", label: "DeepSeek 4 Flash", provider: "opencode" },
   { id: "deepseek-v4-pro", label: "DeepSeek 4 Pro", provider: "opencode" },
@@ -30,7 +30,7 @@ export const OPENCODE_MODELS: AIModel[] = [
   { id: "glm-5.3", label: "GLM 5.3", provider: "opencode" },
   { id: "glm-5.3-flash", label: "GLM 5.3 Flash", provider: "opencode" },
   { id: "kimi-k3", label: "Kimi K3", provider: "opencode" },
-  { id: "big-pickle", label: "Big Pickle (free)", provider: "opencode" },
+  { id: "big-pickle", label: "Big Pickle", provider: "opencode" },
 ];
 
 // Gemini — provider dự phòng (fallback tự động) + grounding web search.

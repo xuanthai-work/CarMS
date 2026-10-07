@@ -209,17 +209,66 @@ function SourceList({ sources }: { sources: GroundingSourcePart[] }) {
   );
 }
 
-/** Ba chấm nảy nhẹ, canh trái không bong bóng — chỉ báo trợ lý đang soạn/tìm kiếm, chưa có chữ để hiện con trỏ. */
-function TypingIndicator({ reduceMotion }: { reduceMotion: boolean | null }) {
+/** Suy ra dòng trạng thái Meow đang làm gì từ parts (tool gần nhất / reasoning / mặc định). */
+function getThinkingStatus(parts: UIMessage["parts"] = []): string {
+  const toolPart = [...parts]
+    .reverse()
+    .find((p) => p.type.startsWith("tool-") || p.type === "dynamic-tool");
+
+  if (toolPart) {
+    const type = toolPart.type;
+    if (type.includes("monthly_finance") || type.includes("daily_summary")) {
+      return "Đang tổng hợp số liệu tài chính & doanh thu...";
+    }
+    if (type.includes("daily_trips") || type.includes("available_vehicles")) {
+      return "Đang tra cứu lịch xe & điều phối...";
+    }
+    if (type.includes("vehicle_inspections")) {
+      return "Đang kiểm tra hạn đăng kiểm & bảo hiểm...";
+    }
+    if (type.includes("tavily_search") || type.includes("search_web") || type.includes("google_search")) {
+      return "Đang tìm kiếm thông tin trên Web...";
+    }
+    if (type.includes("vietnam_law_search") || type.includes("search_vietnam_law")) {
+      return "Đang tra cứu quy định pháp luật Việt Nam...";
+    }
+    return "Đang truy vấn dữ liệu hệ thống...";
+  }
+
+  const hasReasoning = parts.some((p) => p.type === "reasoning");
+  if (hasReasoning) {
+    return "Đang phân tích và suy nghĩ...";
+  }
+
+  return "Meow đang suy nghĩ...";
+}
+
+/** Hàng chỉ báo Meow đang xử lý: avatar + 3 chấm động + dòng trạng thái theo ngữ cảnh tool. */
+function ThinkingIndicator({
+  statusText,
+  reduceMotion,
+}: {
+  statusText: string;
+  reduceMotion: boolean | null;
+}) {
   return (
-    <div className="flex items-center gap-1.5 py-1">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className={`h-2 w-2 rounded-full bg-muted ${reduceMotion ? "" : "animate-bounce"}`}
-          style={reduceMotion ? undefined : { animationDelay: `${i * 0.12}s` }}
-        />
-      ))}
+    <div className="flex w-full items-start gap-2.5 text-sm">
+      <div className="mt-0.5 h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-canvas">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/meow-avatar.jpg" alt="Meow" className="h-full w-full object-cover" />
+      </div>
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200/80 bg-slate-100/90 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm">
+        <span className="flex items-center gap-1" aria-hidden="true">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className={`h-1.5 w-1.5 rounded-full bg-blue-600 ${reduceMotion ? "" : "animate-bounce"}`}
+              style={reduceMotion ? undefined : { animationDelay: `${i * 0.15}s` }}
+            />
+          ))}
+        </span>
+        <span className="text-slate-700">{statusText}</span>
+      </div>
     </div>
   );
 }
@@ -309,12 +358,14 @@ export default function Messages({ messages, status }: { messages: UIMessage[]; 
   }, [messages, status]);
 
   const lastMessage = messages[messages.length - 1];
-  const lastAssistantHasTextPart =
-    lastMessage?.role === "assistant" && lastMessage.parts.some((p) => p.type === "text");
-  // "submitted": chưa có message assistant nào cả → 3 chấm nảy.
-  // "streaming" mà assistant chưa ra chữ nào (đang gọi tool/tìm kiếm) → vẫn 3 chấm nảy.
+  const lastAssistantHasVisibleText =
+    lastMessage?.role === "assistant" &&
+    lastMessage.parts.some((p) => p.type === "text" && p.text.trim().length > 0);
+  // "submitted": chưa có message assistant nào cả → hiện chỉ báo.
+  // "streaming" mà assistant chưa ra chữ thật (đang gọi tool/tìm kiếm) → vẫn hiện chỉ báo + trạng thái tool.
   // Có chữ rồi thì để con trỏ nhấp nháy gắn ngay sau đoạn text đang stream (renderContentPart).
-  const showTypingIndicator = status === "submitted" || (status === "streaming" && !lastAssistantHasTextPart);
+  const showThinkingIndicator =
+    status === "submitted" || (status === "streaming" && !lastAssistantHasVisibleText);
 
   return (
     <div className="thin-scroll flex-1 space-y-4 overflow-y-auto px-4 py-4">
@@ -337,7 +388,12 @@ export default function Messages({ messages, status }: { messages: UIMessage[]; 
           />
         ))
       )}
-      {showTypingIndicator && <TypingIndicator reduceMotion={reduceMotion} />}
+      {showThinkingIndicator && (
+        <ThinkingIndicator
+          statusText={getThinkingStatus(lastMessage?.role === "assistant" ? lastMessage.parts : [])}
+          reduceMotion={reduceMotion}
+        />
+      )}
       <div ref={bottomRef} />
     </div>
   );

@@ -20,6 +20,8 @@ export default function SelectMenu({
   options,
   placeholder = "Chọn…",
   placement = "down",
+  variant = "default",
+  leadingDotClassName,
 }: {
   name: string;
   value: string;
@@ -28,6 +30,10 @@ export default function SelectMenu({
   placeholder?: string;
   /** Hướng bung menu. "up" khi control nằm sát đáy (VD composer chat) để không tràn xuống dưới. */
   placement?: "down" | "up";
+  /** Kiểu nút: "default" (form) hoặc "pill" (viên thuốc gọn — dùng cho chọn model). */
+  variant?: "default" | "pill";
+  /** Chấm màu trước nhãn (hợp với variant="pill"). VD "bg-indigo-500". */
+  leadingDotClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -36,20 +42,33 @@ export default function SelectMenu({
 
   const opts = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
   const selectedLabel = opts.find((o) => o.value === value)?.label ?? "";
+  const isPill = variant === "pill";
+
+  const triggerClass = isPill
+    ? `flex h-8 w-full items-center justify-between gap-2 rounded-full border bg-white px-3 text-sm font-medium shadow-sm transition ${
+        open ? "border-brand-500 ring-1 ring-brand-500" : "border-slate-200 hover:border-slate-300"
+      } ${selectedLabel ? "text-slate-700" : "text-slate-400"}`
+    : `flex h-9 w-full items-center justify-between gap-2 rounded-xl border px-3 text-sm transition ${
+        open ? "border-brand-500 ring-1 ring-brand-500" : "border-slate-300 hover:border-slate-400"
+      } ${selectedLabel ? "text-slate-800" : "text-slate-400"}`;
 
   return (
     <div className="relative" ref={ref}>
       <input type="hidden" name={name} value={value} />
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className={`flex h-9 w-full items-center justify-between gap-2 rounded-xl border px-3 text-sm transition ${
-          open ? "border-brand-500 ring-1 ring-brand-500" : "border-slate-300 hover:border-slate-400"
-        } ${selectedLabel ? "text-slate-800" : "text-slate-400"}`}
-      >
-        <span className="truncate">{selectedLabel || placeholder}</span>
-        <span className={`text-xs text-slate-500 transition ${open ? "rotate-180" : ""}`}>⌄</span>
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className={triggerClass}>
+        <span className="flex min-w-0 items-center gap-2">
+          {leadingDotClassName && (
+            <span className={`h-2 w-2 shrink-0 rounded-full ${leadingDotClassName}`} aria-hidden="true" />
+          )}
+          <span className="truncate">{selectedLabel || placeholder}</span>
+        </span>
+        <span
+          className={`text-xs transition ${isPill ? "text-slate-400" : "text-slate-500"} ${
+            open ? "rotate-180" : ""
+          }`}
+        >
+          ⌄
+        </span>
       </button>
 
       <AnimatePresence>
