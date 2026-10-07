@@ -1,17 +1,34 @@
 "use client";
 
-import { memo, useEffect, useRef } from "react";
+import { isValidElement, memo, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { FileUIPart, SourceDocumentUIPart, SourceUrlUIPart, UIMessage } from "ai";
 import { DURATION, EASE } from "@/utils/motion";
-import { FileGlyph, LinkGlyph } from "@/components/assistant/icons";
+import { CopyIcon, CheckIcon, FileGlyph, LinkGlyph } from "@/components/assistant/icons";
 
 type ContentPart = UIMessage["parts"][number];
 type GroundingSourcePart = SourceUrlUIPart | SourceDocumentUIPart;
 
 /* ---- Markdown: không có @tailwindcss/typography → style tay từng thẻ ---- */
+
+/** Lấy text thuần từ children của một ô markdown (string/number/element lồng nhau). */
+function textOf(node: ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement(node)) return textOf((node.props as { children?: ReactNode }).children);
+  return "";
+}
+
+/** Ô chứa tiền/định lượng (1.250.000 đ, 12%, 1,5tr) → canh phải + font mono cho dễ so. */
+function isNumericCell(node: ReactNode): boolean {
+  const t = textOf(node).trim();
+  if (!t) return false;
+  return /^[-+]?\d[\d.,\s]*(%|đ|₫|tr|k)?$/i.test(t);
+}
+
 const markdownComponents: Components = {
   p: ({ node, ...props }) => <p className="mb-2 leading-relaxed last:mb-0" {...props} />,
   a: ({ node, ...props }) => (
@@ -42,13 +59,28 @@ const markdownComponents: Components = {
   ),
   code: ({ node, ...props }) => <code className="rounded bg-canvas px-1.5 py-0.5 text-[12.5px]" {...props} />,
   table: ({ node, ...props }) => (
-    <div className="my-2 overflow-x-auto rounded-lg border border-hairline">
+    <div className="my-2 overflow-x-auto rounded-xl border border-hairline bg-surface shadow-sm">
       <table className="w-full border-collapse text-left text-[12.5px]" {...props} />
     </div>
   ),
-  thead: ({ node, ...props }) => <thead className="bg-canvas" {...props} />,
-  th: ({ node, ...props }) => <th className="border-b border-hairline px-2.5 py-1.5 font-semibold text-ink" {...props} />,
-  td: ({ node, ...props }) => <td className="border-b border-hairline px-2.5 py-1.5 align-top text-ink" {...props} />,
+  thead: ({ node, ...props }) => <thead className="bg-canvas/50" {...props} />,
+  tr: ({ node, ...props }) => <tr className="even:bg-canvas/40" {...props} />,
+  th: ({ node, ...props }) => (
+    <th
+      className="border-b border-hairline px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted"
+      {...props}
+    />
+  ),
+  td: ({ node, children, ...props }) => (
+    <td
+      className={`border-b border-hairline/80 px-3 py-2 align-top text-xs text-ink ${
+        isNumericCell(children) ? "text-right font-mono tabular-nums" : ""
+      }`}
+      {...props}
+    >
+      {children}
+    </td>
+  ),
   img: ({ node, ...props }) => (
     // Ảnh tuỳ URL bất kỳ trong markdown trả lời — không dùng next/image (không biết trước kích thước/nguồn).
     // eslint-disable-next-line @next/next/no-img-element
@@ -192,14 +224,42 @@ function TypingIndicator({ reduceMotion }: { reduceMotion: boolean | null }) {
   );
 }
 
+/** Nút sao chép câu trả lời — hiện "Đã sao chép" trong 1.5s. */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  async function onCopy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Trình duyệt chặn clipboard (không phải https) — bỏ qua, không phá luồng chat.
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={onCopy}
+      aria-label="Sao chép nội dung trả lời"
+      className="mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-muted transition-colors hover:bg-canvas hover:text-ink"
+    >
+      {copied ? <CheckIcon className="h-3 w-3" /> : <CopyIcon className="h-3 w-3" />}
+      {copied ? "Đã sao chép" : "Sao chép"}
+    </button>
+  );
+}
+
 /** Một dòng hội thoại. memo theo tham chiếu `message`: khi stream token mới, các tin đã xong
  *  (giữ nguyên tham chiếu) không render/parse markdown lại — chỉ tin đang stream mới render lại. */
 const MessageRow = memo(function MessageRow({
   message,
   reduceMotion,
+  streaming = false,
 }: {
   message: UIMessage;
   reduceMotion: boolean | null;
+  /** Tin đang được stream — ẩn nút sao chép cho tới khi xong. */
+  streaming?: boolean;
 }) {
   const isUser = message.role === "user";
   const sources = collectSources(message.parts);
@@ -218,10 +278,23 @@ const MessageRow = memo(function MessageRow({
       </motion.div>
     );
   }
+  const text = message.parts
+    .filter((p): p is Extract<ContentPart, { type: "text" }> => p.type === "text")
+    .map((p) => p.text)
+    .join("\n\n")
+    .trim();
   return (
-    <motion.div {...motionProps} className="w-full text-sm text-ink">
-      <div className="space-y-1.5">{message.parts.map((part, i) => renderContentPart(part, i, false))}</div>
-      {sources.length > 0 && <SourceList sources={sources} />}
+    <motion.div {...motionProps} className="flex w-full items-start gap-2.5 text-sm text-ink">
+      <div className="mt-0.5 h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-canvas">
+        {/* Avatar tĩnh trong /public */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/meow-avatar.jpg" alt="Meow" className="h-full w-full object-cover" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="space-y-1.5">{message.parts.map((part, i) => renderContentPart(part, i, false))}</div>
+        {sources.length > 0 && <SourceList sources={sources} />}
+        {text && !streaming && <CopyButton text={text} />}
+      </div>
     </motion.div>
   );
 });
@@ -255,7 +328,14 @@ export default function Messages({ messages, status }: { messages: UIMessage[]; 
           </div>
         </div>
       ) : (
-        messages.map((m) => <MessageRow key={m.id} message={m} reduceMotion={reduceMotion} />)
+        messages.map((m, i) => (
+          <MessageRow
+            key={m.id}
+            message={m}
+            reduceMotion={reduceMotion}
+            streaming={status === "streaming" && i === messages.length - 1}
+          />
+        ))
       )}
       {showTypingIndicator && <TypingIndicator reduceMotion={reduceMotion} />}
       <div ref={bottomRef} />

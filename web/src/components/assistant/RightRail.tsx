@@ -12,6 +12,8 @@ type Extension = {
   id: string;
   label: string;
   icon: ComponentType<IconProps>;
+  /** Ảnh đại diện (public) — nếu có thì hiện thay icon. */
+  avatar?: string;
   active: boolean;
   onClick: () => void;
 };
@@ -24,6 +26,7 @@ export default function RightRail() {
       id: "chat",
       label: "Meow AI",
       icon: ChatBubbleIcon,
+      avatar: "/meow-avatar.jpg",
       active: open,
       onClick: () => setOpen(!open),
     },
@@ -47,7 +50,14 @@ export default function RightRail() {
               ext.active ? "bg-dispatch-600 text-white" : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
             }`}
           >
-            <Icon className="h-5 w-5" />
+            {ext.avatar ? (
+              <span className="h-7 w-7 overflow-hidden rounded-[10px] border border-white/15">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={ext.avatar} alt="" className="h-full w-full object-cover" />
+              </span>
+            ) : (
+              <Icon className="h-5 w-5" />
+            )}
           </button>
         );
       })}

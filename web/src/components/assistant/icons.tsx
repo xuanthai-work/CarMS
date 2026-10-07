@@ -92,3 +92,33 @@ export function LinkGlyph({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Quả địa cầu — nút bật/tắt tìm kiếm web. */
+export function GlobeIcon({ className }: IconProps) {
+  return (
+    <svg {...ICON} className={className}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17" />
+      <path d="M12 3.5c2.4 2.3 3.6 5.2 3.6 8.5S14.4 18.2 12 20.5c-2.4-2.3-3.6-5.2-3.6-8.5S9.6 5.8 12 3.5Z" />
+    </svg>
+  );
+}
+
+/** Sao chép — thanh công cụ dưới câu trả lời. */
+export function CopyIcon({ className }: IconProps) {
+  return (
+    <svg {...ICON} className={className}>
+      <rect x="9" y="9" width="10.5" height="10.5" rx="2.5" />
+      <path d="M15 9V6.5A2.5 2.5 0 0 0 12.5 4H6.5A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15H9" />
+    </svg>
+  );
+}
+
+/** Dấu tick — trạng thái "đã sao chép". */
+export function CheckIcon({ className }: IconProps) {
+  return (
+    <svg {...ICON} className={className}>
+      <path d="M5 12.5 10 17.5 19 7" />
+    </svg>
+  );
+}

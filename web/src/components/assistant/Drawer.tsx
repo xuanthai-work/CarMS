@@ -91,7 +91,25 @@ export default function Drawer() {
       {/* Header 1 hàng: tiêu đề (trái) + Chat mới / cài đặt / đóng (phải).
           Đổi model đã chuyển xuống thanh nhập (Composer) nên không còn ở đây. */}
       <header className="flex items-center justify-between gap-2 border-b border-hairline px-4 py-3">
-        <span className="text-sm font-bold text-ink">Meow</span>
+        <div className="flex items-center gap-2.5">
+          <div className="relative shrink-0">
+            <div className="h-9 w-9 overflow-hidden rounded-[12px] border border-hairline bg-canvas">
+              {/* Avatar tĩnh trong /public — không dùng next/image cho tiện 1 dòng */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/meow-avatar.jpg" alt="Meow AI" className="h-full w-full object-cover" />
+            </div>
+            <span
+              className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface bg-emerald-500"
+              aria-hidden="true"
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold leading-tight text-ink">Meow AI</span>
+            <span className="mt-0.5 w-fit rounded-full border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-600">
+              CarMS Copilot
+            </span>
+          </div>
+        </div>
         <div className="flex items-center gap-1">
           <button
             type="button"

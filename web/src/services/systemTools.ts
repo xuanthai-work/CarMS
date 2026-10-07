@@ -3,8 +3,14 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { Trip } from "@/types";
-import { todayStr } from "@/utils/format";
-import { tripMoney } from "@/utils/revenue";
+import { monthKeyOf, monthLabel, todayStr } from "@/utils/format";
+import { buildMonthFinance, tripMoney } from "@/utils/revenue";
+import { buildSalaryRows, salariedPeople, salaryCostForMonth } from "@/utils/salary";
+import { getTrips } from "@/services/trips";
+import { getFuelMonthTotals } from "@/services/fuel";
+import { getSalaryMonths, getPartnerPayouts } from "@/services/salary";
+import { getOfficeStaff } from "@/services/staff";
+import { getDrivers } from "@/services/drivers";
 
 /**
  * Bộ công cụ CHỈ-ĐỌC dữ liệu thật của CarMS cho Trợ lý Meow.
@@ -202,13 +208,16 @@ export function getAvailableVehiclesTool() {
 /**
  * 3. Tổng quan vận hành & tài chính trong ngày.
  *
- * Doanh thu/chi phí chuyến tính qua tripMoney() để khớp quy chuẩn doanh thu.
- * Lợi nhuận tạm tính = doanh thu ghi nhận − chi phí chuyến − tiền dầu trong ngày.
+ * Tách bạch 2 khái niệm để KHÔNG đếm trùng chuyến khứ hồi/nhiều ngày:
+ *  - VẬN HÀNH: chuyến có lượt ĐI hoặc lượt VỀ rơi vào ngày đang xét.
+ *  - TÀI CHÍNH: doanh thu chỉ ghi nhận vào NGÀY HOÀN TẤT của chuyến
+ *    (finishDate = returnDate ?? outboundDate) — đúng quy chuẩn revenue.ts.
+ * Nhờ vậy cộng dồn theo từng ngày khớp 100% với báo cáo tháng (buildMonthFinance).
  */
 export function getDailySummaryTool() {
   return tool({
     description:
-      "Xem tổng quan hoạt động trong ngày: tổng số cuốc xe (hoàn thành, đang chờ, hủy), tổng doanh thu cuốc, và tổng tiền dầu đã đổ. Dùng khi hỏi: 'tổng kết hôm nay', 'doanh thu hôm nay', 'tình hình vận hành hôm nay'.",
+      "Xem tổng quan hoạt động trong ngày: số chuyến vận hành, doanh thu ghi nhận theo ngày hoàn tất, và tổng tiền dầu đã đổ. Dùng khi hỏi: 'tổng kết hôm nay', 'doanh thu hôm nay', 'tình hình vận hành hôm nay'.",
     inputSchema: z.object({
       date: z.string().optional().describe("Ngày cần tổng hợp YYYY-MM-DD. Mặc định là hôm nay."),
     }),
@@ -216,7 +225,7 @@ export function getDailySummaryTool() {
       const targetDate = date?.trim() || todayStr();
 
       try {
-        // 1. Chuyến xe trong ngày.
+        // Tập VẬN HÀNH: mọi chuyến có lượt đi hoặc lượt về trong ngày.
         const trips = await prisma.trip.findMany({
           where: { OR: [{ outboundDate: targetDate }, { returnDate: targetDate }] },
           select: {
@@ -227,26 +236,31 @@ export function getDailySummaryTool() {
             tollCost: true,
             partnerCost: true,
             otherCost: true,
+            outboundDate: true,
+            returnDate: true,
+            hasReturn: true,
           },
         });
 
-        const totalTrips = trips.length;
-        const completedTrips = trips.filter(
+        const totalOps = trips.length;
+        const completedOps = trips.filter(
           (t) => t.status === "completed" || t.status === "completed_paid"
         ).length;
-        const cancelledTrips = trips.filter((t) => t.status === "cancelled").length;
-        const activeTrips = totalTrips - completedTrips - cancelledTrips;
+        const cancelledOps = trips.filter((t) => t.status === "cancelled").length;
+        const activeOps = totalOps - completedOps - cancelledOps;
 
-        // Chuyến không huỷ mới ghi nhận tiền; tính qua tripMoney (chuẩn revenue.ts).
-        const moneys = trips
-          .filter((t) => t.status !== "cancelled")
-          .map((t) => tripMoney(t as unknown as Trip));
+        // Tập TÀI CHÍNH: chỉ chuyến HOÀN TẤT đúng ngày này mới ghi nhận doanh thu.
+        // finishDate = returnDate ?? outboundDate (returnDate chỉ có nghĩa khi hasReturn).
+        const finished = trips.filter(
+          (t) => (t.hasReturn ? t.returnDate : t.outboundDate) === targetDate
+        );
+        const moneys = finished.map((t) => tripMoney(t as unknown as Trip));
         const totalRevenue = moneys.reduce((acc, m) => acc + m.recognized, 0);
         const totalCollected = moneys.reduce((acc, m) => acc + m.collected, 0);
         const totalOutstanding = moneys.reduce((acc, m) => acc + m.outstanding, 0);
         const totalTripCosts = moneys.reduce((acc, m) => acc + m.cost, 0);
 
-        // 2. Tiền dầu trong ngày.
+        // Tiền dầu trong ngày.
         const fuelEntries = await prisma.fuelEntry.findMany({
           where: { refuelDate: targetDate },
           select: { amount: true, paymentStatus: true },
@@ -255,17 +269,19 @@ export function getDailySummaryTool() {
         const totalFuelCost = fuelEntries.reduce((acc, f) => acc + f.amount, 0);
 
         return (
-          `BÁO CÁO TỔNG QUAN VẬN HÀNH NGÀY ${targetDate}:\n\n` +
-          `1. Hoạt động cuốc xe:\n` +
-          `• Tổng số chuyến: ${totalTrips} (Đã xong: ${completedTrips}, Đang chạy/chờ: ${activeTrips}, Đã hủy: ${cancelledTrips})\n` +
+          `BÁO CÁO NGÀY ${targetDate}:\n\n` +
+          `1. Vận hành trong ngày (lượt đi/về rơi vào ngày):\n` +
+          `• Lượt chuyến hoạt động: ${totalOps} (Đã xong: ${completedOps}, Đang chạy/chờ: ${activeOps}, Đã hủy: ${cancelledOps})\n\n` +
+          `2. Tài chính — doanh thu ghi nhận theo NGÀY HOÀN TẤT ${targetDate}:\n` +
+          `• Số chuyến hoàn tất hôm nay: ${finished.length}\n` +
           `• Doanh thu ghi nhận: ${vnd(totalRevenue)} đ\n` +
           `• Đã thu (cọc/thu trước): ${vnd(totalCollected)} đ\n` +
           `• Còn phải thu: ${vnd(totalOutstanding)} đ\n` +
           `• Chi phí chuyến (cầu đường, đối tác, khác): ${vnd(totalTripCosts)} đ\n\n` +
-          `2. Tiêu hao nhiên liệu (Tiền dầu):\n` +
+          `3. Tiêu hao nhiên liệu (Tiền dầu):\n` +
           `• Lượt đổ dầu: ${totalFuelCount} lượt\n` +
           `• Tổng tiền dầu: ${vnd(totalFuelCost)} đ\n\n` +
-          `• Lợi nhuận tạm tính (Doanh thu - Chi phí chuyến - Tiền dầu): ${vnd(
+          `• Lợi nhuận tạm tính (Doanh thu ghi nhận - Chi phí chuyến - Tiền dầu): ${vnd(
             totalRevenue - totalTripCosts - totalFuelCost
           )} đ`
         );
@@ -340,6 +356,83 @@ export function getVehicleInspectionsTool() {
   });
 }
 
+/**
+ * 5. Tổng hợp tài chính cả tháng — khớp CHÍNH XÁC với màn hình "Doanh thu".
+ *
+ * Tái dùng đúng nguồn dữ liệu + hàm tính của trang doanh-thu:
+ *  - getTrips() + buildMonthFinance (doanh thu ghi nhận theo ngày hoàn tất).
+ *  - getFuelMonthTotals(monthKey) cho tiền dầu.
+ *  - Lương: salariedPeople + buildSalaryRows + salaryCostForMonth (office + lái xe
+ *    tháng + lái xe nhận công theo ngày qua PartnerPayout).
+ * Không tự cộng tay để tránh lệch/nhân đôi số liệu.
+ */
+export function getMonthlyFinanceTool() {
+  return tool({
+    description:
+      "Tổng hợp tài chính cả tháng (doanh thu ghi nhận, đã thanh toán, còn phải thu, tổng chi phí, lợi nhuận, số chuyến hoàn tất). Dùng khi hỏi: 'doanh thu tháng này', 'tài chính tháng 9', 'lợi nhuận tháng trước'.",
+    inputSchema: z.object({
+      monthKey: z
+        .string()
+        .optional()
+        .describe("Tháng cần tổng hợp dạng YYYY-MM (ví dụ 2026-09). Mặc định là tháng hiện tại."),
+    }),
+    execute: async ({ monthKey }) => {
+      const key = monthKey?.trim() || monthKeyOf(todayStr());
+      if (!/^\d{4}-\d{2}$/.test(key)) {
+        return `Tháng không hợp lệ: "${key}". Cần định dạng YYYY-MM (ví dụ 2026-09).`;
+      }
+
+      try {
+        // Cùng bộ dữ liệu trang Doanh thu dùng (lấy tất cả rồi lọc theo tháng ở hàm chuẩn).
+        const [trips, fuelMonth, office, drivers, months, payouts] = await Promise.all([
+          getTrips(),
+          getFuelMonthTotals(key),
+          getOfficeStaff(),
+          getDrivers(),
+          getSalaryMonths(),
+          getPartnerPayouts(),
+        ]);
+
+        const fuelTotal = fuelMonth.total;
+        const people = salariedPeople(office, drivers);
+        const salaryRows = buildSalaryRows(
+          people,
+          months.filter((m) => m.monthKey === key)
+        );
+        const salaryCost = salaryCostForMonth(salaryRows, payouts, key);
+
+        // Một đường tính duy nhất — không cộng trùng.
+        const { rows, summary, tripCosts, paidTotal, totalCost, profit } = buildMonthFinance(
+          trips,
+          key,
+          fuelTotal,
+          salaryCost
+        );
+        const noPriceCount = rows.filter((r) => r.trip.price == null).length;
+
+        return (
+          `BÁO CÁO TÀI CHÍNH THÁNG ${monthLabel(key)}:\n\n` +
+          `1. Doanh thu ghi nhận: ${vnd(summary.recognized)} đ\n` +
+          `2. Đã thanh toán (completed_paid): ${vnd(paidTotal)} đ\n` +
+          `3. Còn phải thu: ${vnd(summary.outstanding)} đ\n` +
+          `4. Tổng chi phí tháng: ${vnd(totalCost)} đ\n` +
+          `   • Chi phí chuyến: ${vnd(summary.cost)} đ (khác ${vnd(tripCosts.other)} + thuê đối tác ${vnd(
+            tripCosts.partner
+          )})\n` +
+          `   • Tiền dầu: ${vnd(fuelTotal)} đ\n` +
+          `   • Chi phí lương: ${vnd(salaryCost)} đ\n` +
+          `5. Lợi nhuận: ${vnd(profit)} đ\n` +
+          `6. Số chuyến hoàn tất trong tháng: ${summary.count} chuyến${
+            noPriceCount > 0 ? ` (trong đó ${noPriceCount} chuyến chưa có giá)` : ""
+          }`
+        );
+      } catch (err) {
+        return `Lỗi tổng hợp tài chính tháng: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    },
+  });
+}
+
 /** Gom toàn bộ System Read Tools thành một ToolSet cấp mặc định cho model. */
 export function systemReadTools() {
   return {
@@ -347,5 +440,6 @@ export function systemReadTools() {
     get_available_vehicles: getAvailableVehiclesTool(),
     get_daily_summary: getDailySummaryTool(),
     get_vehicle_inspections: getVehicleInspectionsTool(),
+    get_monthly_finance: getMonthlyFinanceTool(),
   };
 }

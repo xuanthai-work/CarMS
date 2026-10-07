@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import FilterTabs from "@/components/common/FilterTabs";
 import ModelPicker from "@/components/assistant/ModelPicker";
-import { PlusIcon, ArrowUpIcon, CloseIcon, StopIcon } from "@/components/assistant/icons";
+import { PlusIcon, ArrowUpIcon, CloseIcon, StopIcon, GlobeIcon } from "@/components/assistant/icons";
 
 /** Ảnh đính kèm vượt quá dung lượng này sẽ bị chặn kèm cảnh báo.
  *  3MB → base64 ~4MB, vẫn dưới hạn mức request-body ~4.5MB của Vercel serverless
@@ -132,7 +131,7 @@ export default function Composer({
         />
 
         <div className="mt-1.5 flex flex-nowrap items-center gap-1.5">
-          {/* Trái: thêm ảnh + chế độ Thường/Web (cố định, không co) */}
+          {/* Trái: thêm ảnh + bật/tắt tìm kiếm web */}
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
@@ -143,21 +142,26 @@ export default function Composer({
             <PlusIcon className="h-5 w-5" />
           </button>
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => pickFiles(e.target.files)} />
-          <div className="shrink-0">
-            <FilterTabs
-              value={webSearch ? "web" : "normal"}
-              onChange={(v) => onWebSearchChange(v === "web")}
-              ariaLabel="Chế độ trả lời: thường hay tìm web"
-              options={[
-                ["normal", "Thường"],
-                ["web", "Web"],
-              ] as const}
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => onWebSearchChange(!webSearch)}
+            aria-pressed={webSearch}
+            aria-label="Bật/tắt tìm kiếm web"
+            title="Tìm kiếm web"
+            className={`flex h-7 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-all ${
+              webSearch
+                ? "border-blue-200 bg-blue-50 text-blue-700 shadow-sm"
+                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+            }`}
+          >
+            <GlobeIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Tìm kiếm Web</span>
+            <span className="sm:hidden">Web</span>
+          </button>
 
-          {/* Phải: đổi model (co lại + truncate nếu chật) + gửi */}
+          {/* Phải: đổi model + gửi. ModelPicker rộng rãi để không cắt cụt tên model. */}
           <div className="ml-auto flex min-w-0 items-center gap-1.5">
-            <div className="w-28 min-w-0">
+            <div className="min-w-[130px] max-w-[160px]">
               <ModelPicker placement="up" />
             </div>
             {isStreaming ? (
@@ -166,7 +170,7 @@ export default function Composer({
                 onClick={onStop}
                 aria-label="Dừng trả lời"
                 title="Dừng"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-hairline bg-surface text-ink transition-colors hover:bg-canvas active:scale-95"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-hairline bg-surface text-ink transition-colors hover:bg-canvas active:scale-95"
               >
                 <StopIcon className="h-4 w-4" />
               </button>
@@ -177,7 +181,7 @@ export default function Composer({
                 disabled={!canSend}
                 aria-label="Gửi"
                 title="Gửi"
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-600 text-white shadow-sm transition-colors hover:bg-brand-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-brand-600 text-white shadow-sm transition-colors hover:bg-brand-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
               >
                 <ArrowUpIcon className="h-4 w-4" />
               </button>
