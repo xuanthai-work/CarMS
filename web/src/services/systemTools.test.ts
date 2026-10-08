@@ -27,9 +27,16 @@ import {
   getAvailableVehiclesTool,
   getDailySummaryTool,
   getDailyTripsTool,
+  getDriverScheduleTool,
+  getFuelHistoryTool,
   getMonthlyFinanceTool,
+  getSalaryBreakdownTool,
+  searchTripsTool,
   systemReadTools,
 } from "./systemTools";
+
+const MANAGER = { isManager: true };
+const STAFF = { isManager: false };
 
 const vnd = (n: number) => n.toLocaleString("vi-VN");
 
@@ -83,14 +90,18 @@ beforeEach(() => {
 });
 
 describe("systemReadTools", () => {
-  it("trả về đủ 5 tool đọc với inputSchema + execute", () => {
-    const tools = systemReadTools();
+  it("trả về đủ 9 tool đọc với inputSchema + execute", () => {
+    const tools = systemReadTools(MANAGER);
     expect(Object.keys(tools).sort()).toEqual([
       "get_available_vehicles",
       "get_daily_summary",
       "get_daily_trips",
+      "get_driver_schedule",
+      "get_fuel_history",
       "get_monthly_finance",
+      "get_salary_breakdown",
       "get_vehicle_inspections",
+      "search_trips",
     ]);
     for (const t of Object.values(tools)) {
       expect(t.inputSchema).toBeDefined();
@@ -225,7 +236,7 @@ describe("getDailySummaryTool", () => {
       { amount: 100_000, paymentStatus: "unpaid" },
     ]);
 
-    const tool = getDailySummaryTool();
+    const tool = getDailySummaryTool(MANAGER);
     const out = (await tool.execute!({ date: "2026-07-15" }, callOptions(tool))) as string;
 
     // Vận hành: cả 3 chuyến đều có lượt đi/về rơi vào 15/07.
@@ -255,7 +266,7 @@ describe("getDailySummaryTool", () => {
     ]);
     db.fuelEntryFindMany.mockResolvedValue([]);
 
-    const tool = getDailySummaryTool();
+    const tool = getDailySummaryTool(MANAGER);
     const out0109 = (await tool.execute!({ date: "2026-09-01" }, callOptions(tool))) as string;
     const out0209 = (await tool.execute!({ date: "2026-09-02" }, callOptions(tool))) as string;
 
@@ -345,7 +356,7 @@ describe("getMonthlyFinanceTool", () => {
       },
     ]);
 
-    const tool = getMonthlyFinanceTool();
+    const tool = getMonthlyFinanceTool(MANAGER);
     const out = (await tool.execute!({ monthKey: "2026-09" }, callOptions(tool))) as string;
 
     // Doanh thu ghi nhận = 1.0M + 2.0M = 3.0M
@@ -365,9 +376,259 @@ describe("getMonthlyFinanceTool", () => {
   });
 
   it("monthKey sai định dạng → báo lỗi, không truy vấn", async () => {
-    const tool = getMonthlyFinanceTool();
+    const tool = getMonthlyFinanceTool(MANAGER);
     const out = (await tool.execute!({ monthKey: "09/2026" }, callOptions(tool))) as string;
     expect(out).toContain("Tháng không hợp lệ");
     expect(db.tripFindMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("role guard các tool tài chính", () => {
+  it("getDailySummaryTool: nhân viên thường bị từ chối", async () => {
+    const tool = getDailySummaryTool(STAFF);
+    const out = (await tool.execute!({ date: "2026-07-15" }, callOptions(tool))) as string;
+    expect(out).toBe("Bạn không có quyền truy cập thông tin này");
+    expect(db.tripFindMany).not.toHaveBeenCalled();
+  });
+
+  it("getMonthlyFinanceTool: nhân viên thường bị từ chối", async () => {
+    const tool = getMonthlyFinanceTool(STAFF);
+    const out = (await tool.execute!({ monthKey: "2026-09" }, callOptions(tool))) as string;
+    expect(out).toBe("Bạn không có quyền truy cập thông tin này");
+  });
+});
+
+describe("getDriverScheduleTool", () => {
+  const drivers = [
+    { id: "d1", name: "Lái A", phone: "0912", licenseClass: "B2", type: "own", baseSalary: 5_000_000 },
+  ];
+  const trips = [
+    {
+      id: "t1",
+      customerName: "Anh Nam",
+      status: "pending",
+      hasReturn: false,
+      outboundDate: "2026-07-15",
+      outboundTime: "08:00",
+      outboundFrom: "Hà Nội",
+      outboundTo: "Cát Bà",
+      outboundDriverId: "d1",
+      returnDriverId: null,
+      returnDate: null,
+      returnTime: null,
+      returnFrom: null,
+      returnTo: null,
+      outboundVehicle: { plate: "29A-12345" },
+      returnVehicle: null,
+    },
+  ];
+
+  it("quản lý thấy lương cơ bản và lịch chạy", async () => {
+    db.driverFindMany.mockResolvedValue(drivers);
+    db.tripFindMany.mockResolvedValue(trips);
+
+    const tool = getDriverScheduleTool(MANAGER);
+    const out = (await tool.execute!({ fromDate: "2026-07-15" }, callOptions(tool))) as string;
+
+    expect(out).toContain("Lái A");
+    expect(out).toContain(`Lương cơ bản: ${vnd(5_000_000)} đ`);
+    expect(out).toContain("Hà Nội ➔ Cát Bà");
+    expect(out).toContain("29A-12345");
+  });
+
+  it("nhân viên thường KHÔNG thấy baseSalary", async () => {
+    db.driverFindMany.mockResolvedValue(drivers);
+    db.tripFindMany.mockResolvedValue(trips);
+
+    const tool = getDriverScheduleTool(STAFF);
+    const out = (await tool.execute!({ fromDate: "2026-07-15" }, callOptions(tool))) as string;
+
+    expect(out).toContain("Lái A");
+    expect(out).not.toContain("Lương cơ bản");
+    expect(out).not.toContain(vnd(5_000_000));
+  });
+});
+
+describe("searchTripsTool", () => {
+  it("lọc theo SĐT + khoảng ngày và format kết quả", async () => {
+    db.tripFindMany.mockResolvedValue([
+      {
+        id: "t-9",
+        customerName: "Chị Hoa",
+        customerPhone: "0909999888",
+        tourType: "1d",
+        status: "completed",
+        price: 2_000_000,
+        deposit: 500_000,
+        outboundDate: "2026-07-15",
+        outboundTime: "07:00",
+        outboundFrom: "Hà Nội",
+        outboundTo: "Ninh Bình",
+        hasReturn: true,
+        returnDate: "2026-07-16",
+        returnTime: "17:00",
+        returnFrom: "Ninh Bình",
+        returnTo: "Hà Nội",
+        outboundDriver: { name: "Lái A", phone: "0912" },
+        outboundVehicle: { plate: "29A-12345", seats: 7 },
+        returnDriver: { name: "Lái B", phone: "0913" },
+        returnVehicle: { plate: "29A-12345", seats: 7 },
+      },
+    ]);
+
+    const tool = searchTripsTool(STAFF);
+    const out = (await tool.execute!(
+      { customerPhone: "0909999", fromDate: "2026-07-01", toDate: "2026-07-31" },
+      callOptions(tool)
+    )) as string;
+
+    const arg = db.tripFindMany.mock.calls[0][0] as { where: { AND: unknown[] }; take: number };
+    expect(arg.where.AND).toContainEqual({
+      customerPhone: { contains: "0909999", mode: "insensitive" },
+    });
+    expect(arg.where.AND).toContainEqual({
+      OR: [
+        { outboundDate: { gte: "2026-07-01", lte: "2026-07-31" } },
+        { returnDate: { gte: "2026-07-01", lte: "2026-07-31" } },
+      ],
+    });
+    expect(arg.take).toBe(20);
+    expect(out).toContain("Chị Hoa");
+    expect(out).toContain("0909999888");
+    expect(out).toContain("Lái A");
+    expect(out).toContain("Lái B");
+  });
+
+  it("không có kết quả → thông báo trống", async () => {
+    db.tripFindMany.mockResolvedValue([]);
+    const tool = searchTripsTool(STAFF);
+    const out = (await tool.execute!({ customerName: "Không Tồn Tại" }, callOptions(tool))) as string;
+    expect(out).toBe("Không tìm thấy cuốc xe nào phù hợp với tiêu chí tìm kiếm.");
+  });
+});
+
+describe("getFuelHistoryTool", () => {
+  it("lọc theo biển số và trạng thái thanh toán, tính tổng", async () => {
+    db.fuelEntryFindMany.mockResolvedValue([
+      {
+        refuelDate: "2026-09-05",
+        amount: 500_000,
+        paymentStatus: "unpaid",
+        payerName: "",
+        note: "",
+        vehicle: { plate: "29A-12345" },
+      },
+      {
+        refuelDate: "2026-09-08",
+        amount: 300_000,
+        paymentStatus: "unpaid",
+        payerName: "Anh Tuấn",
+        note: "Đổ dọc đường",
+        vehicle: { plate: "29A-12345" },
+      },
+    ]);
+
+    const tool = getFuelHistoryTool(STAFF);
+    const out = (await tool.execute!(
+      { vehiclePlate: "29A-12345", monthKey: "2026-09", paymentStatus: "unpaid" },
+      callOptions(tool)
+    )) as string;
+
+    const arg = db.fuelEntryFindMany.mock.calls[0][0] as { where: { AND: unknown[] } };
+    expect(arg.where.AND).toContainEqual({
+      vehicle: { plate: { contains: "29A-12345", mode: "insensitive" } },
+    });
+    expect(arg.where.AND).toContainEqual({ paymentStatus: "unpaid" });
+    expect(arg.where.AND).toContainEqual({
+      refuelDate: { gte: "2026-09-01", lt: "2026-10-01" },
+    });
+    expect(out).toContain("Tổng số lần đổ dầu: 2 lượt");
+    expect(out).toContain(`Tổng tiền dầu: ${vnd(800_000)} đ`);
+    expect(out).toContain("Anh Tuấn");
+  });
+});
+
+describe("getSalaryBreakdownTool", () => {
+  const office = [
+    {
+      id: "o1",
+      name: "Trợ lý An",
+      phone: null,
+      position: "Nhân viên",
+      baseSalary: 8_000_000,
+      startDate: null,
+      note: null,
+      dob: null,
+      gender: null,
+      email: null,
+      idNumber: null,
+      socialInsurance: null,
+      payday: null,
+    },
+  ];
+  const drivers = [
+    { id: "d1", name: "Lái A", phone: null, licenseClass: "B2", type: "own", baseSalary: 6_000_000, note: null },
+    { id: "d2", name: "Tài đối tác", phone: null, licenseClass: "C", type: "partner", baseSalary: null, note: null },
+  ];
+
+  it("quản lý tra cứu được lương văn phòng và lái xe", async () => {
+    db.officeStaffFindMany.mockResolvedValue(office);
+    db.driverFindMany.mockResolvedValue(drivers);
+    db.salaryMonthFindMany.mockResolvedValue([]);
+    db.partnerPayoutFindMany.mockResolvedValue([]);
+
+    const tool = getSalaryBreakdownTool(MANAGER);
+    const out = (await tool.execute!({ monthKey: "2026-09" }, callOptions(tool))) as string;
+
+    expect(out).toContain("LƯƠNG NHÂN SỰ VĂN PHÒNG");
+    expect(out).toContain("Trợ lý An");
+    expect(out).toContain("LƯƠNG LÁI XE");
+    expect(out).toContain("Lái A");
+  });
+
+  it("nhân viên thường hỏi lương văn phòng (personType=office) → từ chối", async () => {
+    const tool = getSalaryBreakdownTool(STAFF);
+    const out = (await tool.execute!({ monthKey: "2026-09", personType: "office" }, callOptions(tool))) as string;
+    expect(out).toBe("Bạn không có quyền truy cập thông tin này");
+    expect(db.officeStaffFindMany).not.toHaveBeenCalled();
+  });
+
+  it("nhân viên thường hỏi tên một nhân sự văn phòng → từ chối", async () => {
+    db.officeStaffFindMany.mockResolvedValue(office);
+    db.driverFindMany.mockResolvedValue(drivers);
+
+    const tool = getSalaryBreakdownTool(STAFF);
+    const out = (await tool.execute!({ monthKey: "2026-09", personName: "An" }, callOptions(tool))) as string;
+    expect(out).toBe("Bạn không có quyền truy cập thông tin này");
+  });
+
+  it("nhân viên thường KHÔNG chỉ định người: chỉ thấy lái xe + công nợ đối tác, không có văn phòng", async () => {
+    db.officeStaffFindMany.mockResolvedValue(office);
+    db.driverFindMany.mockResolvedValue(drivers);
+    db.salaryMonthFindMany.mockResolvedValue([]);
+    db.partnerPayoutFindMany.mockResolvedValue([
+      {
+        id: "p1",
+        driverId: "d2",
+        workDate: "2026-09-05",
+        amount: 400_000,
+        paymentStatus: "unpaid",
+        paymentDate: null,
+        payerName: "",
+        note: null,
+        createdAt: new Date("2026-09-05T00:00:00Z"),
+        updatedAt: new Date("2026-09-05T00:00:00Z"),
+      },
+    ]);
+
+    const tool = getSalaryBreakdownTool(STAFF);
+    const out = (await tool.execute!({ monthKey: "2026-09" }, callOptions(tool))) as string;
+
+    expect(out).not.toContain("LƯƠNG NHÂN SỰ VĂN PHÒNG");
+    expect(out).not.toContain("Trợ lý An");
+    expect(out).toContain("LƯƠNG LÁI XE");
+    expect(out).toContain("CÔNG NỢ TÀI XẾ ĐỐI TÁC");
+    expect(out).toContain("Tài đối tác");
+    expect(out).toContain(`${vnd(400_000)} đ`);
   });
 });

@@ -226,6 +226,18 @@ function getThinkingStatus(parts: UIMessage["parts"] = []): string {
     if (type.includes("vehicle_inspections")) {
       return "Đang kiểm tra hạn đăng kiểm & bảo hiểm...";
     }
+    if (type.includes("driver_schedule")) {
+      return "Đang tra cứu thông tin & lịch chạy tài xế...";
+    }
+    if (type.includes("search_trips")) {
+      return "Đang tìm kiếm danh sách cuốc xe...";
+    }
+    if (type.includes("fuel_history")) {
+      return "Đang tra cứu nhật ký tiền dầu...";
+    }
+    if (type.includes("salary_breakdown")) {
+      return "Đang đối soát chi tiết lương & công nợ...";
+    }
     if (type.includes("tavily_search") || type.includes("search_web") || type.includes("google_search")) {
       return "Đang tìm kiếm thông tin trên Web...";
     }

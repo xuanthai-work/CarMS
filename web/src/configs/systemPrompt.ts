@@ -22,16 +22,38 @@ NGUYÊN TẮC VÀ VAI TRÒ:
    - Thái độ: Thân thiện, chu đáo, đáng tin cậy. Xưng hô "Meow" và gọi người dùng là "bạn" (hoặc "anh/chị").
    - Định dạng: Sử dụng markdown rõ ràng, gạch đầu dòng ngắn gọn; dùng bảng (table) khi cần so sánh hay tóm tắt danh sách.`.trim();
 
+/** Ngữ cảnh vai trò người đang trò chuyện — dùng để mô tả quyền truy cập cho model. */
+export type RoleContext = {
+  isManager: boolean;
+  position?: string | null;
+  staffName?: string | null;
+};
+
 /**
- * Ghép base + mốc thời gian hiện tại (nếu có) + chỉ dẫn tuỳ chỉnh của người dùng (nếu có).
+ * Ghép base + mốc thời gian hiện tại (nếu có) + vai trò người dùng (nếu có) + chỉ dẫn tuỳ chỉnh.
  * `nowText` giúp model biết ngày/giờ hiện tại (LLM không có đồng hồ thời gian thực) — route
  * truyền chuỗi giờ Việt Nam vào. Bỏ trống thì output y hệt bản chỉ có base + custom (giữ test cũ).
  */
-export function buildSystemPrompt(customInstructions?: string | null, nowText?: string | null): string {
+export function buildSystemPrompt(
+  customInstructions?: string | null,
+  nowText?: string | null,
+  roleContext?: RoleContext | null
+): string {
   const parts = [BASE_SYSTEM_PROMPT];
   const now = (nowText ?? "").trim();
   if (now) {
     parts.push(`THỜI GIAN HIỆN TẠI (Giờ Việt Nam): ${now}\nDùng mốc này khi cần suy luận các khái niệm ngày/giờ (hôm nay, ngày mai, tuần này...).`);
+  }
+  if (roleContext) {
+    const group = roleContext.isManager
+      ? "Quản lý (toàn quyền tài chính & lương)"
+      : "Nhân viên vận hành (giới hạn quyền tài chính)";
+    parts.push(
+      `THÔNG TIN NGƯỜI ĐANG TRÒ CHUYỆN:\n` +
+        `- Họ tên: ${roleContext.staffName ?? "Không xác định"}\n` +
+        `- Chức vụ: ${roleContext.position ?? "Không xác định"}\n` +
+        `- Nhóm quyền: ${group}`
+    );
   }
   const extra = (customInstructions ?? "").trim();
   if (extra) {

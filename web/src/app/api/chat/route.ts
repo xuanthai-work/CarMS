@@ -1,10 +1,11 @@
 import { streamText, convertToModelMessages, stepCountIs, type UIMessage } from "ai";
-import { getCurrentUser } from "@/services/auth";
+import { getCurrentUser, getCurrentStaff } from "@/services/auth";
 import { planChatRoute } from "@/configs/ai";
 import { buildLanguageModel, buildWebSearchTools, hasGeminiKey, hasOpencodeKey } from "@/services/ai";
 import { hasTavilyKey } from "@/services/tavily";
 import { systemReadTools } from "@/services/systemTools";
 import { buildSystemPrompt } from "@/configs/systemPrompt";
+import { isManager } from "@/utils/office";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -50,13 +51,22 @@ export async function POST(req: Request) {
     hasGeminiKey: geminiKey,
     hasTavilyKey: hasTavilyKey(),
   });
-  const system = buildSystemPrompt(body.customInstructions, VN_DATETIME.format(new Date()));
+  // Vai trò người đang trò chuyện → kiểm soát quyền truy cập dữ liệu tài chính/lương.
+  const staff = await getCurrentStaff();
+  const isManagerUser = isManager(staff?.position ?? null);
+  const roleContext = {
+    isManager: isManagerUser,
+    position: staff?.position ?? null,
+    staffName: staff?.name ?? null,
+  };
+
+  const system = buildSystemPrompt(body.customInstructions, VN_DATETIME.format(new Date()), roleContext);
   const model = buildLanguageModel(plan);
 
   // System Read Tools luôn sẵn sàng cho AI; Web Search Tools cấp thêm nếu lượt này bật web.
   const webTools = buildWebSearchTools(plan);
   const tools = {
-    ...systemReadTools(),
+    ...systemReadTools(roleContext),
     ...(webTools ?? {}),
   };
 
