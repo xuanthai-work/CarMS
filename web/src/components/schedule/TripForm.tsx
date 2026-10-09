@@ -212,23 +212,17 @@ export default function TripForm({
           </div>
         </div>
 
-        {/* Chi phí (để tính lợi nhuận) — của cả chuyến */}
-        <div>
-          <div className="mb-2 text-sm font-semibold text-slate-700">Chi phí</div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Field label="VETC / Cầu đường">
-              <MoneyInput name="tollCost" defaultValue={trip?.tollCost ?? null} placeholder="0" />
-            </Field>
-            {usesPartnerVehicle && (
+        {/* Chi phí thuê xe đối tác (nếu có) */}
+        {usesPartnerVehicle && (
+          <div>
+            <div className="mb-2 text-sm font-semibold text-slate-700">Chi phí</div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <Field label="Tiền thuê đối tác">
                 <MoneyInput name="partnerCost" defaultValue={trip?.partnerCost ?? null} placeholder="0" />
               </Field>
-            )}
-            <Field label="Chi phí khác">
-              <MoneyInput name="otherCost" defaultValue={trip?.otherCost ?? null} placeholder="0" />
-            </Field>
+            </div>
           </div>
-        </div>
+        )}
 
         <Field label="Ghi chú">
           <input name="note" defaultValue={trip?.note ?? ""} placeholder="Ghi chú thêm" className={inputCls} />

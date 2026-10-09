@@ -79,6 +79,8 @@ model Trip {
   tollCost    Float? // VETC / cầu đường
   partnerCost Float? // tiền thuê đối tác
   otherCost   Float? // chi phí khác
+
+  partnerDebt PartnerDebt?
 }
 
 model FuelEntry {
@@ -151,4 +153,40 @@ model PartnerPayout {
 
   @@index([workDate])
   @@index([driverId, workDate])
+}
+
+model OtherExpense {
+  id            String   @id
+  date          String   // YYYY-MM-DD (ngày phát sinh / ngày chi)
+  title         String   // Tên khoản chi / nội dung chi phí
+  category      String   @default("other") // maintenance (Bảo dưỡng/Sửa chữa), washing (Rửa xe), toll (Cầu đường/VETC), parking (Bến bãi), fine_insurance (Phạt/Bảo hiểm), other (Chi phí khác)
+  amount        Float    // Số tiền (VND)
+  paymentStatus String   @default("unpaid") // 'paid' | 'unpaid'
+  paymentDate   String?  // YYYY-MM-DD
+  payerName     String   @default("") // Người chi tiền / thanh toán
+  note          String?  @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date])
+  @@index([paymentStatus])
+}
+
+model PartnerDebt {
+  id            String   @id
+  tripId        String   @unique
+  partnerName   String   // Tên / biển số xe đối tác
+  workDate      String   // Ngày thực hiện chuyến (YYYY-MM-DD)
+  amount        Float    // Tiền thuê đối tác (VND)
+  paymentStatus String   @default("unpaid") // 'paid' | 'unpaid'
+  paymentDate   String?  // YYYY-MM-DD
+  payerName     String   @default("") // Người thanh toán
+  note          String?  @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  trip          Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([workDate])
+  @@index([paymentStatus])
 }

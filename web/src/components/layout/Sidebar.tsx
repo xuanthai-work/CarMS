@@ -45,6 +45,17 @@ const FuelIcon = ({ className }: IconProps) => (
     <path d="M12 3s6 6.4 6 10.4A6 6 0 0 1 6 13.4C6 9.4 12 3 12 3z" />
   </svg>
 );
+const ReceiptIcon = ({ className }: IconProps) => (
+  <svg {...svg(className)}>
+    <path d="M4 3h16a1 1 0 0 1 1 1v16.5l-3-1.5-3 1.5-3-1.5-3 1.5-3-1.5-3 1.5V4a1 1 0 0 1 1-1z" />
+    <path d="M8 8h8M8 12h8M8 16h4" />
+  </svg>
+);
+const DebtIcon = ({ className }: IconProps) => (
+  <svg {...svg(className)}>
+    <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
+  </svg>
+);
 const TruckIcon = ({ className }: IconProps) => (
   <svg {...svg(className)}>
     <path d="M3 6.5h11v9.5H3z" />
@@ -86,6 +97,8 @@ const LINKS: NavLink[] = [
   { href: "/lich", label: "Lịch", icon: CalendarIcon },
   { href: "/doanh-thu", label: "Doanh thu", icon: RevenueIcon, managerOnly: true },
   { href: "/tien-dau", label: "Tiền dầu", icon: FuelIcon },
+  { href: "/chi-phi-khac", label: "Chi phí khác", icon: ReceiptIcon },
+  { href: "/cong-no", label: "Công nợ", icon: DebtIcon },
   { href: "/xe", label: "Quản lý xe", icon: TruckIcon },
   { href: "/nhan-su", label: "Nhân sự", icon: UsersIcon },
   { href: "/luong", label: "Lương", icon: WalletIcon },

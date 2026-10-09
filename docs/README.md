@@ -16,6 +16,8 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-006** | 2026-10-07 | Redesign Giao Diện Chat Meow (Tasteful UI & Cat Avatar) | AI Assistant / Frontend UX-UI |  **Đã xong** | [TASK-006](tasks/TASK-006-redesign-ui-chat-meow.md) |
 | **TASK-007** | 2026-10-07 | Thêm Thinking & Tool Execution Indicator Cho Meow | AI Assistant / Frontend UX-Streaming |  **Đã xong** | [TASK-007](tasks/TASK-007-thinking-va-tool-indicator.md) |
 | **TASK-008** | 2026-10-08 | Bổ sung 4 System Tools mới & Phân quyền Role Guard | AI Assistant / Core System & Security |  **Đã xong** | [TASK-008](tasks/TASK-008-bo-sung-4-tools-va-role-guard.md) |
+| **TASK-009** | 2026-10-09 | Màn hình Chi Phí Khác (Độc lập) & Cập nhật Form Chuyến | Operational Finance / Core System |  **Đã xong** | [TASK-009](tasks/TASK-009-man-hinh-chi-phi-khac.md) |
+| **TASK-010** | 2026-10-09 | Màn hình Công Nợ Đối Tác & Tự Động Sinh Phiếu | Operational Finance / Core System |  **Đã xong** | [TASK-010](tasks/TASK-010-man-hinh-cong-no-doi-tac.md) |
 
 ---
 

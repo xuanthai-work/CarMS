@@ -11,5 +11,7 @@ export function revalidateAll() {
   revalidatePath("/nhan-su");
   revalidatePath("/doanh-thu");
   revalidatePath("/tien-dau");
+  revalidatePath("/chi-phi-khac");
+  revalidatePath("/cong-no");
   revalidatePath("/luong");
 }

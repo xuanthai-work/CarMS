@@ -72,6 +72,30 @@ export type Trip = {
   return: Leg | null; // lượt về (null nếu một chiều)
 };
 
+export type OtherExpensePaymentStatus = "paid" | "unpaid";
+
+export type OtherExpenseCategory =
+  | "maintenance" // Bảo dưỡng & Sửa xe
+  | "washing" // Rửa xe
+  | "toll" // Cầu đường / VETC
+  | "parking" // Bến bãi / Gửi xe
+  | "fine_insurance" // Phạt & Bảo hiểm
+  | "other"; // Chi phí khác
+
+export type OtherExpense = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  category: string;
+  amount: number;
+  paymentStatus: OtherExpensePaymentStatus;
+  paymentDate: string | null;
+  payerName: string;
+  note: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type FuelPaymentStatus = "paid" | "unpaid";
 
 export type FuelEntry = {
@@ -126,4 +150,30 @@ export type PartnerPayout = {
   note: string;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type PartnerDebtPaymentStatus = "paid" | "unpaid";
+
+export type PartnerDebt = {
+  id: string;
+  tripId: string;
+  partnerName: string;
+  workDate: string;
+  amount: number;
+  paymentStatus: PartnerDebtPaymentStatus;
+  paymentDate: string | null;
+  payerName: string;
+  note: string;
+  createdAt?: string;
+  updatedAt?: string;
+  // Kèm thông tin chuyến xe để hiển thị khách & lộ trình
+  trip?: {
+    id: string;
+    customerName: string;
+    customerPhone: string | null;
+    outboundFrom: string;
+    outboundTo: string;
+    outboundDate: string;
+    returnDate: string | null;
+  };
 };
