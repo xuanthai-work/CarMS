@@ -77,6 +77,7 @@ export default function RevenueScreen({
   drivers,
   defaultMonthKey,
   fuelTotalsByMonth,
+  otherExpenseTotalsByMonth,
   salaryCostBreakdownByMonth,
 }: {
   trips: Trip[];
@@ -84,6 +85,7 @@ export default function RevenueScreen({
   drivers: Driver[];
   defaultMonthKey: string;
   fuelTotalsByMonth: Record<string, number>;
+  otherExpenseTotalsByMonth: Record<string, number>;
   salaryCostBreakdownByMonth: Record<string, SalaryCostBreakdown>;
 }) {
   const { canEdit } = usePermissions();
@@ -102,12 +104,13 @@ export default function RevenueScreen({
     total: 0,
   };
   const salaryCost = salaryCosts.total;
+  const otherExpenseTotal = otherExpenseTotalsByMonth[monthKey] ?? 0;
   // Tất cả số liệu trên thẻ và bảng dùng chung một phép tổng hợp để không cộng trùng.
   const finance = useMemo(
-    () => buildMonthFinance(trips, monthKey, fuelTotal, salaryCost),
-    [trips, monthKey, fuelTotal, salaryCost]
+    () => buildMonthFinance(trips, monthKey, fuelTotal, salaryCost, otherExpenseTotal),
+    [trips, monthKey, fuelTotal, salaryCost, otherExpenseTotal]
   );
-  const { rows: monthMoney, summary, tripCosts, paidTotal, totalCost, profit } = finance;
+  const { rows: monthMoney, summary, tripCosts, otherCostTotal, paidTotal, totalCost, profit } = finance;
   const monthTrips = useMemo(() => monthMoney.map((row) => row.trip), [monthMoney]);
   const noPriceCount = useMemo(() => monthTrips.filter((t) => t.price == null).length, [monthTrips]);
 
@@ -315,7 +318,7 @@ export default function RevenueScreen({
       {costDetailOpen && (
         <Modal title="Chi tiết tổng chi phí tháng" onClose={() => setCostDetailOpen(false)} maxWidthClass="max-w-md">
           <div className="space-y-3">
-            <CostLine label="Chi phí khác" value={tripCosts.other} />
+            <CostLine label="Chi phí khác" value={otherCostTotal} />
             <CostLine label="Tiền thuê đối tác" value={tripCosts.partner} />
             <CostLine label="Tiền dầu" value={fuelTotal} />
             <SalaryCostLine value={salaryCost} breakdown={salaryCosts} />

@@ -1,4 +1,5 @@
 import { getFuelMonthMap } from "@/services/fuel";
+import { getOtherExpenseMonthMap } from "@/services/expenses";
 import { getVehicles } from "@/services/vehicles";
 import { getDrivers } from "@/services/drivers";
 import { getTrips } from "@/services/trips";
@@ -13,15 +14,17 @@ export default async function DoanhThuPage() {
   await requireManager();
   // Tính tháng mặc định phía server để tránh lệch SSR/CSR (như trang /lich).
   const defaultMonthKey = monthKeyOf(todayStr());
-  const [vehicles, drivers, trips, fuelMonthMap, office, months, payouts] = await Promise.all([
-    getVehicles(),
-    getDrivers(),
-    getTrips(),
-    getFuelMonthMap(),
-    getOfficeStaff(),
-    getSalaryMonths(),
-    getPartnerPayouts(),
-  ]);
+  const [vehicles, drivers, trips, fuelMonthMap, otherExpenseMonthMap, office, months, payouts] =
+    await Promise.all([
+      getVehicles(),
+      getDrivers(),
+      getTrips(),
+      getFuelMonthMap(),
+      getOtherExpenseMonthMap(),
+      getOfficeStaff(),
+      getSalaryMonths(),
+      getPartnerPayouts(),
+    ]);
 
   const people = salariedPeople(office, drivers);
   const salaryMonths = new Set([defaultMonthKey, ...months.map((month) => month.monthKey), ...payouts.map((payout) => payout.workDate.slice(0, 7))]);
@@ -39,6 +42,7 @@ export default async function DoanhThuPage() {
       drivers={drivers}
       defaultMonthKey={defaultMonthKey}
       fuelTotalsByMonth={Object.fromEntries(fuelMonthMap)}
+      otherExpenseTotalsByMonth={Object.fromEntries(otherExpenseMonthMap)}
       salaryCostBreakdownByMonth={salaryCostBreakdownByMonth}
     />
   );

@@ -1,7 +1,7 @@
 import type { OtherExpense as OtherExpenseRow } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { OtherExpense, OtherExpensePaymentStatus } from "@/types";
-import { addMonth } from "@/utils/format";
+import { addMonth, monthKeyOf } from "@/utils/format";
 
 function toOtherExpense(r: OtherExpenseRow): OtherExpense {
   return {
@@ -52,4 +52,15 @@ export async function getOtherExpenseMonthTotals(monthKey: string): Promise<{
     },
     { total: 0, paid: 0, unpaid: 0, count: 0 }
   );
+}
+
+/** Tổng tiền chi phí khác theo từng tháng (YYYY-MM) — 1 query, gom ở JS (như getFuelMonthMap). */
+export async function getOtherExpenseMonthMap(): Promise<Map<string, number>> {
+  const rows = await prisma.otherExpense.findMany({ select: { date: true, amount: true } });
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    const k = monthKeyOf(r.date);
+    map.set(k, (map.get(k) ?? 0) + r.amount);
+  }
+  return map;
 }

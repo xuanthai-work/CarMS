@@ -88,13 +88,17 @@ export function monthProfit(summary: RevenueSummary, fuelTotal: number, salaryCo
 
 /**
  * Tổng hợp tài chính một tháng bằng một đường tính duy nhất để tránh cộng trùng
- * giữa doanh thu chuyến, chi phí chuyến, dầu và lương.
+ * giữa doanh thu chuyến, chi phí chuyến, chi phí khác (nhập tay), dầu và lương.
+ *
+ * `otherExpenseTotal`: tổng các khoản chi từ trang Chi phí khác trong tháng —
+ * cộng thêm vào dòng "Chi phí khác" (bảo toàn dữ liệu tollCost/otherCost cũ trên chuyến).
  */
 export function buildMonthFinance(
   trips: Trip[],
   monthKey: string,
   fuelTotal: number,
-  salaryCost: number
+  salaryCost: number,
+  otherExpenseTotal = 0
 ) {
   const rows = trips
     .filter((trip) => revenueMonthKey(trip) === monthKey)
@@ -105,12 +109,16 @@ export function buildMonthFinance(
     .filter((row) => row.trip.status === "completed_paid")
     .reduce((total, row) => total + row.money.recognized, 0);
 
+  const otherCostTotal = tripCosts.other + otherExpenseTotal;
+  const totalCost = tripCosts.partner + otherCostTotal + fuelTotal + salaryCost;
+
   return {
     rows,
     summary,
     tripCosts,
+    otherCostTotal,
     paidTotal,
-    totalCost: summary.cost + fuelTotal + salaryCost,
-    profit: monthProfit(summary, fuelTotal, salaryCost),
+    totalCost,
+    profit: summary.recognized - totalCost,
   };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Trip } from "../types";
-import { revenueMonthKey, tripCostBreakdown } from "./revenue";
+import { buildMonthFinance, revenueMonthKey, tripCostBreakdown } from "./revenue";
 
 function tripWithDates(outboundDate: string, returnDate: string | null): Trip {
   const leg = (date: string) => ({
@@ -63,5 +63,31 @@ describe("tripCostBreakdown", () => {
       other: 600_000,
       partner: 3_000_000,
     });
+  });
+});
+
+describe("buildMonthFinance với chi phí khác trong tháng", () => {
+  it("cộng chi phí khác ngoài chuyến vào tổng chi phí và lợi nhuận", () => {
+    const trip = tripWithDates("2026-08-05", null);
+    trip.price = 10_000_000;
+    trip.partnerCost = 2_000_000;
+    trip.tollCost = 500_000;
+
+    const finance = buildMonthFinance([trip], "2026-08", 1_000_000, 3_000_000, 750_000);
+
+    // 500.000 gắn trên chuyến + 750.000 nhập từ trang Chi phí khác
+    expect(finance.otherCostTotal).toBe(1_250_000);
+    expect(finance.totalCost).toBe(2_000_000 + 1_250_000 + 1_000_000 + 3_000_000);
+    expect(finance.profit).toBe(10_000_000 - finance.totalCost);
+  });
+
+  it("mặc định không cộng chi phí khác khi không truyền tham số", () => {
+    const trip = tripWithDates("2026-08-05", null);
+    trip.price = 5_000_000;
+
+    const finance = buildMonthFinance([trip], "2026-08", 0, 0);
+
+    expect(finance.otherCostTotal).toBe(0);
+    expect(finance.profit).toBe(5_000_000);
   });
 });
