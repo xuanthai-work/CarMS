@@ -177,18 +177,21 @@ export default function ScheduleGrid({
               </span>
             ))}
           </div>
-          {/* Viền — mặc định (vùng hẹp) tụt xuống hàng riêng; @container ≥ ngưỡng kéo về 1 dòng. */}
-          <div
-            data-slot="border-legend"
-            className="order-last flex basis-full flex-wrap items-center gap-x-2.5 gap-y-1"
-          >
-            <span className="font-semibold text-ink">Viền:</span>
-            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-yellow-400" /> Trong ngày</span>
-            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-blue-500" /> Lượt đi</span>
-            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-amber-500" /> Lượt về</span>
-            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-violet-400" /> Theo đoàn</span>
-            <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-slate-400" /> Một chiều</span>
-          </div>
+          {/* Viền — chỉ có nghĩa ở view Gantt; ẩn khi xem theo xe.
+              Mặc định (vùng hẹp) tụt xuống hàng riêng; @container ≥ ngưỡng kéo về 1 dòng. */}
+          {view === "tour" && (
+            <div
+              data-slot="border-legend"
+              className="order-last flex basis-full flex-wrap items-center gap-x-2.5 gap-y-1"
+            >
+              <span className="font-semibold text-ink">Viền:</span>
+              <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-yellow-400" /> Trong ngày</span>
+              <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-blue-500" /> Lượt đi</span>
+              <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-amber-500" /> Lượt về</span>
+              <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-violet-400" /> Theo đoàn</span>
+              <span className="flex items-center gap-1"><i className="h-3.5 w-1 rounded bg-slate-400" /> Một chiều</span>
+            </div>
+          )}
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {view === "xe" && (
               <div className="relative z-[60] w-56">
@@ -226,6 +229,7 @@ export default function ScheduleGrid({
           today={today}
           vid={vid}
           onOpen={(t) => setModal({ trip: t })}
+          onAdd={canEdit ? () => setModal({ trip: null, prefill: { vehicleId: vid } }) : undefined}
         />
       )}
 
