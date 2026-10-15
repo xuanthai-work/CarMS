@@ -175,7 +175,7 @@ export default function DebtScreen({
                   <th className="px-4 py-3.5">Lộ trình</th>
                   <th className="whitespace-nowrap px-4 py-3.5 text-right">Tiền thuê</th>
                   <th className="whitespace-nowrap px-4 py-3.5">Trạng thái</th>
-                  <th className="whitespace-nowrap px-4 py-3.5">Ngày trả / Người trả</th>
+                  <th className="whitespace-nowrap px-4 py-3.5">Ngày trả</th>
                 </tr>
               </thead>
               <tbody>

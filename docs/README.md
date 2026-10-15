@@ -22,7 +22,8 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-012** | 2026-10-15 | Đồng Bộ Dropdown Trạng Thái Giống Màn Tiền Dầu | Operational Finance / Frontend UI Refinement |  **Đã xong** | [TASK-012](tasks/TASK-012-dong-bo-dropdown-trang-thai-thanh-toan.md) |
 | **TASK-013** | 2026-10-15 | Sửa Lỗi Modal Công Nợ & Loại Bỏ Scroll Ngang Thừa | Operational Finance / Bug Fix & Layout |  **Đã xong** | [TASK-013](tasks/TASK-013-sua-loi-modal-cong-no-va-bo-scroll-ngang.md) |
 | ****TASK-014** | 2026-10-15 | Đổi Chế Độ Xem "Theo Xe" Thành Danh Sách Chuyến | Schedule / Frontend UI Refinement |  **Đã xong** (Commit `8b9cc42`) | [TASK-014](tasks/TASK-014-danh-sach-chuyen-theo-xe.md) |
-| **TASK-015** | 2026-10-15 | Tích Hợp Chi Phí Khác Vào Doanh Thu & Lợi Nhuận | Operational Finance / Integration |  **Đã xong** (Commit `e5f574e`) | [TASK-015](tasks/TASK-015-tich-hop-chi-phi-khac-vao-doanh-thu.md) |
+| **TASK-015** | 2026-10-15 | Tích Hợp Chi Phí Khác Vào Doanh Thu & Lợi Nhuận | Operational Finance / Integration |  **Đã xong** (Commit `62abd09`) | [TASK-015](tasks/TASK-015-tich-hop-chi-phi-khac-vao-doanh-thu.md) |
+| **TASK-016** | 2026-10-15 | Đưa Nội Dung Đầu Bảng & Đồng Bộ Cột Ngày Chi | Operational Finance / Frontend UI Refinement |  **Đã xong** | [TASK-016](tasks/TASK-016-noi-dung-dau-bang-va-dong-bo-ngay-chi.md) |
 
 ---
 

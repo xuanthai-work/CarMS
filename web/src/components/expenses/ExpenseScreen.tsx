@@ -19,13 +19,12 @@ import type { OtherExpense } from "@/types";
 
 const ExpenseColgroup = () => (
   <colgroup>
+    <col style={{ width: "24%" }} />
+    <col style={{ width: "15%" }} />
+    <col style={{ width: "14%" }} />
     <col style={{ width: "12%" }} />
-    <col style={{ width: "25%" }} />
-    <col style={{ width: "16%" }} />
-    <col style={{ width: "12%" }} />
-    <col style={{ width: "12%" }} />
-    <col style={{ width: "12%" }} />
-    <col style={{ width: "11%" }} />
+    <col style={{ width: "14%" }} />
+    <col style={{ width: "21%" }} />
   </colgroup>
 );
 
@@ -241,12 +240,11 @@ export default function ExpenseScreen({
               <ExpenseColgroup />
               <thead className="bg-canvas/70">
                 <tr className="border-b border-hairline text-left text-[12px] font-bold uppercase tracking-[0.02em] text-muted">
-                  <th className="sticky left-0 z-10 whitespace-nowrap bg-canvas px-4 py-3.5">Ngày chi</th>
-                  <th className="px-4 py-3.5">Nội dung</th>
+                  <th className="sticky left-0 z-10 whitespace-nowrap bg-canvas px-4 py-3.5">Nội dung</th>
                   <th className="whitespace-nowrap px-4 py-3.5">Phân loại</th>
                   <th className="whitespace-nowrap px-4 py-3.5 text-right">Số tiền</th>
-                  <th className="whitespace-nowrap px-4 py-3.5">Người chi</th>
                   <th className="whitespace-nowrap px-4 py-3.5">Trạng thái</th>
+                  <th className="whitespace-nowrap px-4 py-3.5">Ngày chi</th>
                   <th className="px-4 py-3.5">Ghi chú</th>
                 </tr>
               </thead>
@@ -263,11 +261,10 @@ export default function ExpenseScreen({
                           : "border-b border-slate-100"
                       }
                     >
-                      <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-4 py-4 text-[15px] text-slate-700 group-hover:bg-slate-50">
-                        {fmtDate(entry.date)}
-                      </td>
-                      <td className="truncate px-4 py-4 text-[15px] font-semibold text-slate-900">
-                        {entry.title}
+                      <td className="sticky left-0 z-10 bg-surface px-4 py-4 text-[15px] font-bold text-slate-900 group-hover:bg-slate-50">
+                        <div className="truncate" title={entry.title}>
+                          {entry.title}
+                        </div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-4">
                         <span className={`inline-flex w-fit rounded-full px-2.5 py-1 text-[12px] font-bold leading-none ${meta.badge}`}>
@@ -276,9 +273,6 @@ export default function ExpenseScreen({
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right text-[15px] font-bold text-slate-800">
                         {fmtMoney(entry.amount)}
-                      </td>
-                      <td className="truncate px-4 py-4 text-[15px] text-slate-700">
-                        {entry.payerName || "—"}
                       </td>
                       <td className="whitespace-nowrap px-4 py-4">
                         <span
@@ -290,6 +284,20 @@ export default function ExpenseScreen({
                         >
                           {entry.paymentStatus === "paid" ? "Đã chi" : "Chưa chi"}
                         </span>
+                      </td>
+                      <td className="px-4 py-4 text-[13px] text-slate-600">
+                        {entry.paymentStatus === "paid" ? (
+                          <>
+                            <span className="block tabular-nums">
+                              {fmtDate(entry.paymentDate || entry.date)}
+                            </span>
+                            <span className="block text-[12px] text-muted">
+                              {entry.payerName || "—"}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-slate-300">—</span>
+                        )}
                       </td>
                       <td className="truncate px-4 py-4 text-[14px] leading-relaxed text-slate-700">
                         {entry.note || <span className="text-slate-300">—</span>}
