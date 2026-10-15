@@ -15,14 +15,13 @@ import type { PartnerDebt } from "@/types";
 
 const DebtColgroup = () => (
   <colgroup>
-    <col style={{ width: "11%" }} />
     <col style={{ width: "12%" }} />
-    <col style={{ width: "16%" }} />
+    <col style={{ width: "13%" }} />
     <col style={{ width: "18%" }} />
+    <col style={{ width: "22%" }} />
+    <col style={{ width: "13%" }} />
+    <col style={{ width: "10%" }} />
     <col style={{ width: "12%" }} />
-    <col style={{ width: "11%" }} />
-    <col style={{ width: "12%" }} />
-    <col style={{ width: "8%" }} />
   </colgroup>
 );
 
@@ -177,7 +176,6 @@ export default function DebtScreen({
                   <th className="whitespace-nowrap px-4 py-3.5 text-right">Tiền thuê</th>
                   <th className="whitespace-nowrap px-4 py-3.5">Trạng thái</th>
                   <th className="whitespace-nowrap px-4 py-3.5">Ngày trả / Người trả</th>
-                  <th className="px-4 py-3.5 text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,32 +229,6 @@ export default function DebtScreen({
                         ) : (
                           <span className="text-slate-300">—</span>
                         )}
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        {canEdit &&
-                          (paid ? (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setModal({ id: d.id, mode: "edit" });
-                              }}
-                              className="rounded-lg border border-hairline px-3 py-1.5 text-[13px] font-semibold text-muted transition hover:bg-canvas"
-                            >
-                              Sửa
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setModal({ id: d.id, mode: "pay" });
-                              }}
-                              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98]"
-                            >
-                              Thanh toán
-                            </button>
-                          ))}
                       </td>
                     </tr>
                   );

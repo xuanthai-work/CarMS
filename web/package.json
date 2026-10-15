@@ -15,7 +15,8 @@
     "db:setup": "npm run db:push && npm run db:realtime && npm run db:seed",
     "supabase:start": "npx --yes supabase start",
     "supabase:stop": "npx --yes supabase stop",
-    "supabase:status": "npx --yes supabase status"
+    "supabase:status": "npx --yes supabase status",
+    "watch:task": "powershell -ExecutionPolicy Bypass -File ../scripts/watch-and-inject.ps1"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.23",

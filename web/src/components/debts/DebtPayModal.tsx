@@ -2,17 +2,12 @@
 
 import { useState, useTransition } from "react";
 import DatePicker from "@/components/common/DatePicker";
-import SelectMenu from "@/components/common/SelectMenu";
+import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import { updatePartnerDebt } from "@/api/debts";
 import { DetailCell, Field, inputCls } from "@/components/common/ui";
 import { fmtDate, todayStr } from "@/utils/format";
 import { fmtMoney } from "@/utils/trips";
 import type { PartnerDebt } from "@/types";
-
-const PAYMENT_OPTIONS = [
-  { value: "paid", label: "Đã trả" },
-  { value: "unpaid", label: "Chưa trả" },
-] as const;
 
 /**
  * Modal thanh toán nhanh / chỉnh sửa thông tin trả tiền thuê đối tác.
@@ -61,11 +56,12 @@ export default function DebtPayModal({
       <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
         <DetailCell>
           <Field label="Trạng thái">
-            <SelectMenu
+            <FuelPaymentStatusSelect
               name="paymentStatus"
               value={paymentStatus}
-              onChange={(v) => setPaymentStatus(v as "paid" | "unpaid")}
-              options={PAYMENT_OPTIONS}
+              onChange={setPaymentStatus}
+              paidLabel="Đã trả"
+              unpaidLabel="Chưa trả"
             />
           </Field>
         </DetailCell>

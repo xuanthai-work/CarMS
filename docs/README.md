@@ -18,6 +18,8 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-008** | 2026-10-08 | Bổ sung 4 System Tools mới & Phân quyền Role Guard | AI Assistant / Core System & Security |  **Đã xong** | [TASK-008](tasks/TASK-008-bo-sung-4-tools-va-role-guard.md) |
 | **TASK-009** | 2026-10-09 | Màn hình Chi Phí Khác (Độc lập) & Cập nhật Form Chuyến | Operational Finance / Core System |  **Đã xong** | [TASK-009](tasks/TASK-009-man-hinh-chi-phi-khac.md) |
 | **TASK-010** | 2026-10-09 | Màn hình Công Nợ Đối Tác & Tự Động Sinh Phiếu | Operational Finance / Core System |  **Đã xong** | [TASK-010](tasks/TASK-010-man-hinh-cong-no-doi-tac.md) |
+| **TASK-011** | 2026-10-15 | Loại Bỏ Cột Thao Tác Thừa Trên Màn Hình Công Nợ | Operational Finance / Frontend UI Refinement |  **Đã xong** | [TASK-011](tasks/TASK-011-loai-bo-cot-thao-tac-cong-no.md) |
+| **TASK-012** | 2026-10-15 | Đồng Bộ Dropdown Trạng Thái Giống Màn Tiền Dầu | Operational Finance / Frontend UI Refinement |  **Đã xong** | [TASK-012](tasks/TASK-012-dong-bo-dropdown-trang-thai-thanh-toan.md) |
 
 ---
 

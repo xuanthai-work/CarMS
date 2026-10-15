@@ -5,36 +5,40 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { dropdownMotion } from "@/utils/motion";
 import { useDismiss } from "@/hooks/common/useDismiss";
 
-const OPTIONS = [
-  {
-    value: "paid",
-    label: "Đã thanh toán",
-    chip: "bg-emerald-100 text-emerald-700",
-    swatch: "bg-emerald-400",
-  },
-  {
-    value: "unpaid",
-    label: "Chưa thanh toán",
-    chip: "bg-amber-100 text-amber-700",
-    swatch: "bg-amber-400",
-  },
-] as const;
-
 export default function FuelPaymentStatusSelect({
   name,
   value,
   onChange,
+  paidLabel = "Đã thanh toán",
+  unpaidLabel = "Chưa thanh toán",
 }: {
   name: string;
   value: "paid" | "unpaid";
   onChange: (next: "paid" | "unpaid") => void;
+  paidLabel?: string;
+  unpaidLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   useDismiss(open, ref, () => setOpen(false));
   const reduceMotion = useReducedMotion();
 
-  const current = OPTIONS.find((option) => option.value === value) ?? OPTIONS[0];
+  const options = [
+    {
+      value: "paid" as const,
+      label: paidLabel,
+      chip: "bg-emerald-100 text-emerald-700",
+      swatch: "bg-emerald-400",
+    },
+    {
+      value: "unpaid" as const,
+      label: unpaidLabel,
+      chip: "bg-amber-100 text-amber-700",
+      swatch: "bg-amber-400",
+    },
+  ];
+
+  const current = options.find((option) => option.value === value) ?? options[0];
 
   return (
     <div className="relative" ref={ref}>
@@ -57,7 +61,7 @@ export default function FuelPaymentStatusSelect({
             {...dropdownMotion(reduceMotion)}
             className="absolute inset-x-0 top-full z-30 mt-2 rounded-xl border border-hairline bg-surface p-1.5 shadow-xl"
           >
-          {OPTIONS.map((option) => {
+          {options.map((option) => {
             const active = option.value === value;
             return (
               <button

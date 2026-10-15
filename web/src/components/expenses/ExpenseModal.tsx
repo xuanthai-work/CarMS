@@ -5,6 +5,7 @@ import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import DatePicker from "@/components/common/DatePicker";
 import MoneyInput from "@/components/common/MoneyInput";
 import SelectMenu from "@/components/common/SelectMenu";
+import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import { deleteOtherExpense, saveOtherExpense } from "@/api/expenses";
 import { fmtDate } from "@/utils/format";
 import { DetailCell, Field, inputCls } from "@/components/common/ui";
@@ -12,10 +13,6 @@ import { OTHER_EXPENSE_CATEGORIES, otherExpenseCategoryMeta } from "@/utils/expe
 import type { OtherExpense } from "@/types";
 
 const CATEGORY_OPTIONS = OTHER_EXPENSE_CATEGORIES.map((c) => ({ value: c.value, label: c.label }));
-const PAYMENT_OPTIONS = [
-  { value: "unpaid", label: "Chưa chi" },
-  { value: "paid", label: "Đã chi" },
-] as const;
 
 export default function ExpenseModal({
   expense,
@@ -94,11 +91,12 @@ export default function ExpenseModal({
         </DetailCell>
         <DetailCell>
           <Field label="Trạng thái">
-            <SelectMenu
+            <FuelPaymentStatusSelect
               name="paymentStatus"
               value={paymentStatus}
-              onChange={(v) => setPaymentStatus(v as "paid" | "unpaid")}
-              options={PAYMENT_OPTIONS}
+              onChange={setPaymentStatus}
+              paidLabel="Đã chi"
+              unpaidLabel="Chưa chi"
             />
           </Field>
         </DetailCell>
