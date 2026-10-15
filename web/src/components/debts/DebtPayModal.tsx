@@ -10,25 +10,22 @@ import { fmtMoney } from "@/utils/trips";
 import type { PartnerDebt } from "@/types";
 
 /**
- * Modal thanh toán nhanh / chỉnh sửa thông tin trả tiền thuê đối tác.
- * - mode="pay": mặc định Đã trả + ngày hôm nay, điền người trả rồi lưu 1 chạm.
- * - mode="edit": giữ nguyên trạng thái hiện tại, cho phép sửa ngày/người trả/ghi chú
- *   và hoàn tác về "Chưa trả".
+ * Modal cập nhật thông tin thanh toán tiền thuê đối tác.
+ * Khởi tạo đúng trạng thái thanh toán hiện tại của bản ghi; cho phép đổi
+ * trạng thái, ngày trả, người trả và ghi chú.
  */
 export default function DebtPayModal({
   debt,
-  mode = "pay",
   onDone,
   onCancel,
 }: {
   debt: PartnerDebt;
-  mode?: "pay" | "edit";
   onDone: () => void;
   onCancel: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
   const [paymentStatus, setPaymentStatus] = useState<"paid" | "unpaid">(
-    mode === "pay" ? "paid" : debt.paymentStatus,
+    debt.paymentStatus,
   );
   const [paymentDate, setPaymentDate] = useState(
     debt.paymentDate ?? todayStr(),
@@ -99,7 +96,7 @@ export default function DebtPayModal({
           disabled={isPending}
           className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
         >
-          {isPending ? "Đang lưu…" : mode === "pay" ? "Xác nhận thanh toán" : "Lưu"}
+          {isPending ? "Đang lưu…" : "Lưu thông tin"}
         </button>
       </div>
     </form>

@@ -237,7 +237,7 @@ export default function ExpenseScreen({
           </div>
         ) : (
           <div className="overflow-x-auto thin-scroll">
-            <table className="w-full min-w-[920px] table-fixed text-[14px]">
+            <table className="w-full table-fixed text-[14px]">
               <ExpenseColgroup />
               <thead className="bg-canvas/70">
                 <tr className="border-b border-hairline text-left text-[12px] font-bold uppercase tracking-[0.02em] text-muted">

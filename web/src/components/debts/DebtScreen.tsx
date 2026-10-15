@@ -60,7 +60,7 @@ export default function DebtScreen({
   const router = useRouter();
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "unpaid">("all");
-  const [modal, setModal] = useState<{ id: string; mode: "pay" | "edit" } | null>(null);
+  const [modal, setModal] = useState<{ id: string } | null>(null);
 
   const nq = normalizeVn(q);
 
@@ -165,7 +165,7 @@ export default function DebtScreen({
           </div>
         ) : (
           <div className="overflow-x-auto thin-scroll">
-            <table className="w-full min-w-[1040px] table-fixed text-[14px]">
+            <table className="w-full table-fixed text-[14px]">
               <DebtColgroup />
               <thead className="bg-canvas/70">
                 <tr className="border-b border-hairline text-left text-[12px] font-bold uppercase tracking-[0.02em] text-muted">
@@ -186,7 +186,7 @@ export default function DebtScreen({
                   return (
                     <tr
                       key={d.id}
-                      onClick={canEdit ? () => setModal({ id: d.id, mode: paid ? "edit" : "pay" }) : undefined}
+                      onClick={canEdit ? () => setModal({ id: d.id }) : undefined}
                       className={
                         canEdit
                           ? "group cursor-pointer border-b border-slate-100 transition hover:bg-slate-50"
@@ -241,13 +241,12 @@ export default function DebtScreen({
 
       {modal && editing && (
         <Modal
-          title={modal.mode === "pay" ? "Xác nhận thanh toán" : "Sửa thông tin công nợ"}
+          title="Cập nhật thanh toán công nợ"
           onClose={() => setModal(null)}
           maxWidthClass="max-w-xl"
         >
           <DebtPayModal
             debt={editing}
-            mode={modal.mode}
             onDone={() => {
               setModal(null);
               router.refresh();
