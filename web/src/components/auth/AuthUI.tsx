@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 
 // Dùng chung cho 3 trang xác thực (login / forgot / reset).
 // Không có hook nên dùng được cả ở server page lẫn client component.
@@ -29,8 +30,15 @@ export function AuthHeader({ logo, title, subtitle }: { logo?: boolean; title: s
   return (
     <div className={`${logo ? "mb-10" : "mb-8"} text-center`}>
       {logo && (
-        <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-tr from-brand-600 to-blue-500 font-bold text-white shadow-lg shadow-brand-500/30">
-          <span className="text-2xl">🚐</span>
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-2.5 shadow-md shadow-brand-500/10 border border-slate-100">
+          <Image
+            src="/logo.png"
+            alt="CarMS logo"
+            width={72}
+            height={72}
+            className="h-full w-full object-contain"
+            priority
+          />
         </div>
       )}
       <h1 className={`${logo ? "text-3xl" : "text-2xl"} font-extrabold tracking-tight text-slate-900`}>{title}</h1>

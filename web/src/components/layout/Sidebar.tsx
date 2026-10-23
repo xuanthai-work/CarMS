@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
@@ -150,7 +151,16 @@ export default function Sidebar({
       <div className={`flex h-16 items-center ${collapsed ? "justify-center px-2" : "gap-2.5 px-4"}`}>
         {!collapsed && (
           <Link href="/" className="flex min-w-0 items-center gap-2.5">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-dispatch-600 text-lg">🚐</span>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.08] p-1">
+              <Image
+                src="/logo.png"
+                alt="CarMS logo"
+                width={32}
+                height={32}
+                className="h-full w-full object-contain"
+                priority
+              />
+            </div>
             <span className="truncate text-lg font-bold tracking-tight text-white">CarMS</span>
           </Link>
         )}
