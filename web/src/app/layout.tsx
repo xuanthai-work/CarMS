@@ -14,7 +14,14 @@ export const metadata: Metadata = {
   description: "Hệ thống điều xe & quản lý cho thuê xe (prototype)",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "CarMS" },
-  icons: { apple: "/apple-touch-icon.png" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
