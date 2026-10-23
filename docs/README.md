@@ -24,6 +24,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | ****TASK-014** | 2026-10-15 | Đổi Chế Độ Xem "Theo Xe" Thành Danh Sách Chuyến | Schedule / Frontend UI Refinement |  **Đã xong** (Commit `8b9cc42`) | [TASK-014](tasks/TASK-014-danh-sach-chuyen-theo-xe.md) |
 | **TASK-015** | 2026-10-15 | Tích Hợp Chi Phí Khác Vào Doanh Thu & Lợi Nhuận | Operational Finance / Integration |  **Đã xong** (Commit `62abd09`) | [TASK-015](tasks/TASK-015-tich-hop-chi-phi-khac-vao-doanh-thu.md) |
 | **TASK-016** | 2026-10-15 | Đưa Nội Dung Đầu Bảng & Đồng Bộ Cột Ngày Chi | Operational Finance / Frontend UI Refinement |  **Đã xong** | [TASK-016](tasks/TASK-016-noi-dung-dau-bang-va-dong-bo-ngay-chi.md) |
+| **TASK-017** | 2026-10-23 | Chống Double-Submit / Multi-Click Khi Thêm & Sửa Chuyến | Dispatch Calendar / Core UI & Data Integrity |  **Đã xong** | [TASK-017](tasks/TASK-017-chong-duplicate-trip-submit.md) |
 
 ---
 

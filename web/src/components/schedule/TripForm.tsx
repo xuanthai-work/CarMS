@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useTransition } from "react";
 import { saveTrip, deleteTrip } from "@/api/trips";
 import { quickCreateVehicle } from "@/api/vehicles";
 import { quickCreateDriver } from "@/api/drivers";
@@ -135,6 +135,11 @@ export default function TripForm({
     vehicles
   );
 
+  // useTransition: cung cấp isPending để disable nút trong lúc Server Action (1-3s trên production).
+  // isSubmittingRef: chốt chặn đồng bộ, loại bỏ các click liên tiếp trong cùng 1 tick trước khi action chạy.
+  const [isPending, startTransition] = useTransition();
+  const isSubmittingRef = useRef(false);
+
   function changeODate(v: string) {
     setODate(v);
     // khi thêm mới: giữ ngày về hợp lệ (mặc định cùng ngày, không để trước ngày đi)
@@ -144,13 +149,29 @@ export default function TripForm({
   // Loại tour suy ra từ ngày đi/về (+ có lượt về hay không) — thay cho việc chọn tay.
   const derivedType = tourTypeFromDates(oDate, hasReturn ? rDate : null);
 
-  async function handleSave(fd: FormData) {
-    await saveTrip(fd);
-    onDone();
+  function handleSave(fd: FormData) {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    startTransition(async () => {
+      try {
+        await saveTrip(fd);
+        onDone();
+      } finally {
+        isSubmittingRef.current = false;
+      }
+    });
   }
-  async function handleDelete(fd: FormData) {
-    await deleteTrip(fd);
-    onDone();
+  async function handleDelete(fd: FormData): Promise<void> {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    startTransition(async () => {
+      try {
+        await deleteTrip(fd);
+        onDone();
+      } finally {
+        isSubmittingRef.current = false;
+      }
+    });
   }
 
   return (
@@ -239,16 +260,18 @@ export default function TripForm({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            disabled={isPending}
+            className="rounded-md border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Hủy
           </button>
           <button
             type="submit"
             form={formId}
-            className="rounded-md bg-brand-600 px-5 py-1.5 text-sm font-semibold text-white hover:bg-brand-700"
+            disabled={isPending}
+            className="rounded-md bg-brand-600 px-5 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {trip ? "Lưu" : "Thêm chuyến"}
+            {isPending ? (trip ? "Đang lưu…" : "Đang thêm…") : trip ? "Lưu" : "Thêm chuyến"}
           </button>
         </div>
       </div>
