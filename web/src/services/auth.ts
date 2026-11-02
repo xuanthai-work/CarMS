@@ -15,17 +15,22 @@ import type { OfficeStaff } from "@/types";
  */
 
 /**
- * User của phiên hiện tại — đọc từ cookie tại chỗ, KHÔNG gọi mạng.
- * An toàn vì middleware (src/lib/supabase/middleware.ts) đã gọi getUser() để xác thực
- * + làm mới cookie trên CÙNG request này TRƯỚC khi layout/page/action chạy. Dùng
- * getSession() ở đây cắt 1 vòng round-trip tới Supabase Auth mỗi lần điều hướng.
+ * User của phiên hiện tại — xác thực với Supabase Auth.
+ *
+ * Dùng getUser(), KHÔNG dùng getSession(): getSession() chỉ giải mã token trong cookie
+ * mà không kiểm tra với Auth server, nên @supabase/ssr cảnh báo "could be insecure"
+ * khi đọc user ở phía server. getUser() xác nhận token hợp lệ rồi mới trả user
+ * (không có phiên/hết hạn → error → null), đúng chuẩn server-side của @supabase/ssr.
+ *
+ * Vẫn bọc cache() để mọi tầng trong CÙNG request chỉ gọi mạng 1 lần.
  */
 export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session?.user ?? null;
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  return error ? null : (user ?? null);
 });
 
 /** Nhân sự văn phòng ứng với tài khoản đang đăng nhập (khớp email), hoặc null. */

@@ -128,6 +128,8 @@ export default function TripForm({
   const [rVehId, setRVehId] = useState(initVeh(trip?.return));
   const [rDrvId, setRDrvId] = useState(trip?.return?.driverId ?? "");
   const [status, setStatus] = useState<string>(trip?.status ?? "pending");
+  // Lỗi từ Server Action (hết phiên, không có quyền ghi, lỗi DB/mạng) — hiện thành banner.
+  const [error, setError] = useState<string | null>(null);
 
   // Tiền thuê đối tác là chi phí thuê xe ngoài, không phụ thuộc tài xế là công ty hay cộng tác.
   const usesPartnerVehicle = hasPartnerVehicle(
@@ -152,10 +154,13 @@ export default function TripForm({
   function handleSave(fd: FormData) {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
+    setError(null);
     startTransition(async () => {
       try {
         await saveTrip(fd);
         onDone();
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra khi lưu chuyến.");
       } finally {
         isSubmittingRef.current = false;
       }
@@ -164,10 +169,13 @@ export default function TripForm({
   async function handleDelete(fd: FormData): Promise<void> {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
+    setError(null);
     startTransition(async () => {
       try {
         await deleteTrip(fd);
         onDone();
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra khi xoá chuyến.");
       } finally {
         isSubmittingRef.current = false;
       }
@@ -176,7 +184,21 @@ export default function TripForm({
 
   return (
     <div>
-      <form id={formId} action={handleSave} className="space-y-4">
+      {error && (
+        <div
+          role="alert"
+          className="mb-3 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+        >
+          <span aria-hidden>⚠️</span>
+          <span>{error}</span>
+        </div>
+      )}
+      <form
+        id={formId}
+        action={handleSave}
+        className="space-y-4"
+        onInput={() => error && setError(null)}
+      >
         {trip && <input type="hidden" name="id" value={trip.id} />}
 
         {/* Khách + tour */}
