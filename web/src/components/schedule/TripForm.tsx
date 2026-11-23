@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useRef, useTransition, useMemo, useEffect } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { saveTrip, deleteTrip } from "@/api/trips";
 import { quickCreateVehicle } from "@/api/vehicles";
 import { quickCreateDriver } from "@/api/drivers";
 import Button from "@/components/common/Button";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
+import Collapse from "@/components/common/Collapse";
 import { inputCls } from "@/components/common/ui";
 import DatePicker from "@/components/common/DatePicker";
 import TimePicker from "@/components/common/TimePicker";
@@ -79,6 +81,10 @@ export default function TripForm({
   renderFooter?: (footer: React.ReactNode) => void;
 }) {
   const { canEdit } = usePermissions();
+  const reduce = useReducedMotion();
+  const fadeTransition = reduce
+    ? { duration: 0 }
+    : { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const };
   const formId = `trip-form-${trip?.id ?? "new"}`;
   const [hasReturn, setHasReturn] = useState<boolean>(trip ? !!trip.return : true);
   const [oDate, setODate] = useState<string>(trip?.outbound.date ?? prefill?.date ?? "");
@@ -312,30 +318,59 @@ export default function TripForm({
               </label>
             }
             children2={
-              hasReturn ? (
-                <DatePicker
-                  name="r_date"
-                  value={rDate}
-                  onChange={setRDate}
-                  disabled={!canEdit}
-                />
-              ) : null
+              <AnimatePresence initial={false}>
+                {hasReturn && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -4 }}
+                    transition={fadeTransition}
+                  >
+                    <DatePicker
+                      name="r_date"
+                      value={rDate}
+                      onChange={setRDate}
+                      disabled={!canEdit}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             }
           />
 
-          {/* Giờ đón: TimePicker (chọn giờ HH:mm) */}
-          {hasReturn ? (
-            <Row2
-              label1="Giờ đón đi"
-              children1={<TimePicker name="o_time" defaultValue={trip?.outbound.time ?? ""} />}
-              label2="Giờ đón về"
-              children2={<TimePicker name="r_time" defaultValue={trip?.return?.time ?? ""} />}
-            />
-          ) : (
-            <Row label="Giờ đón">
-              <TimePicker name="o_time" defaultValue={trip?.outbound.time ?? ""} />
-            </Row>
-          )}
+          {/* Giờ đón: luôn là Row2 */}
+          <Row2
+            label1={hasReturn ? "Giờ đón đi" : "Giờ đón"}
+            children1={<TimePicker name="o_time" defaultValue={trip?.outbound.time ?? ""} />}
+            label2={
+              <AnimatePresence initial={false}>
+                {hasReturn && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -4 }}
+                    transition={fadeTransition}
+                  >
+                    Giờ đón về
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            }
+            children2={
+              <AnimatePresence initial={false}>
+                {hasReturn && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -4 }}
+                    transition={fadeTransition}
+                  >
+                    <TimePicker name="r_time" defaultValue={trip?.return?.time ?? ""} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            }
+          />
 
           {/* Lộ trình (một ô duy nhất) */}
           <Row label="Lộ trình">
@@ -392,8 +427,8 @@ export default function TripForm({
           )}
 
           {/* Các dòng xe/lái xe lượt về & giữ xe */}
-          {hasReturn && (
-            <>
+          <Collapse open={hasReturn} className="!mt-0">
+            <div className="pt-2.5 space-y-2.5">
               {/* Xe · Lái xe (về) */}
               {isReturnPartnerVeh ? (
                 <Row label="Xe về">
@@ -448,8 +483,8 @@ export default function TripForm({
                   className="mt-0.5 h-4 w-4 rounded border-slate-300"
                 />
               </Row>
-            </>
-          )}
+            </div>
+          </Collapse>
 
           {/* Ghi chú */}
           <Row label="Ghi chú" className="!items-start pt-1 flex-1 min-h-[4.5rem]">
