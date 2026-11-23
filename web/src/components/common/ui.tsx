@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Button from "./Button";
 
 // KHÔNG import thư viện chỉ chạy được ở client vào file này (vd @phosphor-icons/react,
 // thứ gọi createContext ở top-level). ui.tsx cố ý KHÔNG có "use client" để Server
@@ -103,17 +104,17 @@ export function SearchInput({
 
 export function CancelButton({ onClick, className = "" }: { onClick: () => void; className?: string }) {
   return (
-    <button type="button" onClick={onClick} className={`rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas ${className}`}>
+    <Button variant="secondary" onClick={onClick} className={className}>
       Hủy
-    </button>
+    </Button>
   );
 }
 
 export function SaveButton({ form, children = "Lưu" }: { form?: string; children?: ReactNode }) {
   return (
-    <button type="submit" form={form} className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
+    <Button type="submit" form={form}>
       {children}
-    </button>
+    </Button>
   );
 }
 

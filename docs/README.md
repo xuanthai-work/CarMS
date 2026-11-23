@@ -42,6 +42,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-032** | 2026-11-23 | Tách Thư Mục Đầu Ra Của Dev Và Build | Tooling |  **Đã xong** | [TASK-032](tasks/TASK-032-separate-dev-and-build-dist.md) |
 | **TASK-033** | 2026-11-23 | Lỗi Form Thân Thiện (Trùng Biển Số, Trùng Email) | Vehicles / Staff / UX |  **Đã xong** | [TASK-033](tasks/TASK-033-friendly-form-errors.md) |
 | **TASK-034** | 2026-11-23 | Form Chuyến Dùng ActionResult (Lỗi Tiếng Việt Trên Production) | Schedule / UX |  **Đã xong** | [TASK-034](tasks/TASK-034-trip-form-action-result.md) |
+| **TASK-035** | 2026-11-23 | Component Nút Dùng Chung (Button) | UI / Design system |  **Đã xong** | [TASK-035](tasks/TASK-035-shared-button.md) |
 
 ---
 

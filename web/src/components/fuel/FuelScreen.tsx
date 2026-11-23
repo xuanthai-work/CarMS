@@ -15,6 +15,7 @@ import { normalizeVn } from "@/utils/search";
 import { fmtMoney, fmtMoneyUnit } from "@/utils/trips";
 import type { FuelEntry, Vehicle } from "@/types";
 import { companyVehicles } from "@/utils/vehicles";
+import Button from "@/components/common/Button";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
@@ -239,13 +240,9 @@ export default function FuelScreen({
           placeholder="Tìm biển số, người đổ, ghi chú..."
         />
         {canEdit && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
-          >
+          <Button size="toolbar" onClick={() => setAdding(true)}>
             + Thêm phiếu dầu
-          </button>
+          </Button>
         )}
       </Toolbar>
 

@@ -4,6 +4,7 @@ import { useState, useRef, useTransition } from "react";
 import { saveTrip, deleteTrip } from "@/api/trips";
 import { quickCreateVehicle } from "@/api/vehicles";
 import { quickCreateDriver } from "@/api/drivers";
+import Button from "@/components/common/Button";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import { Field, inputCls } from "@/components/common/ui";
 import DatePicker from "@/components/common/DatePicker";
@@ -289,22 +290,20 @@ export default function TripForm({
           <span />
         )}
         <div className="flex gap-2">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={onCancel}
             disabled={isPending}
-            className="rounded-md border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Hủy
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form={formId}
             disabled={isPending}
-            className="rounded-md bg-brand-600 px-5 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isPending ? (trip ? "Đang lưu…" : "Đang thêm…") : trip ? "Lưu" : "Thêm chuyến"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { saveDriver } from "@/api/drivers";
+import Button from "@/components/common/Button";
 import Modal from "@/components/common/Modal";
 import { LICENSE_OPTIONS, DRIVER_TYPES } from "@/utils/drivers";
 import { DetailCell, Field, inputCls } from "@/components/common/ui";
@@ -25,13 +26,12 @@ export default function AddDriverButton() {
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        size="toolbar"
         onClick={() => setOpen(true)}
-        className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
       >
         + Thêm lái xe
-      </button>
+      </Button>
 
       {open && (
         <Modal title="Thêm lái xe" onClose={() => setOpen(false)}>
@@ -47,16 +47,12 @@ export default function AddDriverButton() {
               <DetailCell className={form.type === "partner" ? "sm:col-span-2" : ""}><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
             </div>
             <div className="flex justify-end gap-2 border-t border-hairline pt-3">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
-              >
+              <Button variant="secondary" onClick={() => setOpen(false)}>
                 Hủy
-              </button>
-              <button className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+              </Button>
+              <Button type="submit">
                 Thêm lái xe
-              </button>
+              </Button>
             </div>
           </form>
         </Modal>

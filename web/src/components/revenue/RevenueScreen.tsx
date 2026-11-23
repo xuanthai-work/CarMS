@@ -13,6 +13,7 @@ import Modal from "@/components/common/Modal";
 import StatusSelect from "@/components/schedule/StatusSelect";
 import { setTripStatus } from "@/api/trips";
 import FilterTabs from "@/components/common/FilterTabs";
+import Button from "@/components/common/Button";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
@@ -296,21 +297,12 @@ export default function RevenueScreen({
             <b>{tripStatusLabel(statusChange.next)}</b>?
           </p>
           <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setStatusChange(null)}
-              className="rounded-md border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
+            <Button variant="secondary" onClick={() => setStatusChange(null)}>
               Huỷ
-            </button>
-            <button
-              type="button"
-              onClick={doSetStatus}
-              disabled={isPending}
-              className="rounded-md bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
-            >
+            </Button>
+            <Button onClick={doSetStatus} disabled={isPending}>
               {isPending ? "Đang lưu…" : "Xác nhận"}
-            </button>
+            </Button>
           </div>
         </Modal>
       )}

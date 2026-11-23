@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Button from "@/components/common/Button";
 import DatePicker from "@/components/common/DatePicker";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import { updatePartnerDebt } from "@/api/debts";
@@ -84,20 +85,12 @@ export default function DebtPayModal({
         </DetailCell>
       </div>
       <div className="flex items-center justify-end gap-2 border-t border-hairline pt-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
-        >
+        <Button variant="secondary" onClick={onCancel}>
           Hủy
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
-        >
+        </Button>
+        <Button type="submit" disabled={isPending}>
           {isPending ? "Đang lưu…" : "Lưu thông tin"}
-        </button>
+        </Button>
       </div>
     </form>
   );

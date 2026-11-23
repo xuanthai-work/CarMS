@@ -7,6 +7,7 @@ import MoneyInput from "@/components/common/MoneyInput";
 import DatePicker from "@/components/common/DatePicker";
 import SelectMenu from "@/components/common/SelectMenu";
 import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
+import Button from "@/components/common/Button";
 import { OFFICE_POSITIONS, GENDERS } from "@/utils/office";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
@@ -44,16 +45,15 @@ export default function AddOfficeStaffButton() {
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        size="toolbar"
         onClick={() => {
           setError(null);
           setOpen(true);
         }}
-        className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
       >
         + Thêm nhân sự văn phòng
-      </button>
+      </Button>
 
       {open && (
         <Modal title="Thêm nhân sự văn phòng" onClose={handleClose}>
@@ -74,20 +74,12 @@ export default function AddOfficeStaffButton() {
               <DetailCell><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
             </div>
             <div className="flex justify-end gap-2 border-t border-hairline pt-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
-              >
+              <Button variant="secondary" onClick={handleClose}>
                 Hủy
-              </button>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-              >
+              </Button>
+              <Button type="submit" disabled={isPending}>
                 {isPending ? "Đang thêm..." : "Thêm nhân sự"}
-              </button>
+              </Button>
             </div>
           </form>
         </Modal>

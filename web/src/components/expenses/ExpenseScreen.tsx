@@ -12,6 +12,7 @@ import { addMonth, fmtDate, monthLabel } from "@/utils/format";
 import { normalizeVn } from "@/utils/search";
 import { fmtMoney, fmtMoneyUnit } from "@/utils/trips";
 import { OTHER_EXPENSE_CATEGORIES, otherExpenseCategoryMeta } from "@/utils/expenses";
+import Button from "@/components/common/Button";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
@@ -219,13 +220,9 @@ export default function ExpenseScreen({
           placeholder="Tìm nội dung, người chi, ghi chú..."
         />
         {canEdit && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
-          >
+          <Button size="toolbar" onClick={() => setAdding(true)}>
             + Thêm khoản chi
-          </button>
+          </Button>
         )}
       </Toolbar>
 

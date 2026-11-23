@@ -5,6 +5,7 @@ import { saveVehicle } from "@/api/vehicles";
 import Modal from "@/components/common/Modal";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS } from "@/utils/vehicles";
 import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
+import Button from "@/components/common/Button";
 import SelectMenu from "@/components/common/SelectMenu";
 import DatePicker from "@/components/common/DatePicker";
 import { useFormState } from "@/hooks/common/useFormState";
@@ -41,16 +42,15 @@ export default function AddVehicleButton() {
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        size="toolbar"
         onClick={() => {
           setError(null);
           setOpen(true);
         }}
-        className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
       >
         + Thêm xe
-      </button>
+      </Button>
 
       {open && (
         <Modal title="Thêm xe" onClose={handleClose}>
@@ -72,20 +72,12 @@ export default function AddVehicleButton() {
               <DetailCell className="sm:col-span-2"><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
             </div>
             <div className="flex justify-end gap-2 border-t border-hairline pt-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
-              >
+              <Button variant="secondary" onClick={handleClose}>
                 Hủy
-              </button>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-              >
+              </Button>
+              <Button type="submit" disabled={isPending}>
                 {isPending ? "Đang thêm..." : "Thêm xe"}
-              </button>
+              </Button>
             </div>
           </form>
         </Modal>

@@ -8,6 +8,7 @@ import { monthLabel, addMonth } from "@/utils/format";
 import { fmtMoneyUnit } from "@/utils/trips";
 import type { SalaryRow } from "@/utils/salary";
 import type { Driver, PartnerPayout } from "@/types";
+import Button from "@/components/common/Button";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
@@ -85,13 +86,9 @@ export default function SalaryScreen({
         />
         <SearchInput value={query} onChange={setQuery} placeholder="Tìm tên nhân sự, chức vụ..." />
         {tab === "partner" && canEdit && (
-          <button
-            type="button"
-            onClick={() => setAddingPartnerPayout(true)}
-            className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-brand-700 active:scale-[0.98]"
-          >
+          <Button size="toolbar" onClick={() => setAddingPartnerPayout(true)}>
             ＋ Thêm phiếu trả công
-          </button>
+          </Button>
         )}
       </Toolbar>
 

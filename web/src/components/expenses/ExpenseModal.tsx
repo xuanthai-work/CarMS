@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Button from "@/components/common/Button";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import DatePicker from "@/components/common/DatePicker";
 import MoneyInput from "@/components/common/MoneyInput";
@@ -128,18 +129,10 @@ export default function ExpenseModal({
           <span />
         )}
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
-          >
+          <Button variant="secondary" onClick={onCancel}>
             Hủy
-          </button>
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
-          >
+          </Button>
+          <Button type="submit" disabled={isPending}>
             {isPending
               ? expense
                 ? "Đang lưu…"
@@ -147,7 +140,7 @@ export default function ExpenseModal({
               : expense
               ? "Lưu"
               : "Thêm khoản chi"}
-          </button>
+          </Button>
         </div>
       </div>
     </form>
