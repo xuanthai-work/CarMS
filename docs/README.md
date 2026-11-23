@@ -34,6 +34,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-024** | 2026-11-23 | Tách systemTools.ts Theo Nhóm Tool (Clean Code Đợt 2) | Code Quality / AI Assistant |  **Đã xong** | [TASK-024](tasks/TASK-024-split-system-tools.md) |
 | **TASK-025** | 2026-11-23 | Xóa Script watch:task Mồ Côi | Tooling |  **Đã xong** | [TASK-025](tasks/TASK-025-remove-watch-task-script.md) |
 | **TASK-026** | 2026-11-23 | Báo Cáo Ngày Dùng Hàm Tính Tiền Chuẩn (Clean Code Đợt 3) | Code Quality / AI Assistant |  **Đã xong** | [TASK-026](tasks/TASK-026-daily-summary-use-shared-money.md) |
+| **TASK-028** | 2026-11-23 | Sửa Xung Đột File Icon Trùng | Tooling / Frontend |  **Đã xong** | [TASK-028](tasks/TASK-028-fix-duplicate-icon-files.md) |
 
 ---
 
