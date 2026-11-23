@@ -6,9 +6,10 @@ import { getTrips } from "@/services/trips";
 import { getOfficeStaff } from "@/services/staff";
 import { getSalaryMonths, getPartnerPayouts } from "@/services/salary";
 import RevenueScreen from "@/components/revenue/RevenueScreen";
-import { monthKeyOf, todayStr } from "@/utils/format";
+import { monthKeyOf, monthsBetween, todayStr } from "@/utils/format";
 import { requireManager } from "@/services/auth";
-import { salariedPeople, buildSalaryRows, salaryCostBreakdownForMonth } from "@/utils/salary";
+import { salaryCostByMonth } from "@/utils/salary";
+import { revenueMonthKey } from "@/utils/revenue";
 
 export default async function DoanhThuPage() {
   await requireManager();
@@ -26,14 +27,24 @@ export default async function DoanhThuPage() {
       getPartnerPayouts(),
     ]);
 
-  const salaryMonths = new Set([defaultMonthKey, ...months.map((month) => month.monthKey), ...payouts.map((payout) => payout.workDate.slice(0, 7))]);
-  const salaryCostBreakdownByMonth = Object.fromEntries(
-    Array.from(salaryMonths, (monthKey) => {
-      const people = salariedPeople(office, drivers, monthKey);
-      const rows = buildSalaryRows(people, months.filter((month) => month.monthKey === monthKey));
-      return [monthKey, salaryCostBreakdownForMonth(rows, payouts, monthKey)];
-    })
-  );
+  const allMonths = [
+    defaultMonthKey,
+    ...trips.map(revenueMonthKey),
+    ...fuelMonthMap.keys(),
+    ...otherExpenseMonthMap.keys(),
+    ...months.map((m) => m.monthKey),
+    ...payouts.map((p) => p.workDate.slice(0, 7)),
+  ].filter((m) => /^\d{4}-\d{2}$/.test(m));
+
+  let minKey = defaultMonthKey;
+  let maxKey = defaultMonthKey;
+  for (const m of allMonths) {
+    if (m < minKey) minKey = m;
+    if (m > maxKey) maxKey = m;
+  }
+
+  const monthKeys = monthsBetween(minKey, maxKey);
+  const salaryCostBreakdownByMonth = salaryCostByMonth(office, drivers, months, payouts, monthKeys);
 
   return (
     <RevenueScreen

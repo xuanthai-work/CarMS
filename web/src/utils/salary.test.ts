@@ -7,6 +7,7 @@ import {
   salaryCostBreakdownForMonth,
   salaryCostForMonth,
   visibleSalaryRows,
+  salaryCostByMonth,
   type SalaryRow,
 } from "./salary";
 
@@ -134,5 +135,83 @@ describe("visibleSalaryRows", () => {
     const v = visibleSalaryRows(rows, false);
     expect(v).toHaveLength(1);
     expect(v[0].personType).toBe("driver");
+  });
+});
+
+describe("salaryCostByMonth", () => {
+  it("tháng không có dòng SalaryMonth và không có phiếu công vẫn ra lương cơ bản của người đang làm", () => {
+    const office = [{ id: "o1", name: "An", position: "Nhân viên", baseSalary: 10_000_000 }];
+    const drivers = [{ id: "d1", name: "Ba", type: "own", baseSalary: 8_000_000 }];
+    const breakdown = salaryCostByMonth(office, drivers, [], [], ["2026-07"]);
+
+    expect(breakdown["2026-07"]).toEqual({
+      office: 10_000_000,
+      monthlyDrivers: 8_000_000,
+      dailyDrivers: 0,
+      total: 18_000_000,
+    });
+  });
+
+  it("tháng có dòng lương: dùng snapshot + thưởng/khấu trừ", () => {
+    const office = [{ id: "o1", name: "An", position: "Nhân viên", baseSalary: 10_000_000 }];
+    const months = [
+      {
+        monthKey: "2026-07",
+        personType: "office",
+        personId: "o1",
+        baseSalary: 10_000_000,
+        additions: 1_000_000,
+        deductions: 500_000,
+        note: "",
+        paid: false,
+      },
+    ];
+    const breakdown = salaryCostByMonth(office, [], months, [], ["2026-07"]);
+    expect(breakdown["2026-07"].office).toBe(10_500_000);
+    expect(breakdown["2026-07"].total).toBe(10_500_000);
+  });
+
+  it("người có endDate giữa tháng 8: có mặt ở tháng 8, vắng ở tháng 9", () => {
+    const office = [
+      { id: "o1", name: "An", position: "Nhân viên", baseSalary: 10_000_000, endDate: "2026-08-15" },
+    ];
+    const breakdown = salaryCostByMonth(office, [], [], [], ["2026-08", "2026-09"]);
+    expect(breakdown["2026-08"].total).toBe(10_000_000);
+    expect(breakdown["2026-09"].total).toBe(0);
+  });
+
+  it("phiếu công đối tác tính đúng tháng của workDate (dailyDrivers), không lẫn sang tháng khác", () => {
+    const payouts = [
+      { workDate: "2026-07-15", amount: 1_200_000 },
+      { workDate: "2026-08-02", amount: 2_000_000 },
+    ];
+    const breakdown = salaryCostByMonth([], [], [], payouts, ["2026-07", "2026-08"]);
+    expect(breakdown["2026-07"].dailyDrivers).toBe(1_200_000);
+    expect(breakdown["2026-07"].total).toBe(1_200_000);
+    expect(breakdown["2026-08"].dailyDrivers).toBe(2_000_000);
+    expect(breakdown["2026-08"].total).toBe(2_000_000);
+  });
+
+  it("lái xe partner không bao giờ vào lương tháng", () => {
+    const drivers = [{ id: "d2", name: "Tư", type: "partner", baseSalary: 15_000_000 }];
+    const breakdown = salaryCostByMonth([], drivers, [], [], ["2026-07"]);
+    expect(breakdown["2026-07"].monthlyDrivers).toBe(0);
+    expect(breakdown["2026-07"].total).toBe(0);
+  });
+
+  it("mỗi khóa trong monthKeys đều có mặt trong kết quả, kể cả tháng không có gì (total = 0)", () => {
+    const breakdown = salaryCostByMonth([], [], [], [], ["2026-05", "2026-06"]);
+    expect(breakdown["2026-05"]).toEqual({
+      office: 0,
+      monthlyDrivers: 0,
+      dailyDrivers: 0,
+      total: 0,
+    });
+    expect(breakdown["2026-06"]).toEqual({
+      office: 0,
+      monthlyDrivers: 0,
+      dailyDrivers: 0,
+      total: 0,
+    });
   });
 });

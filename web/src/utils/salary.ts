@@ -145,6 +145,27 @@ export function salaryCostForMonth(rows: SalaryRow[], payouts: PayoutLike[], mon
   return salaryCostBreakdownForMonth(rows, payouts, monthKey).total;
 }
 
+/**
+ * Chi phí lương mọi tháng trong `monthKeys` (office + lái xe tháng + công lái xe theo ngày).
+ * Mỗi tháng dùng đúng đường tính của trang Lương: salariedPeople(…, monthKey) → buildSalaryRows(chỉ dòng tháng đó) → salaryCostBreakdownForMonth.
+ */
+export function salaryCostByMonth(
+  office: OfficeLike[],
+  drivers: DriverLike[],
+  months: (MonthLike & { monthKey: string })[],
+  payouts: PayoutLike[],
+  monthKeys: string[]
+): Record<string, SalaryCostBreakdown> {
+  const result: Record<string, SalaryCostBreakdown> = {};
+  for (const monthKey of monthKeys) {
+    const people = salariedPeople(office, drivers, monthKey);
+    const monthRows = months.filter((m) => m.monthKey === monthKey);
+    const rows = buildSalaryRows(people, monthRows);
+    result[monthKey] = salaryCostBreakdownForMonth(rows, payouts, monthKey);
+  }
+  return result;
+}
+
 /** Nhân viên thường chỉ thấy dòng lương lái xe; quản lý thấy tất cả. */
 export function visibleSalaryRows(rows: SalaryRow[], isManager: boolean): SalaryRow[] {
   return isManager ? rows : rows.filter((r) => r.personType === "driver");

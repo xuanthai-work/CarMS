@@ -92,3 +92,15 @@ export function monthRange(monthKey: string): { gte: string; lt: string } {
   return { gte: `${monthKey}-01`, lt: `${addMonth(monthKey, 1)}-01` };
 }
 
+/** Các tháng liên tiếp từ `from` đến `to` (gồm cả hai đầu), dạng YYYY-MM. from > to → []. Giới hạn tối đa 240 tháng để chống dữ liệu rác. */
+export function monthsBetween(from: string, to: string): string[] {
+  if (from > to) return [];
+  const res: string[] = [];
+  let cur = from;
+  while (cur <= to && res.length < 240) {
+    res.push(cur);
+    cur = addMonth(cur, 1);
+  }
+  return res;
+}
+
