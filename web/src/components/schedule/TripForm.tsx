@@ -159,10 +159,14 @@ export default function TripForm({
     setError(null);
     startTransition(async () => {
       try {
-        await saveTrip(fd);
+        const r = await saveTrip(fd);
+        if (!r.ok) {
+          setError(r.error);
+          return;
+        }
         onDone();
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra khi lưu chuyến.");
+      } catch {
+        setError("Không kết nối được máy chủ. Vui lòng thử lại.");
       } finally {
         isSubmittingRef.current = false;
       }
@@ -174,10 +178,14 @@ export default function TripForm({
     setError(null);
     startTransition(async () => {
       try {
-        await deleteTrip(fd);
+        const r = await deleteTrip(fd);
+        if (!r.ok) {
+          setError(r.error);
+          return;
+        }
         onDone();
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra khi xoá chuyến.");
+      } catch {
+        setError("Không kết nối được máy chủ. Vui lòng thử lại.");
       } finally {
         isSubmittingRef.current = false;
       }

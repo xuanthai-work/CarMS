@@ -6,6 +6,7 @@ import { s, optStr, optNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { tourTypeFromDates, tripFinishDate } from "@/utils/trips";
 import { revalidateAll } from "./revalidate";
+import { OK, fail, type ActionResult } from "@/utils/actionResult";
 
 /** Ghép các cột phẳng của một lượt (đi = "o", về = "r") từ FormData. */
 function legFields(fd: FormData, prefix: string) {
@@ -23,14 +24,24 @@ function legFields(fd: FormData, prefix: string) {
   };
 }
 
-export async function saveTrip(fd: FormData): Promise<void> {
-  await requireEditor();
+export async function saveTrip(fd: FormData): Promise<ActionResult> {
+  try {
+    await requireEditor();
+  } catch {
+    return fail("Bạn không có quyền sửa dữ liệu hoặc phiên đăng nhập đã hết. Hãy đăng nhập lại.");
+  }
   const id = s(fd, "id");
   const hasReturn = s(fd, "hasReturn") === "on";
   const o = legFields(fd, "o");
   const r = hasReturn ? legFields(fd, "r") : null;
+  const customerName = s(fd, "customerName");
+
+  if (!customerName.trim()) return fail("Vui lòng nhập tên khách.");
+  if (!o.date.trim()) return fail("Vui lòng chọn ngày đi.");
+  if (hasReturn && !r?.date?.trim()) return fail("Vui lòng chọn ngày về.");
+
   const data = {
-    customerName: s(fd, "customerName"),
+    customerName,
     customerPhone: optStr(fd, "customerPhone"),
     tourType: tourTypeFromDates(o.date, r?.date ?? null),
     price: optNum(fd, "price"),
@@ -60,19 +71,25 @@ export async function saveTrip(fd: FormData): Promise<void> {
     returnSeatClass: r?.seatClass ?? null,
   };
   const tripId = id || newId("t");
-  if (id) {
-    await prisma.trip.update({ where: { id }, data });
-  } else {
-    await prisma.trip.create({ data: { id: tripId, ...data } });
+  try {
+    if (id) {
+      await prisma.trip.update({ where: { id }, data });
+    } else {
+      await prisma.trip.create({ data: { id: tripId, ...data } });
+    }
+    await syncPartnerDebt(
+      tripId,
+      data.outboundVehicleId,
+      data.returnVehicleId,
+      data.partnerCost,
+      tripFinishDate(data.outboundDate, data.returnDate)
+    );
+  } catch (e) {
+    console.error("saveTrip failed", e);
+    return fail("Không lưu được chuyến. Vui lòng thử lại; nếu vẫn lỗi hãy tải lại trang.");
   }
-  await syncPartnerDebt(
-    tripId,
-    data.outboundVehicleId,
-    data.returnVehicleId,
-    data.partnerCost,
-    tripFinishDate(data.outboundDate, data.returnDate)
-  );
   revalidateAll();
+  return OK;
 }
 
 /**
@@ -126,11 +143,25 @@ async function syncPartnerDebt(
   }
 }
 
-export async function deleteTrip(fd: FormData): Promise<void> {
-  await requireEditor();
+export async function deleteTrip(fd: FormData): Promise<ActionResult> {
+  try {
+    await requireEditor();
+  } catch {
+    return fail("Bạn không có quyền sửa dữ liệu hoặc phiên đăng nhập đã hết. Hãy đăng nhập lại.");
+  }
   const id = s(fd, "id");
-  await prisma.trip.delete({ where: { id } });
+  try {
+    await prisma.trip.delete({ where: { id } });
+  } catch (e: unknown) {
+    if (typeof e === "object" && e !== null && (e as { code?: unknown }).code === "P2025") {
+      revalidateAll();
+      return OK;
+    }
+    console.error("deleteTrip failed", e);
+    return fail("Không xóa được chuyến. Vui lòng thử lại.");
+  }
   revalidateAll();
+  return OK;
 }
 
 /** Đổi trạng thái 1 chuyến (từ dropdown trạng thái ở màn Doanh thu). */
