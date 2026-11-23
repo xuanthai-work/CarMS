@@ -39,6 +39,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-029** | 2026-11-23 | Tạm Tắt Trợ Lý AI | AI Assistant / Layout |  **Đã xong** | [TASK-029](tasks/TASK-029-disable-ai-assistant.md) |
 | **TASK-030** | 2026-11-23 | Bộ Script SQL Kiểm Tra Và Đồng Bộ Production | Database / Security / Tooling |  **Đã xong** | [TASK-030](tasks/TASK-030-prod-sql-scripts.md) |
 | **TASK-031** | 2026-11-23 | Màn Doanh Thu Tính Lương Cho Mọi Tháng | Operational Finance / Salary |  **Đã xong** | [TASK-031](tasks/TASK-031-revenue-page-salary-all-months.md) |
+| **TASK-032** | 2026-11-23 | Tách Thư Mục Đầu Ra Của Dev Và Build | Tooling |  **Đã xong** | [TASK-032](tasks/TASK-032-separate-dev-and-build-dist.md) |
 
 ---
 
