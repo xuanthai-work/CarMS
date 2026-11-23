@@ -54,6 +54,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-044** | 2026-11-23 | Lịch Chọn Ngày Căn Phải Cho Ô Ngày Về | UI / Schedule |  **Đã xong** | [TASK-044](tasks/TASK-044-datepicker-align-right.md) |
 | **TASK-045** | 2026-11-23 | Sửa Xe Bằng SideDrawer (Phase 6, Màn Quản Lý Xe) | Vehicles / UX |  **Đã xong** | [TASK-045](tasks/TASK-045-vehicle-edit-drawer.md) |
 | **TASK-046** | 2026-11-23 | Thêm/Sửa Lái Xe Bằng SideDrawer (Phase 6, Màn Lái Xe) | Drivers / UX |  **Đã xong** | [TASK-046](tasks/TASK-046-driver-drawer.md) |
+| **TASK-047** | 2026-11-23 | Thêm/Sửa Nhân Sự Văn Phòng Bằng SideDrawer (Phase 6) | Staff / UX |  **Đã xong** | [TASK-047](tasks/TASK-047-office-staff-drawer.md) |
 
 ---
 

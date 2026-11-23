@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { saveOfficeStaff } from "@/api/staff";
-import Modal from "@/components/common/Modal";
+import Button from "@/components/common/Button";
+import SideDrawer from "@/components/common/SideDrawer";
 import MoneyInput from "@/components/common/MoneyInput";
 import DatePicker from "@/components/common/DatePicker";
 import SelectMenu from "@/components/common/SelectMenu";
 import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
-import Button from "@/components/common/Button";
 import { OFFICE_POSITIONS, GENDERS } from "@/utils/office";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
@@ -56,10 +56,28 @@ export default function AddOfficeStaffButton() {
       </Button>
 
       {open && (
-        <Modal title="Thêm nhân sự văn phòng" onClose={handleClose}>
+        <SideDrawer
+          title="Thêm nhân sự văn phòng"
+          onClose={handleClose}
+          footer={
+            <>
+              <Button variant="secondary" onClick={handleClose}>
+                Hủy
+              </Button>
+              <Button type="submit" form="add-staff-form" disabled={isPending}>
+                {isPending ? "Đang thêm..." : "Thêm nhân sự"}
+              </Button>
+            </>
+          }
+        >
           <FormError message={error} />
-          <form onSubmit={handleSubmit} onInput={() => error && setError(null)} className="space-y-3">
-            <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
+          <form
+            id="add-staff-form"
+            onSubmit={handleSubmit}
+            onInput={() => error && setError(null)}
+            className="space-y-3"
+          >
+            <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
               <DetailCell><Field label="Họ tên *"><input name="name" required placeholder="VD: Trần Thị B" className={inputCls} /></Field></DetailCell>
               <DetailCell><Field label="SĐT"><input name="phone" placeholder="VD: 0912xxxxxx" className={inputCls} /></Field></DetailCell>
               <DetailCell><Field label="Email"><input name="email" type="email" placeholder="VD: a@congty.vn" className={inputCls} /></Field></DetailCell>
@@ -73,16 +91,8 @@ export default function AddOfficeStaffButton() {
               <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
               <DetailCell><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
             </div>
-            <div className="flex justify-end gap-2 border-t border-hairline pt-3">
-              <Button variant="secondary" onClick={handleClose}>
-                Hủy
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Đang thêm..." : "Thêm nhân sự"}
-              </Button>
-            </div>
           </form>
-        </Modal>
+        </SideDrawer>
       )}
     </>
   );
