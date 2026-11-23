@@ -28,6 +28,9 @@ export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) return new Response("Chưa đăng nhập", { status: 401 });
 
+  const staff = await getCurrentStaff();
+  if (!staff) return new Response("Tài khoản chưa được cấp quyền", { status: 403 });
+
   // OpenCode Zen là provider chính; Gemini dự phòng (và lo web search). Cần ít nhất 1 key.
   const opencodeKey = hasOpencodeKey();
   const geminiKey = hasGeminiKey();
@@ -52,7 +55,6 @@ export async function POST(req: Request) {
     hasTavilyKey: hasTavilyKey(),
   });
   // Vai trò người đang trò chuyện → kiểm soát quyền truy cập dữ liệu tài chính/lương.
-  const staff = await getCurrentStaff();
   const isManagerUser = isManager(staff?.position ?? null);
   const roleContext = {
     isManager: isManagerUser,

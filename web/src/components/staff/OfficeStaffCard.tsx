@@ -13,7 +13,7 @@ import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import Modal from "@/components/common/Modal";
 import { fmtMoney } from "@/utils/trips";
 import { fmtDate, todayStr } from "@/utils/format";
-import { GENDERS, officePositionOptions } from "@/utils/office";
+import { GENDERS, officePositionOptions, hasLeft } from "@/utils/office";
 import { useFormState } from "@/hooks/common/useFormState";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { OfficeStaff } from "@/types";
@@ -112,7 +112,7 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="truncate text-lg font-bold tracking-tight text-ink" title={p.name}>{p.name}</span>
             {p.position && <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">{p.position}</span>}
-            {p.endDate && p.endDate <= todayStr() && (
+            {hasLeft(p.endDate, todayStr()) && (
               <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">Đã nghỉ việc</span>
             )}
           </div>

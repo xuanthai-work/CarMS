@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getOfficeStaffByEmail } from "@/services/staff";
+import { todayStr } from "@/utils/format";
+import { hasLeft } from "@/utils/office";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -17,6 +20,12 @@ export async function login(formData: FormData) {
 
   if (error) {
     redirect("/login?error=Invalid email or password");
+  }
+
+  const staff = await getOfficeStaffByEmail(data.email);
+  if (staff && hasLeft(staff.endDate, todayStr())) {
+    await supabase.auth.signOut();
+    redirect("/login?error=" + encodeURIComponent("Tài khoản này đã nghỉ việc, không thể đăng nhập."));
   }
 
   revalidatePath("/", "layout");

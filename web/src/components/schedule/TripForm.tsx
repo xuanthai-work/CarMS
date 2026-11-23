@@ -13,7 +13,8 @@ import MoneyInput from "@/components/common/MoneyInput";
 import SelectMenu from "@/components/common/SelectMenu";
 import { hasPartnerVehicle, tourTypeLabel, tourTypeFromDates, TRIP_STATUSES } from "@/utils/trips";
 import { seatLabel, VEHICLE_TYPES } from "@/utils/vehicles";
-import { fmtDateFull } from "@/utils/format";
+import { fmtDateFull, todayStr } from "@/utils/format";
+import { hasLeft } from "@/utils/office";
 import type { Trip, Vehicle, Driver, Leg } from "@/types";
 
 type Prefill = { vehicleId?: string; date?: string };
@@ -45,6 +46,7 @@ function LegFields({
 }) {
   // Xe đối tác/thuê ngoài thường đi kèm lái xe của họ → ẩn ô lái xe (không gửi driverId → lưu null).
   const isPartnerVeh = !!vehId && vehicles.find((v) => v.id === vehId)?.type === "partner";
+  const pickable = drivers.filter((d) => !hasLeft(d.endDate, date || todayStr()) || d.id === drvId);
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -88,7 +90,7 @@ function LegFields({
             name={`${prefix}_driverId`}
             value={drvId}
             onChange={setDrvId}
-            options={drivers.map((d) => ({ id: d.id, label: d.name }))}
+            options={pickable.map((d) => ({ id: d.id, label: d.name }))}
             placeholder="Tìm / chọn lái xe…"
             emptyText="Không thấy lái xe"
             onCreate={(t) => quickCreateDriver(t)}

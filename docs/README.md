@@ -29,6 +29,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-019** | 2026-11-23 | Đồng Bộ Số Liệu Tài Chính Của Trợ Lý AI Với Màn Doanh Thu | AI Assistant / Operational Finance |  **Đã xong** | [TASK-019](tasks/TASK-019-ai-finance-tools-align.md) |
 | **TASK-020** | 2026-11-23 | Công Nợ Đối Tác Tính Theo Ngày Về | Partner Debt / Operational Finance |  **Đã xong** | [TASK-020](tasks/TASK-020-partner-debt-workdate-return.md) |
 | **TASK-021** | 2026-11-23 | Ngày Nghỉ Việc Cho Nhân Sự Và Lái Xe | HR / Salary / Operational Finance |  **Đã xong** | [TASK-021](tasks/TASK-021-staff-end-date.md) |
+| **TASK-022** | 2026-11-23 | Ẩn Người Nghỉ Việc Khỏi Ô Chọn Lái Xe Và Chặn Đăng Nhập | HR / Auth / Dispatch Calendar |  **Đã xong** | [TASK-022](tasks/TASK-022-hide-left-people-and-block-login.md) |
 
 ---
 

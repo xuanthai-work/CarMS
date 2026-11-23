@@ -38,3 +38,8 @@ export const READONLY_POSITIONS = ["CEO"] as const;
 export function canEdit(position: string | null): boolean {
   return position != null && !(READONLY_POSITIONS as readonly string[]).includes(position);
 }
+
+/** Đã nghỉ việc tại ngày `onDate` (YYYY-MM-DD)? endDate là ngày làm cuối cùng nên chỉ tính khi endDate < onDate. */
+export function hasLeft(endDate: string | null | undefined, onDate: string): boolean {
+  return !!endDate && endDate < onDate;
+}

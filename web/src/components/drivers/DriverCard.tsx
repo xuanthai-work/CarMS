@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/utils/motion";
 import { saveDriver, deleteDriver } from "@/api/drivers";
 import { LICENSE_OPTIONS, DRIVER_TYPES, driverTypeLabel } from "@/utils/drivers";
+import { hasLeft } from "@/utils/office";
 import { DetailCell, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
 import EditIconButton from "@/components/common/EditIconButton";
 import SelectMenu from "@/components/common/SelectMenu";
@@ -96,7 +97,7 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
           <span className="truncate text-lg font-bold tracking-tight text-ink" title={d.name}>{d.name}</span>
           {d.licenseClass && <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">Hạng {d.licenseClass}</span>}
           <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-muted">{driverTypeLabel(d.type)}</span>
-          {d.endDate && d.endDate <= todayStr() && (
+          {hasLeft(d.endDate, todayStr()) && (
             <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">Đã nghỉ việc</span>
           )}
         </div>

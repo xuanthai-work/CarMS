@@ -13,6 +13,7 @@ import Modal from "@/components/common/Modal";
 import { useFormState } from "@/hooks/common/useFormState";
 import { fmtDate } from "@/utils/format";
 import { fmtMoney } from "@/utils/trips";
+import { hasLeft } from "@/utils/office";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Driver, PartnerPayout } from "@/types";
 
@@ -35,7 +36,7 @@ function PartnerPayoutForm({
     paymentStatus: payout?.paymentStatus ?? "unpaid",
   }));
   const options = drivers
-    .filter((d) => d.type === "partner")
+    .filter((d) => d.type === "partner" && (!hasLeft(d.endDate, form.workDate || defaultDate) || d.id === form.driverId))
     .map((d) => ({ value: d.id, label: d.name }));
 
   async function submit(fd: FormData) {

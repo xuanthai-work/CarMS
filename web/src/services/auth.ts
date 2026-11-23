@@ -2,7 +2,8 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getOfficeStaffByEmail } from "./staff";
-import { isManager, canEdit } from "@/utils/office";
+import { isManager, canEdit, hasLeft } from "@/utils/office";
+import { todayStr } from "@/utils/format";
 import type { OfficeStaff } from "@/types";
 
 /**
@@ -38,7 +39,9 @@ export const getCurrentStaff = cache(async (): Promise<OfficeStaff | null> => {
   const user = await getCurrentUser();
   const email = user?.email;
   if (!email) return null;
-  return getOfficeStaffByEmail(email);
+  const staff = await getOfficeStaffByEmail(email);
+  if (!staff || hasLeft(staff.endDate, todayStr())) return null;
+  return staff;
 });
 
 /** Bắt buộc có bản ghi nhân sự; chưa gán → đá về /no-access. */
