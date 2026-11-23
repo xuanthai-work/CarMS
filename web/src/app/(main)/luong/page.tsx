@@ -21,7 +21,7 @@ export default async function LuongPage({ searchParams }: { searchParams: Promis
     getPartnerPayouts(monthKey),
   ]);
 
-  const allRows = buildSalaryRows(salariedPeople(office, drivers), months);
+  const allRows = buildSalaryRows(salariedPeople(office, drivers, monthKey), months);
   const rows = visibleSalaryRows(allRows, manager);
   const payoutTotal = partnerPayoutMonthTotal(payouts, monthKey);
 

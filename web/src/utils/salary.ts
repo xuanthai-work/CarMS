@@ -18,8 +18,21 @@ export type SalaryRow = SalariedPerson & {
   net: number;
 };
 
-type OfficeLike = { id: string; name: string; position: string | null; baseSalary: number | null; payday?: number | null };
-type DriverLike = { id: string; name: string; type: string; baseSalary: number | null };
+type OfficeLike = {
+  id: string;
+  name: string;
+  position: string | null;
+  baseSalary: number | null;
+  payday?: number | null;
+  endDate?: string | null;
+};
+type DriverLike = {
+  id: string;
+  name: string;
+  type: string;
+  baseSalary: number | null;
+  endDate?: string | null;
+};
 type MonthLike = {
   personType: string;
   personId: string;
@@ -44,18 +57,30 @@ export function salaryNet(x: { baseSalary: number; additions: number; deductions
   return x.baseSalary + x.additions - x.deductions;
 }
 
-/** Người ăn lương tháng: toàn bộ office + lái xe type="own". */
-export function salariedPeople(office: OfficeLike[], drivers: DriverLike[]): SalariedPerson[] {
-  const fromOffice: SalariedPerson[] = office.map((p) => ({
-    personType: "office",
-    personId: p.id,
-    name: p.name,
-    role: p.position || "Nhân viên",
-    baseSalary: p.baseSalary ?? 0,
-    payday: p.payday ?? null,
-  }));
+/**
+ * Người ăn lương tháng: toàn bộ office + lái xe type="own".
+ * Nếu có monthKey: bỏ người có endDate thuộc tháng TRƯỚC monthKey (nghỉ từ tháng sau ngày nghỉ).
+ */
+export function salariedPeople(
+  office: OfficeLike[],
+  drivers: DriverLike[],
+  monthKey?: string
+): SalariedPerson[] {
+  const isEmployedInMonth = (p: { endDate?: string | null }) =>
+    !monthKey || !p.endDate || monthKeyOf(p.endDate) >= monthKey;
+
+  const fromOffice: SalariedPerson[] = office
+    .filter(isEmployedInMonth)
+    .map((p) => ({
+      personType: "office",
+      personId: p.id,
+      name: p.name,
+      role: p.position || "Nhân viên",
+      baseSalary: p.baseSalary ?? 0,
+      payday: p.payday ?? null,
+    }));
   const fromDrivers: SalariedPerson[] = drivers
-    .filter((d) => d.type === "own")
+    .filter((d) => d.type === "own" && isEmployedInMonth(d))
     .map((d) => ({
       personType: "driver",
       personId: d.id,

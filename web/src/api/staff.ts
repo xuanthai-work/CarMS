@@ -22,6 +22,7 @@ export async function saveOfficeStaff(fd: FormData): Promise<void> {
     idNumber: optStr(fd, "idNumber"),
     socialInsurance: optStr(fd, "socialInsurance"),
     payday: dayOfMonth(fd, "payday"),
+    ...(fd.has("endDate") ? { endDate: optStr(fd, "endDate") } : {}),
   };
   // Email = tài khoản đăng nhập nên phải là duy nhất; chặn trùng để login không map nhầm người/quyền.
   if (data.email) {

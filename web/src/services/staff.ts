@@ -10,6 +10,7 @@ function toOfficeStaff(r: OfficeStaffRow): OfficeStaff {
     position: r.position ?? "",
     baseSalary: r.baseSalary,
     startDate: r.startDate,
+    endDate: r.endDate ?? null,
     note: r.note ?? "",
     dob: r.dob,
     gender: r.gender,

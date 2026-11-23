@@ -29,6 +29,7 @@ model Driver {
   licenseClass String?
   type         String  @default("own")
   baseSalary   Float?  // lương tháng (VND) — chỉ dùng cho lái xe type="own"
+  endDate      String? // ngày nghỉ việc (YYYY-MM-DD); null = đang làm
   note         String?
 
   outboundTrips Trip[]  @relation("OutboundDriver")
@@ -110,6 +111,7 @@ model OfficeStaff {
   position        String? // chức vụ: điều hành, kế toán…
   baseSalary      Float?  // lương cơ bản (VND)
   startDate       String? // ngày vào làm (YYYY-MM-DD)
+  endDate         String? // ngày nghỉ việc (YYYY-MM-DD); null = đang làm
   note            String?
   dob             String? // ngày sinh (YYYY-MM-DD)
   gender          String? // Nam | Nữ | Khác

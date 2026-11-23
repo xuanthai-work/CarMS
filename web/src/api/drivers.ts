@@ -16,6 +16,7 @@ export async function saveDriver(fd: FormData): Promise<void> {
     type: s(fd, "type") || "own",
     baseSalary: optNum(fd, "baseSalary"),
     note: s(fd, "note"),
+    ...(fd.has("endDate") ? { endDate: optStr(fd, "endDate") } : {}),
   };
   if (id) {
     await prisma.driver.update({ where: { id }, data });

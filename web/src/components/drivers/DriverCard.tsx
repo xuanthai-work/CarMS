@@ -10,14 +10,16 @@ import EditIconButton from "@/components/common/EditIconButton";
 import SelectMenu from "@/components/common/SelectMenu";
 import MoneyInput from "@/components/common/MoneyInput";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
+import DatePicker from "@/components/common/DatePicker";
 import Modal from "@/components/common/Modal";
 import { fmtMoney } from "@/utils/trips";
+import { fmtDate, todayStr } from "@/utils/format";
 import { useFormState } from "@/hooks/common/useFormState";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Driver } from "@/types";
 
 export default function DriverCard({ driver: d }: { driver: Driver }) {
-  const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own" });
+  const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own", endDate: d.endDate ?? "" });
   const { canEdit } = usePermissions();
   const [editing, setEditing] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -56,8 +58,21 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
           <DetailCell><Field label="SĐT / Zalo"><input name="phone" defaultValue={d.phone ?? ""} className={inputCls} /></Field></DetailCell>
           <DetailCell><Field label="Hạng bằng"><SelectMenu name="licenseClass" value={form.licenseClass} onChange={set("licenseClass")} options={LICENSE_OPTIONS} /></Field></DetailCell>
           {form.type === "own" && <DetailCell><Field label="Lương tháng"><MoneyInput name="baseSalary" defaultValue={d.baseSalary} placeholder="VD: 12.000.000" /></Field></DetailCell>}
-          {/* form.type (không phải d.type): đổi Loại ngay trong form thì Lương tháng ẩn đi, span phải giãn theo cùng lúc */}
-          <DetailCell className={form.type === "partner" ? "sm:col-span-2" : ""}><Field label="Ghi chú"><input name="note" defaultValue={d.note} className={inputCls} /></Field></DetailCell>
+          <DetailCell>
+            <Field label="Ngày nghỉ việc">
+              <DatePicker name="endDate" value={form.endDate} onChange={set("endDate")} />
+              {form.endDate && (
+                <button
+                  type="button"
+                  onClick={() => set("endDate")("")}
+                  className="mt-1 block text-xs text-rose-600 hover:underline"
+                >
+                  Xóa ngày nghỉ
+                </button>
+              )}
+            </Field>
+          </DetailCell>
+          <DetailCell className={form.type === "own" ? "sm:col-span-2" : ""}><Field label="Ghi chú"><input name="note" defaultValue={d.note} className={inputCls} /></Field></DetailCell>
         </div>
       </form>
       <div className="mt-3 flex items-center justify-between">
@@ -81,11 +96,24 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
           <span className="truncate text-lg font-bold tracking-tight text-ink" title={d.name}>{d.name}</span>
           {d.licenseClass && <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">Hạng {d.licenseClass}</span>}
           <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-muted">{driverTypeLabel(d.type)}</span>
+          {d.endDate && d.endDate <= todayStr() && (
+            <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">Đã nghỉ việc</span>
+          )}
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
           <Info label="SĐT / Zalo" value={d.phone || "—"} />
-          {d.type === "own" && <Info label="Lương tháng" value={fmtMoney(d.baseSalary)} />}
-          <Info label="Ghi chú" value={d.note || "—"} className="col-span-2 sm:col-span-1" />
+          {d.type === "own" ? (
+            <>
+              <Info label="Lương tháng" value={fmtMoney(d.baseSalary)} />
+              <Info label="Ngày nghỉ việc" value={fmtDate(d.endDate)} />
+              <Info label="Ghi chú" value={d.note || "—"} />
+            </>
+          ) : (
+            <>
+              <Info label="Ngày nghỉ việc" value={fmtDate(d.endDate)} />
+              <Info label="Ghi chú" value={d.note || "—"} className="col-span-2" />
+            </>
+          )}
         </div>
       </div>
 
@@ -101,7 +129,8 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
                 <DetailCell><Info label="SĐT / Zalo" value={d.phone || "—"} size="md" /></DetailCell>
                 <DetailCell><Info label="Hạng bằng" value={d.licenseClass || "—"} size="md" /></DetailCell>
                 {d.type === "own" && <DetailCell><Info label="Lương tháng" value={fmtMoney(d.baseSalary)} size="md" /></DetailCell>}
-                <DetailCell className={d.type === "partner" ? "sm:col-span-2" : ""}><Info label="Ghi chú" value={d.note || "—"} size="md" /></DetailCell>
+                <DetailCell><Info label="Ngày nghỉ việc" value={fmtDate(d.endDate)} size="md" /></DetailCell>
+                <DetailCell className={d.type === "own" ? "sm:col-span-2" : ""}><Info label="Ghi chú" value={d.note || "—"} size="md" /></DetailCell>
               </div>
               {canEdit && (
                 <div className="mt-5 flex justify-end border-t border-hairline pt-4">

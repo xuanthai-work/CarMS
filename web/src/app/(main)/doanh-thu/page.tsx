@@ -26,10 +26,10 @@ export default async function DoanhThuPage() {
       getPartnerPayouts(),
     ]);
 
-  const people = salariedPeople(office, drivers);
   const salaryMonths = new Set([defaultMonthKey, ...months.map((month) => month.monthKey), ...payouts.map((payout) => payout.workDate.slice(0, 7))]);
   const salaryCostBreakdownByMonth = Object.fromEntries(
     Array.from(salaryMonths, (monthKey) => {
+      const people = salariedPeople(office, drivers, monthKey);
       const rows = buildSalaryRows(people, months.filter((month) => month.monthKey === monthKey));
       return [monthKey, salaryCostBreakdownForMonth(rows, payouts, monthKey)];
     })

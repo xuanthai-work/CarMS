@@ -427,7 +427,7 @@ export function getMonthlyFinanceTool(ctx: UserRoleContext) {
 
         const fuelTotal = fuelMonth.total;
         const otherExpenseTotal = otherExpenseMonth.total;
-        const people = salariedPeople(office, drivers);
+        const people = salariedPeople(office, drivers, key);
         const salaryRows = buildSalaryRows(
           people,
           months.filter((m) => m.monthKey === key)
@@ -769,7 +769,7 @@ export function getSalaryBreakdownTool(ctx: UserRoleContext) {
           return NO_PERMISSION;
         }
 
-        const rows = buildSalaryRows(salariedPeople(office, drivers), months);
+        const rows = buildSalaryRows(salariedPeople(office, drivers, key), months);
         const officeIds = new Set(matchedOffice.map((o) => o.id));
         const driverIds = new Set(matchedDrivers.map((d) => d.id));
         const driverNameById = new Map(drivers.map((d) => [d.id, d.name]));

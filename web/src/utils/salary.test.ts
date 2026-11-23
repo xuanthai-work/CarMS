@@ -17,7 +17,7 @@ describe("salaryNet", () => {
 });
 
 describe("salariedPeople", () => {
-  it("gồm mọi office + chỉ lái xe own", () => {
+  it("gồm mọi office + chỉ lái xe own khi không có endDate", () => {
     const office = [{ id: "o1", name: "An", position: "COO", baseSalary: 20_000_000 }];
     const drivers = [
       { id: "d1", name: "Ba", type: "own", baseSalary: 12_000_000 },
@@ -27,6 +27,43 @@ describe("salariedPeople", () => {
     expect(people.map((p) => p.personId)).toEqual(["o1", "d1"]);
     expect(people[0]).toMatchObject({ personType: "office", role: "COO", baseSalary: 20_000_000 });
     expect(people[1]).toMatchObject({ personType: "driver", role: "Lái xe", baseSalary: 12_000_000 });
+  });
+
+  it("không truyền monthKey → không lọc dù có endDate", () => {
+    const office = [{ id: "o1", name: "An", position: "COO", baseSalary: 20_000_000, endDate: "2026-09-15" }];
+    const drivers = [{ id: "d1", name: "Ba", type: "own", baseSalary: 12_000_000, endDate: "2026-09-15" }];
+    const people = salariedPeople(office, drivers);
+    expect(people.map((p) => p.personId)).toEqual(["o1", "d1"]);
+  });
+
+  it("office có endDate = 2026-09-15: có mặt ở 2026-08, 2026-09; vắng ở 2026-10", () => {
+    const office = [{ id: "o1", name: "An", position: "COO", baseSalary: 20_000_000, endDate: "2026-09-15" }];
+    const drivers = [{ id: "d1", name: "Ba", type: "own", baseSalary: 12_000_000 }];
+    expect(salariedPeople(office, drivers, "2026-08").map((p) => p.personId)).toEqual(["o1", "d1"]);
+    expect(salariedPeople(office, drivers, "2026-09").map((p) => p.personId)).toEqual(["o1", "d1"]);
+    expect(salariedPeople(office, drivers, "2026-10").map((p) => p.personId)).toEqual(["d1"]);
+  });
+
+  it("driver own có endDate cùng quy tắc; driver partner vẫn bị loại", () => {
+    const office = [{ id: "o1", name: "An", position: "COO", baseSalary: 20_000_000 }];
+    const drivers = [
+      { id: "d1", name: "Ba", type: "own", baseSalary: 12_000_000, endDate: "2026-09-15" },
+      { id: "d2", name: "Tư", type: "partner", baseSalary: null, endDate: "2026-09-15" },
+    ];
+    expect(salariedPeople(office, drivers, "2026-09").map((p) => p.personId)).toEqual(["o1", "d1"]);
+    expect(salariedPeople(office, drivers, "2026-10").map((p) => p.personId)).toEqual(["o1"]);
+  });
+
+  it("tích hợp: buildSalaryRows và salaryCostBreakdownForMonth không tính lương người đã nghỉ ở tháng sau", () => {
+    const office = [{ id: "o1", name: "An", position: "COO", baseSalary: 20_000_000, endDate: "2026-09-15" }];
+    const drivers = [{ id: "d1", name: "Ba", type: "own", baseSalary: 12_000_000 }];
+    const people = salariedPeople(office, drivers, "2026-10");
+    const rows = buildSalaryRows(people, []);
+    expect(rows.map((r) => r.personId)).toEqual(["d1"]);
+    const breakdown = salaryCostBreakdownForMonth(rows, [], "2026-10");
+    expect(breakdown.office).toBe(0);
+    expect(breakdown.monthlyDrivers).toBe(12_000_000);
+    expect(breakdown.total).toBe(12_000_000);
   });
 });
 
