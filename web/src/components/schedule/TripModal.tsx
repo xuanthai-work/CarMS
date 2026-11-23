@@ -17,9 +17,9 @@ type Props = {
 export default function TripModal({ trip, prefill, vehicles, drivers, onClose }: Props) {
   return (
     <Modal
-      title={trip ? `Chuyến: ${trip.customerName}` : "Thêm chuyến"}
+      title={trip ? "Sửa chuyến" : "Thêm chuyến"}
       onClose={onClose}
-      maxWidthClass="max-w-4xl"
+      maxWidthClass="max-w-2xl"
     >
       <TripForm
         trip={trip ?? undefined}
