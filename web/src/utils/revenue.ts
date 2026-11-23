@@ -53,11 +53,6 @@ export function revenueMonthKey(trip: Trip): string {
   return monthKeyOf(trip.return?.date ?? trip.outbound.date);
 }
 
-/** Class chữ cho số lợi nhuận: lãi ≥ 0 → xanh, lỗ < 0 → đỏ. */
-export function profitTextClass(profit: number): string {
-  return profit >= 0 ? "text-emerald-700" : "text-rose-600";
-}
-
 export type RevenueSummary = {
   recognized: number;
   collected: number;

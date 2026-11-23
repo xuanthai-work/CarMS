@@ -64,12 +64,3 @@ export async function getFuelMonthMap(): Promise<Map<string, number>> {
   }
   return map;
 }
-
-export async function getAvailableFuelMonths(): Promise<string[]> {
-  const rows = await prisma.fuelEntry.findMany({
-    select: { refuelDate: true },
-    distinct: ["refuelDate"],
-    orderBy: { refuelDate: "desc" },
-  });
-  return Array.from(new Set(rows.map((r) => monthKeyOf(r.refuelDate)))).sort().reverse();
-}

@@ -133,20 +133,6 @@ export async function deleteTrip(fd: FormData): Promise<void> {
   revalidateAll();
 }
 
-/** Đặt giờ đến (endTime) cho 1 lượt — dùng khi kéo mép dưới thẻ ở lịch theo xe. */
-export async function setLegEndTime(
-  id: string,
-  kind: "out" | "ret",
-  endTime: string | null
-): Promise<void> {
-  await requireEditor();
-  await prisma.trip.update({
-    where: { id },
-    data: kind === "ret" ? { returnEndTime: endTime } : { outboundEndTime: endTime },
-  });
-  revalidateAll();
-}
-
 /** Đổi trạng thái 1 chuyến (từ dropdown trạng thái ở màn Doanh thu). */
 export async function setTripStatus(id: string, status: string): Promise<void> {
   await requireManagerEditor();

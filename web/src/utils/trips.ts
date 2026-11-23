@@ -51,17 +51,6 @@ export function sameVehicleBothLegs(trip: Trip): boolean {
   return !!trip.return && trip.outbound.vehicleId === trip.return.vehicleId;
 }
 
-/** Nhãn + màu cho 1 lượt trên card: cùng xe cả đi/về => "Trọn gói", ngược lại "Lượt đi"/"Lượt về". */
-export function legMeta(trip: Trip, kind: "out" | "ret"): { label: string; tone: "round" | "go" | "back" } {
-  if (sameVehicleBothLegs(trip)) return { label: "Theo đoàn", tone: "round" };
-  return kind === "out" ? { label: "Lượt đi", tone: "go" } : { label: "Lượt về", tone: "back" };
-}
-
-/** Class viền trái theo tone lượt (dùng chung 2 view). */
-export function toneBorderClass(tone: "round" | "go" | "back"): string {
-  return tone === "round" ? "border-l-emerald-500" : tone === "go" ? "border-l-blue-500" : "border-l-amber-500";
-}
-
 /** Lộ trình "điểm đón → điểm đến" (bỏ phần rỗng); không có -> "—". */
 export function legRoute(leg: { from: string; to: string }): string {
   return [leg.from, leg.to].map((x) => x?.trim()).filter(Boolean).join(" → ") || "—";
@@ -111,29 +100,6 @@ export function statusTextClass(status?: string): string {
 /** Nền + viền "chip" cho dropdown trạng thái (tô màu theo legend, chữ để đen). */
 export function statusChipClass(status?: string): string {
   return (TRIP_STATUSES.find((s) => s.value === status) ?? TRIP_STATUSES[0]).chip;
-}
-
-/**
- * Xếp các mục vào lane (hàng) sao cho không đè nhau theo khoảng [startOf, endOf).
- * Gán `lane` cho từng mục (dùng nửa-mở: item kế tiếp bắt đầu đúng chỗ item trước kết thúc thì chung lane).
- * Trả về số lane đã dùng.
- */
-export function assignLanes<T extends { lane: number }>(
-  items: T[],
-  startOf: (t: T) => number,
-  endOf: (t: T) => number
-): number {
-  items.sort((a, b) => startOf(a) - startOf(b) || endOf(a) - endOf(b));
-  const laneEnd: number[] = [];
-  for (const it of items) {
-    let lane = laneEnd.findIndex((end) => end <= startOf(it));
-    if (lane === -1) {
-      lane = laneEnd.length;
-      laneEnd.push(endOf(it));
-    } else laneEnd[lane] = endOf(it);
-    it.lane = lane;
-  }
-  return laneEnd.length;
 }
 
 /**

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 // KHÔNG import thư viện chỉ chạy được ở client vào file này (vd @phosphor-icons/react,
@@ -115,25 +114,5 @@ export function SaveButton({ form, children = "Lưu" }: { form?: string; childre
     <button type="submit" form={form} className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
       {children}
     </button>
-  );
-}
-
-export function LinkButton({
-  href,
-  children,
-  variant = "primary",
-}: {
-  href: string;
-  children: ReactNode;
-  variant?: "primary" | "ghost";
-}) {
-  const cls =
-    variant === "primary"
-      ? "bg-brand-600 text-white hover:bg-brand-700"
-      : "border border-slate-300 text-slate-700 hover:bg-slate-100";
-  return (
-    <Link href={href} className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium ${cls}`}>
-      {children}
-    </Link>
   );
 }

@@ -435,7 +435,7 @@ export function getMonthlyFinanceTool(ctx: UserRoleContext) {
         const salaryCost = salaryCostForMonth(salaryRows, payouts, key);
 
         // Một đường tính duy nhất — không cộng trùng.
-        const { rows, summary, tripCosts, otherCostTotal, paidTotal, totalCost, profit } = buildMonthFinance(
+        const { rows, summary, tripCosts, paidTotal, totalCost, profit } = buildMonthFinance(
           trips,
           key,
           fuelTotal,
