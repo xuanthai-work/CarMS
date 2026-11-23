@@ -8,6 +8,7 @@ import { buildMonthFinance, tripMoney } from "@/utils/revenue";
 import { buildSalaryRows, salariedPeople, salaryCostForMonth } from "@/utils/salary";
 import { getTrips } from "@/services/trips";
 import { getFuelMonthTotals } from "@/services/fuel";
+import { getOtherExpenseMonthTotals } from "@/services/expenses";
 import { getSalaryMonths, getPartnerPayouts } from "@/services/salary";
 import { getOfficeStaff } from "@/services/staff";
 import { getDrivers } from "@/services/drivers";
@@ -19,7 +20,7 @@ import { getDrivers } from "@/services/drivers";
  * TUYỆT ĐỐI không create/update/delete/upsert.
  *
  * Tiền của chuyến được suy theo đúng quy chuẩn hiện hành ở utils/revenue.ts
- * (tripMoney — bên trong gọi tripOtherCost), không tự cộng tay rồi lệch quy tắc.
+ * (tripMoney — bên trong gọi tripCost), không tự cộng tay rồi lệch quy tắc.
  */
 
 /** Ngữ cảnh vai trò người đang trò chuyện — kiểm soát quyền truy cập dữ liệu nhạy cảm. */
@@ -234,7 +235,8 @@ export function getAvailableVehiclesTool() {
  *  - VẬN HÀNH: chuyến có lượt ĐI hoặc lượt VỀ rơi vào ngày đang xét.
  *  - TÀI CHÍNH: doanh thu chỉ ghi nhận vào NGÀY HOÀN TẤT của chuyến
  *    (finishDate = returnDate ?? outboundDate) — đúng quy chuẩn revenue.ts.
- * Nhờ vậy cộng dồn theo từng ngày khớp 100% với báo cáo tháng (buildMonthFinance).
+ * Doanh thu và chi phí chuyến cộng dồn các ngày khớp tháng (buildMonthFinance),
+ * còn lương và chi phí khác không chia theo ngày.
  */
 export function getDailySummaryTool(ctx: UserRoleContext) {
   return tool({
@@ -306,7 +308,7 @@ export function getDailySummaryTool(ctx: UserRoleContext) {
           `3. Tiêu hao nhiên liệu (Tiền dầu):\n` +
           `• Lượt đổ dầu: ${totalFuelCount} lượt\n` +
           `• Tổng tiền dầu: ${vnd(totalFuelCost)} đ\n\n` +
-          `• Lợi nhuận tạm tính (Doanh thu ghi nhận - Chi phí chuyến - Tiền dầu): ${vnd(
+          `• Lợi nhuận tạm tính theo ngày (chỉ trừ chi phí chuyến và tiền dầu; chưa gồm lương, chi phí khác): ${vnd(
             totalRevenue - totalTripCosts - totalFuelCost
           )} đ`
         );
@@ -382,11 +384,12 @@ export function getVehicleInspectionsTool() {
 }
 
 /**
- * 5. Tổng hợp tài chính cả tháng — khớp CHÍNH XÁC với màn hình "Doanh thu".
+ * 5. Tổng hợp tài chính cả tháng — khớp màn Doanh thu vì dùng chung buildMonthFinance.
  *
  * Tái dùng đúng nguồn dữ liệu + hàm tính của trang doanh-thu:
  *  - getTrips() + buildMonthFinance (doanh thu ghi nhận theo ngày hoàn tất).
  *  - getFuelMonthTotals(monthKey) cho tiền dầu.
+ *  - getOtherExpenseMonthTotals(key) cho chi phí khác.
  *  - Lương: salariedPeople + buildSalaryRows + salaryCostForMonth (office + lái xe
  *    tháng + lái xe nhận công theo ngày qua PartnerPayout).
  * Không tự cộng tay để tránh lệch/nhân đôi số liệu.
@@ -412,9 +415,10 @@ export function getMonthlyFinanceTool(ctx: UserRoleContext) {
 
       try {
         // Cùng bộ dữ liệu trang Doanh thu dùng (lấy tất cả rồi lọc theo tháng ở hàm chuẩn).
-        const [trips, fuelMonth, office, drivers, months, payouts] = await Promise.all([
+        const [trips, fuelMonth, otherExpenseMonth, office, drivers, months, payouts] = await Promise.all([
           getTrips(),
           getFuelMonthTotals(key),
+          getOtherExpenseMonthTotals(key),
           getOfficeStaff(),
           getDrivers(),
           getSalaryMonths(),
@@ -422,6 +426,7 @@ export function getMonthlyFinanceTool(ctx: UserRoleContext) {
         ]);
 
         const fuelTotal = fuelMonth.total;
+        const otherExpenseTotal = otherExpenseMonth.total;
         const people = salariedPeople(office, drivers);
         const salaryRows = buildSalaryRows(
           people,
@@ -430,11 +435,12 @@ export function getMonthlyFinanceTool(ctx: UserRoleContext) {
         const salaryCost = salaryCostForMonth(salaryRows, payouts, key);
 
         // Một đường tính duy nhất — không cộng trùng.
-        const { rows, summary, tripCosts, paidTotal, totalCost, profit } = buildMonthFinance(
+        const { rows, summary, tripCosts, otherCostTotal, paidTotal, totalCost, profit } = buildMonthFinance(
           trips,
           key,
           fuelTotal,
-          salaryCost
+          salaryCost,
+          otherExpenseTotal
         );
         const noPriceCount = rows.filter((r) => r.trip.price == null).length;
 
@@ -447,10 +453,11 @@ export function getMonthlyFinanceTool(ctx: UserRoleContext) {
           `   • Chi phí chuyến: ${vnd(summary.cost)} đ (khác ${vnd(tripCosts.other)} + thuê đối tác ${vnd(
             tripCosts.partner
           )})\n` +
+          `   • Chi phí khác (trang Chi phí khác): ${vnd(otherExpenseTotal)} đ\n` +
           `   • Tiền dầu: ${vnd(fuelTotal)} đ\n` +
           `   • Chi phí lương: ${vnd(salaryCost)} đ\n` +
           `5. Lợi nhuận: ${vnd(profit)} đ\n` +
-          `6. Số chuyến hoàn tất trong tháng: ${summary.count} chuyến${
+          `6. Số chuyến ghi nhận doanh thu trong tháng: ${summary.count} chuyến${
             noPriceCount > 0 ? ` (trong đó ${noPriceCount} chuyến chưa có giá)` : ""
           }`
         );

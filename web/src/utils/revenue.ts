@@ -10,7 +10,7 @@ export type TripMoney = {
   profit: number; // lợi nhuận = recognized − cost
 };
 
-export function tripOtherCost(trip: Trip): number {
+export function tripCost(trip: Trip): number {
   return (trip.tollCost ?? 0) + (trip.partnerCost ?? 0) + (trip.otherCost ?? 0);
 }
 
@@ -34,7 +34,7 @@ export function tripMoney(trip: Trip): TripMoney {
   const recognized = trip.price ?? 0;
   const collected =
     trip.status === "completed_paid" ? recognized : Math.min(trip.deposit ?? 0, recognized);
-  const cost = tripOtherCost(trip);
+  const cost = tripCost(trip);
   return {
     recognized,
     collected,
@@ -80,10 +80,6 @@ export function summarize(items: TripMoney[]): RevenueSummary {
     }),
     { recognized: 0, collected: 0, outstanding: 0, cost: 0, profit: 0, count: 0 }
   );
-}
-
-export function monthProfit(summary: RevenueSummary, fuelTotal: number, salaryCost = 0): number {
-  return summary.recognized - summary.cost - fuelTotal - salaryCost;
 }
 
 /**

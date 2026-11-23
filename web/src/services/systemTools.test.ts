@@ -9,6 +9,7 @@ const db = vi.hoisted(() => ({
   partnerPayoutFindMany: vi.fn(),
   officeStaffFindMany: vi.fn(),
   driverFindMany: vi.fn(),
+  otherExpenseFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -20,9 +21,11 @@ vi.mock("@/lib/prisma", () => ({
     partnerPayout: { findMany: db.partnerPayoutFindMany },
     officeStaff: { findMany: db.officeStaffFindMany },
     driver: { findMany: db.driverFindMany },
+    otherExpense: { findMany: db.otherExpenseFindMany },
   },
 }));
 
+import { buildMonthFinance } from "@/utils/revenue";
 import {
   getAvailableVehiclesTool,
   getDailySummaryTool,
@@ -87,6 +90,7 @@ beforeEach(() => {
   db.partnerPayoutFindMany.mockResolvedValue([]);
   db.officeStaffFindMany.mockResolvedValue([]);
   db.driverFindMany.mockResolvedValue([]);
+  db.otherExpenseFindMany.mockResolvedValue([]);
 });
 
 describe("systemReadTools", () => {
@@ -249,7 +253,11 @@ describe("getDailySummaryTool", () => {
     expect(out).toContain(`Chi phí chuyến (cầu đường, đối tác, khác): ${vnd(370_000)} đ`);
     expect(out).toContain("Lượt đổ dầu: 2 lượt");
     expect(out).toContain(`Tổng tiền dầu: ${vnd(500_000)} đ`);
-    expect(out).toContain(`Lợi nhuận tạm tính (Doanh thu ghi nhận - Chi phí chuyến - Tiền dầu): ${vnd(2_130_000)} đ`);
+    expect(out).toContain(
+      `• Lợi nhuận tạm tính theo ngày (chỉ trừ chi phí chuyến và tiền dầu; chưa gồm lương, chi phí khác): ${vnd(
+        2_130_000
+      )} đ`
+    );
   });
 
   it("chuyến khứ hồi đi 01/09 về 02/09: doanh thu chỉ ghi nhận ngày 02/09, không trùng ngày 01/09", async () => {
@@ -372,7 +380,204 @@ describe("getMonthlyFinanceTool", () => {
     // Lợi nhuận = 3.0M - 4.25M = -1.25M
     expect(out).toContain(`5. Lợi nhuận: ${vnd(-1_250_000)} đ`);
     // 2 chuyến hoàn tất trong tháng 9
-    expect(out).toContain("6. Số chuyến hoàn tất trong tháng: 2 chuyến");
+    expect(out).toContain("6. Số chuyến ghi nhận doanh thu trong tháng: 2 chuyến");
+  });
+
+  it("cộng chi phí khác từ trang Chi phí khác vào tổng chi phí và lợi nhuận", async () => {
+    db.tripFindMany.mockResolvedValue([
+      tripRow({
+        id: "t1",
+        outboundDate: "2026-09-01",
+        hasReturn: true,
+        returnDate: "2026-09-02",
+        returnFrom: "B",
+        returnTo: "A",
+        status: "pending",
+        price: 1_000_000,
+        deposit: 200_000,
+        tollCost: 50_000,
+      }),
+      tripRow({
+        id: "t2",
+        outboundDate: "2026-09-10",
+        status: "completed_paid",
+        price: 2_000_000,
+        deposit: 2_000_000,
+        partnerCost: 300_000,
+      }),
+    ]);
+    db.fuelEntryFindMany.mockResolvedValue([
+      {
+        id: "f1",
+        vehicleId: "v1",
+        refuelDate: "2026-09-05",
+        amount: 500_000,
+        paymentStatus: "paid",
+        paymentDate: null,
+        payerName: "",
+        note: null,
+        source: "manual",
+        createdAt: new Date("2026-09-05T00:00:00Z"),
+        updatedAt: new Date("2026-09-05T00:00:00Z"),
+      },
+    ]);
+    db.officeStaffFindMany.mockResolvedValue([
+      {
+        id: "o1",
+        name: "Office",
+        phone: null,
+        position: "Nhân viên",
+        baseSalary: 1_000_000,
+        startDate: null,
+        note: null,
+        dob: null,
+        gender: null,
+        email: null,
+        idNumber: null,
+        socialInsurance: null,
+        payday: null,
+      },
+    ]);
+    db.driverFindMany.mockResolvedValue([
+      { id: "d1", name: "Lái", phone: null, licenseClass: "B2", type: "own", baseSalary: 2_000_000, note: null },
+    ]);
+    db.partnerPayoutFindMany.mockResolvedValue([
+      {
+        id: "p1",
+        driverId: "d1",
+        workDate: "2026-09-05",
+        amount: 400_000,
+        paymentStatus: "unpaid",
+        paymentDate: null,
+        payerName: "",
+        note: null,
+        createdAt: new Date("2026-09-05T00:00:00Z"),
+        updatedAt: new Date("2026-09-05T00:00:00Z"),
+      },
+    ]);
+    db.otherExpenseFindMany.mockResolvedValue([
+      {
+        id: "oe-1",
+        date: "2026-09-07",
+        title: "Văn phòng phẩm",
+        category: "office",
+        amount: 250_000,
+        paymentStatus: "paid",
+        paymentDate: "2026-09-07",
+        payerName: "Kế toán",
+        note: null,
+        createdAt: new Date("2026-09-07T00:00:00Z"),
+        updatedAt: new Date("2026-09-07T00:00:00Z"),
+      },
+    ]);
+
+    const tool = getMonthlyFinanceTool(MANAGER);
+    const out = (await tool.execute!({ monthKey: "2026-09" }, callOptions(tool))) as string;
+
+    // Tổng chi phí = 4.25M + 250k = 4.5M
+    expect(out).toContain(`4. Tổng chi phí tháng: ${vnd(4_500_000)} đ`);
+    expect(out).toContain(`• Chi phí khác (trang Chi phí khác): ${vnd(250_000)} đ`);
+    // Lợi nhuận = 3.0M - 4.5M = -1.5M
+    expect(out).toContain(`5. Lợi nhuận: ${vnd(-1_500_000)} đ`);
+  });
+
+  it("chuỗi lợi nhuận của tool khớp buildMonthFinance tính trực tiếp từ cùng dữ liệu", async () => {
+    db.tripFindMany.mockResolvedValue([
+      tripRow({
+        id: "t1",
+        outboundDate: "2026-09-01",
+        hasReturn: true,
+        returnDate: "2026-09-02",
+        returnFrom: "B",
+        returnTo: "A",
+        status: "pending",
+        price: 1_000_000,
+        deposit: 200_000,
+        tollCost: 50_000,
+      }),
+      tripRow({
+        id: "t2",
+        outboundDate: "2026-09-10",
+        status: "completed_paid",
+        price: 2_000_000,
+        deposit: 2_000_000,
+        partnerCost: 300_000,
+      }),
+    ]);
+    db.fuelEntryFindMany.mockResolvedValue([
+      {
+        id: "f1",
+        vehicleId: "v1",
+        refuelDate: "2026-09-05",
+        amount: 500_000,
+        paymentStatus: "paid",
+        paymentDate: null,
+        payerName: "",
+        note: null,
+        source: "manual",
+        createdAt: new Date("2026-09-05T00:00:00Z"),
+        updatedAt: new Date("2026-09-05T00:00:00Z"),
+      },
+    ]);
+    db.officeStaffFindMany.mockResolvedValue([
+      {
+        id: "o1",
+        name: "Office",
+        phone: null,
+        position: "Nhân viên",
+        baseSalary: 1_000_000,
+        startDate: null,
+        note: null,
+        dob: null,
+        gender: null,
+        email: null,
+        idNumber: null,
+        socialInsurance: null,
+        payday: null,
+      },
+    ]);
+    db.driverFindMany.mockResolvedValue([
+      { id: "d1", name: "Lái", phone: null, licenseClass: "B2", type: "own", baseSalary: 2_000_000, note: null },
+    ]);
+    db.partnerPayoutFindMany.mockResolvedValue([
+      {
+        id: "p1",
+        driverId: "d1",
+        workDate: "2026-09-05",
+        amount: 400_000,
+        paymentStatus: "unpaid",
+        paymentDate: null,
+        payerName: "",
+        note: null,
+        createdAt: new Date("2026-09-05T00:00:00Z"),
+        updatedAt: new Date("2026-09-05T00:00:00Z"),
+      },
+    ]);
+    db.otherExpenseFindMany.mockResolvedValue([
+      {
+        id: "oe-1",
+        date: "2026-09-07",
+        title: "Văn phòng phẩm",
+        category: "office",
+        amount: 250_000,
+        paymentStatus: "paid",
+        paymentDate: "2026-09-07",
+        payerName: "Kế toán",
+        note: null,
+        createdAt: new Date("2026-09-07T00:00:00Z"),
+        updatedAt: new Date("2026-09-07T00:00:00Z"),
+      },
+    ]);
+
+    const { getTrips } = await import("@/services/trips");
+    const domainTrips = await getTrips();
+    const expected = buildMonthFinance(domainTrips, "2026-09", 500_000, 3_400_000, 250_000);
+
+    const tool = getMonthlyFinanceTool(MANAGER);
+    const out = (await tool.execute!({ monthKey: "2026-09" }, callOptions(tool))) as string;
+
+    expect(out).toContain(`4. Tổng chi phí tháng: ${vnd(expected.totalCost)} đ`);
+    expect(out).toContain(`5. Lợi nhuận: ${vnd(expected.profit)} đ`);
   });
 
   it("monthKey sai định dạng → báo lỗi, không truy vấn", async () => {
