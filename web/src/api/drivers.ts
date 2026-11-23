@@ -5,12 +5,16 @@ import { requireEditor } from "@/services/auth";
 import { s, optStr, optNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
+import { OK, fail, type ActionResult } from "@/utils/actionResult";
 
-export async function saveDriver(fd: FormData): Promise<void> {
+export async function saveDriver(fd: FormData): Promise<ActionResult> {
   await requireEditor();
+  const name = s(fd, "name").trim();
+  if (!name) return fail("Vui lòng nhập họ tên lái xe.");
+
   const id = s(fd, "id");
   const data = {
-    name: s(fd, "name"),
+    name,
     phone: optStr(fd, "phone"),
     licenseClass: s(fd, "licenseClass"),
     type: s(fd, "type") || "own",
@@ -24,6 +28,7 @@ export async function saveDriver(fd: FormData): Promise<void> {
     await prisma.driver.create({ data: { id: newId("d"), ...data } });
   }
   revalidateAll();
+  return OK;
 }
 
 export async function deleteDriver(fd: FormData): Promise<void> {
