@@ -48,6 +48,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-038** | 2026-11-23 | Modal Chuyến Thống Nhất (Thêm/Xem/Sửa, Ghi Chú Tự Do) | Schedule / UX |  **Đã xong** | [TASK-038](tasks/TASK-038-unified-trip-modal.md) |
 | **TASK-039** | 2026-11-23 | Form Chuyến Bố Cục Phẳng (Kiểu Ghi Chú) | Schedule / UX |  **Đã xong** | [TASK-039](tasks/TASK-039-trip-form-flat-layout.md) |
 | **TASK-040** | 2026-11-23 | Modal Chuyến Khung Cố Định, Footer Dính Đáy, Gom Dòng | Schedule / UX |  **Đã xong** | [TASK-040](tasks/TASK-040-trip-modal-fixed-frame.md) |
+| **TASK-041** | 2026-11-23 | Gộp Dòng Ngày Đi/Về, Giảm Chiều Cao Modal Chuyến | Schedule / UX |  **Đã xong** | [TASK-041](tasks/TASK-041-trip-date-row-and-height.md) |
 
 ---
 

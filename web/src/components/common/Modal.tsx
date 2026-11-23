@@ -86,7 +86,7 @@ export default function Modal({
           transition={transitionPanel}
           className={
             fixedHeight
-              ? `flex flex-col h-[min(46rem,calc(100dvh-2rem))] w-full ${maxWidthClass} overflow-hidden rounded-xl bg-white p-4 shadow-xl`
+              ? `flex flex-col h-[min(36rem,calc(100dvh-2rem))] w-full ${maxWidthClass} overflow-hidden rounded-xl bg-white p-4 shadow-xl`
               : `w-full ${maxWidthClass} rounded-xl bg-white p-5 shadow-xl`
           }
           onClick={(e) => e.stopPropagation()}
@@ -103,7 +103,7 @@ export default function Modal({
             </button>
           </div>
           {fixedHeight ? (
-            <div className="min-h-0 flex-1 overflow-y-auto scroll-thin pr-1">
+            <div className="min-h-0 flex-1 overflow-y-auto scroll-thin pr-1 flex flex-col">
               {children}
             </div>
           ) : (

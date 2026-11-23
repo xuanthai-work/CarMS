@@ -33,7 +33,7 @@ function Row({
   return (
     <div className={`grid items-center gap-x-3 gap-y-1 sm:grid-cols-[6rem_minmax(0,1fr)] ${className ?? ""}`}>
       <div className="text-sm text-slate-600">{label}</div>
-      <div className="min-w-0">{children}</div>
+      <div className="min-w-0 h-full flex flex-col">{children}</div>
     </div>
   );
 }
@@ -45,9 +45,9 @@ function Row2({
   children2,
   className,
 }: {
-  label1: string;
+  label1: React.ReactNode;
   children1: React.ReactNode;
-  label2: string;
+  label2: React.ReactNode;
   children2: React.ReactNode;
   className?: string;
 }) {
@@ -230,11 +230,11 @@ export default function TripForm({
   }, [renderFooter, canEdit, trip, isPending, formId]);
 
   return (
-    <div>
+    <div className="flex flex-1 flex-col">
       {error && (
         <div
           role="alert"
-          className="mb-3 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+          className="mb-3 shrink-0 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
         >
           <span aria-hidden>⚠️</span>
           <span>{error}</span>
@@ -244,9 +244,10 @@ export default function TripForm({
         id={formId}
         onSubmit={handleSubmit}
         onInput={() => error && setError(null)}
+        className="flex flex-1 flex-col"
       >
         {trip && <input type="hidden" name="id" value={trip.id} />}
-        <fieldset disabled={!canEdit} className={`space-y-2.5 ${!canEdit ? "opacity-90" : ""}`}>
+        <fieldset disabled={!canEdit} className={`flex flex-1 flex-col space-y-2.5 ${!canEdit ? "opacity-90" : ""}`}>
           {/* Khách · Trạng thái */}
           <Row2
             label1="Khách"
@@ -287,20 +288,19 @@ export default function TripForm({
             </Row>
           )}
 
-          {/* Ngày đi */}
-          <Row label="Ngày đi">
-            <DatePicker
-              name="o_date"
-              value={oDate}
-              onChange={changeODate}
-              disabled={!canEdit}
-            />
-          </Row>
-
-          {/* Ngày về: checkbox Về đứng trước DatePicker trên cùng dòng */}
-          <Row label="Ngày về">
-            <div className="flex items-center gap-3">
-              <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-slate-700">
+          {/* Ngày đi & Ngày về (cùng 1 dòng) */}
+          <Row2
+            label1="Ngày đi"
+            children1={
+              <DatePicker
+                name="o_date"
+                value={oDate}
+                onChange={changeODate}
+                disabled={!canEdit}
+              />
+            }
+            label2={
+              <label className="flex cursor-pointer items-center gap-1.5">
                 <input
                   type="checkbox"
                   name="hasReturn"
@@ -310,18 +310,18 @@ export default function TripForm({
                 />
                 <span>Về</span>
               </label>
-              {hasReturn && (
-                <div className="min-w-0 flex-1">
-                  <DatePicker
-                    name="r_date"
-                    value={rDate}
-                    onChange={setRDate}
-                    disabled={!canEdit}
-                  />
-                </div>
-              )}
-            </div>
-          </Row>
+            }
+            children2={
+              hasReturn ? (
+                <DatePicker
+                  name="r_date"
+                  value={rDate}
+                  onChange={setRDate}
+                  disabled={!canEdit}
+                />
+              ) : null
+            }
+          />
 
           {/* Giờ đón: TimePicker (chọn giờ HH:mm) */}
           {hasReturn ? (
@@ -452,12 +452,12 @@ export default function TripForm({
           )}
 
           {/* Ghi chú */}
-          <Row label="Ghi chú" className="!items-start pt-1">
+          <Row label="Ghi chú" className="!items-start pt-1 flex-1 min-h-[4.5rem]">
             <textarea
               name="note"
-              rows={5}
+              rows={3}
               defaultValue={trip?.note ?? ""}
-              className={`${inputCls} min-h-[6rem] resize-y`}
+              className={`${inputCls} h-full min-h-[4.5rem] resize-none`}
             />
           </Row>
         </fieldset>
