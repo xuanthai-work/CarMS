@@ -1,16 +1,14 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { cardMotion } from "@/utils/motion";
 import { saveVehicle, deleteVehicle } from "@/api/vehicles";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS, seatLabel, statusLabel, ownerLabel } from "@/utils/vehicles";
-import { DetailCell, Field, FormError, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
-import EditIconButton from "@/components/common/EditIconButton";
+import { DetailCell, Field, FormError, Info, inputCls } from "@/components/common/ui";
+import Button from "@/components/common/Button";
+import SideDrawer from "@/components/common/SideDrawer";
 import SelectMenu from "@/components/common/SelectMenu";
 import DatePicker from "@/components/common/DatePicker";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
-import Modal from "@/components/common/Modal";
 import { fmtDate } from "@/utils/format";
 import { useFormState } from "@/hooks/common/useFormState";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
@@ -31,11 +29,9 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     insuranceDue: v.insuranceDue ?? "",
   });
   const { canEdit } = usePermissions();
-  const [editing, setEditing] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const reduceMotion = useReducedMotion();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -43,7 +39,6 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
     setError(null);
     formRef.current?.reset();
     reset();
-    setEditing(false);
     setDetailOpen(false);
   }
 
@@ -67,41 +62,6 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
       setDetailOpen(true);
     }
   }
-
-  const editForm = () => (
-    <>
-      <FormError message={error} />
-      <form id={`veh-${v.id}`} ref={formRef} onSubmit={handleSubmit} onInput={() => error && setError(null)}>
-        <input type="hidden" name="id" value={v.id} />
-        {/* Thứ tự + span phải khớp block xem ở dưới, lệch là bấm ✎ thấy field nhảy ô. */}
-        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
-          <DetailCell><Field label="Biển số"><input name="plate" defaultValue={v.plate} className={inputCls} /></Field></DetailCell>
-          <DetailCell><Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field></DetailCell>
-          <DetailCell><Field label="Trạng thái"><SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} /></Field></DetailCell>
-          <DetailCell><Field label="Sở hữu"><SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} /></Field></DetailCell>
-          {form.type === "partner" ? (
-            <DetailCell><Field label="SĐT / Zalo"><input name="phone" defaultValue={v.phone ?? ""} placeholder="Số điện thoại / Zalo" className={inputCls} /></Field></DetailCell>
-          ) : (
-            <>
-              <DetailCell><Field label="Hạn đăng kiểm"><DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} /></Field></DetailCell>
-              <DetailCell><Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field></DetailCell>
-            </>
-          )}
-          {/* xe đối tác chỉ có 5 ô nên Ghi chú nằm gọn bên phải hàng 3; xe công ty có 6 ô nên phải giãn full-width */}
-          <DetailCell className={form.type === "partner" ? "" : "sm:col-span-2"}><Field label="Ghi chú"><input name="note" defaultValue={v.note} className={inputCls} /></Field></DetailCell>
-        </div>
-      </form>
-      <div className="mt-3 flex items-center justify-between">
-        <ConfirmDeleteButton action={deleteVehicle} id={v.id} label={`xe ${v.plate}`} />
-        <div className="flex gap-2">
-          <CancelButton onClick={closeModal} />
-          <SaveButton form={`veh-${v.id}`}>
-            {isPending ? "Đang lưu..." : "Lưu"}
-          </SaveButton>
-        </div>
-      </div>
-    </>
-  );
 
   return (
     <>
@@ -129,30 +89,42 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
       </div>
 
       {detailOpen && (
-        <Modal title={editing ? "Chỉnh sửa xe" : "Thông tin xe"} onClose={closeModal} maxWidthClass="max-w-2xl">
-          {editing ? (
-            <motion.div {...cardMotion(reduceMotion)}>{editForm()}</motion.div>
-          ) : (
-            <>
-              <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
-                <DetailCell><Info label="Biển số" value={v.plate} size="md" /></DetailCell>
-                <DetailCell><Info label="Loại xe" value={seatLabel(v.seats)} size="md" /></DetailCell>
-                <DetailCell><Info label="Trạng thái" value={statusLabel(v.status)} size="md" /></DetailCell>
-                <DetailCell><Info label="Sở hữu" value={ownerLabel(v.type)} size="md" /></DetailCell>
-                {v.type === "partner" ? <DetailCell><Info label="SĐT / Zalo" value={v.phone || "—"} size="md" /></DetailCell> : <>
-                  <DetailCell><Info label="Hạn đăng kiểm" value={fmtDate(v.inspectionDue)} size="md" /></DetailCell>
-                  <DetailCell><Info label="Hạn bảo hiểm" value={fmtDate(v.insuranceDue)} size="md" /></DetailCell>
-                </>}
-                <DetailCell className={v.type === "partner" ? "" : "sm:col-span-2"}><Info label="Ghi chú" value={v.note || "—"} size="md" /></DetailCell>
-              </div>
+        <SideDrawer
+          title={`Xe ${v.plate}`}
+          onClose={closeModal}
+          footer={
+            <div className="flex w-full items-center justify-between">
+              {canEdit ? <ConfirmDeleteButton action={deleteVehicle} id={v.id} label={`xe ${v.plate}`} /> : <span />}
               {canEdit && (
-                <div className="mt-5 flex justify-end border-t border-hairline pt-4">
-                  <EditIconButton onClick={() => { setError(null); setEditing(true); }} />
-                </div>
+                <Button type="submit" form={`veh-${v.id}`} disabled={isPending}>
+                  {isPending ? "Đang lưu..." : "Lưu"}
+                </Button>
               )}
-            </>
-          )}
-        </Modal>
+            </div>
+          }
+        >
+          <FormError message={error} />
+          <form id={`veh-${v.id}`} ref={formRef} onSubmit={handleSubmit} onInput={() => error && setError(null)}>
+            <input type="hidden" name="id" value={v.id} />
+            <fieldset disabled={!canEdit} className="space-y-3">
+              <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
+                <DetailCell><Field label="Biển số"><input name="plate" defaultValue={v.plate} className={inputCls} /></Field></DetailCell>
+                <DetailCell><Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field></DetailCell>
+                <DetailCell><Field label="Trạng thái"><SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} /></Field></DetailCell>
+                <DetailCell><Field label="Sở hữu"><SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} /></Field></DetailCell>
+                {form.type === "partner" ? (
+                  <DetailCell><Field label="SĐT / Zalo"><input name="phone" defaultValue={v.phone ?? ""} placeholder="Số điện thoại / Zalo" className={inputCls} /></Field></DetailCell>
+                ) : (
+                  <>
+                    <DetailCell><Field label="Hạn đăng kiểm"><DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} /></Field></DetailCell>
+                    <DetailCell><Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field></DetailCell>
+                  </>
+                )}
+                <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={v.note} className={inputCls} /></Field></DetailCell>
+              </div>
+            </fieldset>
+          </form>
+        </SideDrawer>
       )}
     </>
   );
