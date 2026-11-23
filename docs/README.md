@@ -32,6 +32,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-022** | 2026-11-23 | Ẩn Người Nghỉ Việc Khỏi Ô Chọn Lái Xe Và Chặn Đăng Nhập | HR / Auth / Dispatch Calendar |  **Đã xong** | [TASK-022](tasks/TASK-022-hide-left-people-and-block-login.md) |
 | **TASK-023** | 2026-11-23 | Xóa Code Chết (Clean Code Đợt 1) | Code Quality |  **Đã xong** | [TASK-023](tasks/TASK-023-remove-dead-code.md) |
 | **TASK-024** | 2026-11-23 | Tách systemTools.ts Theo Nhóm Tool (Clean Code Đợt 2) | Code Quality / AI Assistant |  **Đã xong** | [TASK-024](tasks/TASK-024-split-system-tools.md) |
+| **TASK-025** | 2026-11-23 | Xóa Script watch:task Mồ Côi | Tooling |  **Đã xong** | [TASK-025](tasks/TASK-025-remove-watch-task-script.md) |
 
 ---
 
