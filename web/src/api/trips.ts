@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireEditor, requireManagerEditor } from "@/services/auth";
 import { s, optStr, optNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
-import { tourTypeFromDates } from "@/utils/trips";
+import { tourTypeFromDates, tripFinishDate } from "@/utils/trips";
 import { revalidateAll } from "./revalidate";
 
 /** Ghép các cột phẳng của một lượt (đi = "o", về = "r") từ FormData. */
@@ -65,13 +65,20 @@ export async function saveTrip(fd: FormData): Promise<void> {
   } else {
     await prisma.trip.create({ data: { id: tripId, ...data } });
   }
-  await syncPartnerDebt(tripId, data.outboundVehicleId, data.returnVehicleId, data.partnerCost, data.outboundDate);
+  await syncPartnerDebt(
+    tripId,
+    data.outboundVehicleId,
+    data.returnVehicleId,
+    data.partnerCost,
+    tripFinishDate(data.outboundDate, data.returnDate)
+  );
   revalidateAll();
 }
 
 /**
  * Đồng bộ phiếu công nợ tiền thuê đối tác theo chuyến.
  * - Có xe đối tác + partnerCost > 0  → tạo/cập nhật 1 phiếu (giữ nguyên trạng thái đã trả).
+ * - workDate = ngày hoàn tất của chuyến (returnDate ?? outboundDate).
  * - Ngược lại (xe nhà / partnerCost = 0) → xoá phiếu nếu có.
  * Khi tripId rỗng (chuyến mới chưa tạo) thì bỏ qua.
  */
@@ -80,7 +87,7 @@ async function syncPartnerDebt(
   outboundVehicleId: string | null,
   returnVehicleId: string | null,
   partnerCost: number | null,
-  outboundDate: string
+  workDate: string
 ): Promise<void> {
   if (!tripId) return;
   const selectedVehIds = [outboundVehicleId, returnVehicleId].filter(Boolean) as string[];
@@ -100,7 +107,7 @@ async function syncPartnerDebt(
     if (existingDebt) {
       await prisma.partnerDebt.update({
         where: { tripId },
-        data: { partnerName, workDate: outboundDate, amount: cost },
+        data: { partnerName, workDate, amount: cost },
       });
     } else {
       await prisma.partnerDebt.create({
@@ -108,7 +115,7 @@ async function syncPartnerDebt(
           id: newId("pd"),
           tripId,
           partnerName,
-          workDate: outboundDate,
+          workDate,
           amount: cost,
           paymentStatus: "unpaid",
         },

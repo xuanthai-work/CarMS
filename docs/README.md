@@ -27,6 +27,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-017** | 2026-10-23 | Chống Double-Submit / Multi-Click Khi Thêm & Sửa Chuyến | Dispatch Calendar / Core UI & Data Integrity |  **Đã xong** | [TASK-017](tasks/TASK-017-chong-duplicate-trip-submit.md) |
 | **TASK-018** | 2026-11-02 | Sửa Cảnh Báo Supabase Auth getSession & Xử Lý Lỗi Form Thêm Chuyến | Auth & Security / Dispatch Calendar Form |  **Đã xong** | [TASK-018](tasks/TASK-018-sua-supabase-auth-va-loi-trip-form.md) |
 | **TASK-019** | 2026-11-23 | Đồng Bộ Số Liệu Tài Chính Của Trợ Lý AI Với Màn Doanh Thu | AI Assistant / Operational Finance |  **Đã xong** | [TASK-019](tasks/TASK-019-ai-finance-tools-align.md) |
+| **TASK-020** | 2026-11-23 | Công Nợ Đối Tác Tính Theo Ngày Về | Partner Debt / Operational Finance |  **Đã xong** | [TASK-020](tasks/TASK-020-partner-debt-workdate-return.md) |
 
 ---
 

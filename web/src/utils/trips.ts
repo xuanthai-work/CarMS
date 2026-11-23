@@ -31,6 +31,11 @@ export function tourTypeFromDates(outboundDate: string, returnDate: string | nul
   return "4n3d"; // 3+ đêm: gộp về mức cao nhất trong enum
 }
 
+/** Ngày hoàn tất của chuyến: có lượt về thì ngày về, ngược lại ngày đi (cùng quy tắc revenueMonthKey). */
+export function tripFinishDate(outboundDate: string, returnDate: string | null | undefined): string {
+  return returnDate || outboundDate;
+}
+
 /** Chỉ xe thuê ngoài mới phát sinh ô nhập tiền thuê đối tác; loại tài xế không ảnh hưởng. */
 export function hasPartnerVehicle(
   vehicleIds: Array<string | null | undefined>,

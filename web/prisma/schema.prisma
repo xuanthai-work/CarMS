@@ -176,7 +176,7 @@ model PartnerDebt {
   id            String   @id
   tripId        String   @unique
   partnerName   String   // Tên / biển số xe đối tác
-  workDate      String   // Ngày thực hiện chuyến (YYYY-MM-DD)
+  workDate      String   // Ngày hoàn tất chuyến (returnDate ?? outboundDate) (YYYY-MM-DD)
   amount        Float    // Tiền thuê đối tác (VND)
   paymentStatus String   @default("unpaid") // 'paid' | 'unpaid'
   paymentDate   String?  // YYYY-MM-DD
