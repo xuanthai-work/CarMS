@@ -1,14 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import type { PartnerDebt, PartnerDebtPaymentStatus } from "@/types";
-import { addMonth } from "@/utils/format";
+import { monthRange } from "@/utils/format";
 
 export async function getPartnerDebts(monthKey?: string | null): Promise<PartnerDebt[]> {
   const where = monthKey
     ? {
-        workDate: {
-          gte: `${monthKey}-01`,
-          lt: `${addMonth(monthKey, 1)}-01`,
-        },
+        workDate: monthRange(monthKey),
       }
     : undefined; // null/không truyền: lấy tất cả các khoản (để xem nợ tồn đọng)
 

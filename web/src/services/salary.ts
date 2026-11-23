@@ -4,7 +4,7 @@ import type {
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { SalaryMonth, PartnerPayout } from "@/types";
-import { addMonth } from "@/utils/format";
+import { monthRange } from "@/utils/format";
 
 function toSalaryMonth(r: SalaryMonthRow): SalaryMonth {
   return {
@@ -45,7 +45,7 @@ export async function getSalaryMonths(monthKey?: string): Promise<SalaryMonth[]>
 
 export async function getPartnerPayouts(monthKey?: string): Promise<PartnerPayout[]> {
   const where = monthKey
-    ? { workDate: { gte: `${monthKey}-01`, lt: `${addMonth(monthKey, 1)}-01` } }
+    ? { workDate: monthRange(monthKey) }
     : undefined;
   const rows = await prisma.partnerPayout.findMany({
     where,

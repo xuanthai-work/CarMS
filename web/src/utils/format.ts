@@ -86,3 +86,9 @@ export function addMonth(monthKey: string, delta: number): string {
   const d = new Date(y, m - 1 + delta, 1);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
+
+/** "2026-09" -> { gte: "2026-09-01", lt: "2026-10-01" } — điều kiện nửa mở cho cột ngày dạng chuỗi YYYY-MM-DD. */
+export function monthRange(monthKey: string): { gte: string; lt: string } {
+  return { gte: `${monthKey}-01`, lt: `${addMonth(monthKey, 1)}-01` };
+}
+

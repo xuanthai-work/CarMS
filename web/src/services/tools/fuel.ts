@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { addMonth, monthLabel } from "@/utils/format";
+import { monthLabel, monthRange } from "@/utils/format";
 import { dateRange, resolveRange, type UserRoleContext, vnd } from "./shared";
 
 /**
@@ -31,7 +31,7 @@ export function getFuelHistoryTool(ctx: UserRoleContext) {
           filters.push({ vehicle: { plate: { contains: vehiclePlate.trim(), mode: "insensitive" } } });
         }
         if (key) {
-          filters.push({ refuelDate: { gte: `${key}-01`, lt: `${addMonth(key, 1)}-01` } });
+          filters.push({ refuelDate: monthRange(key) });
         } else if (fromDate?.trim() || toDate?.trim()) {
           const { from, to } = resolveRange(fromDate, toDate);
           filters.push({ refuelDate: dateRange(from, to) });

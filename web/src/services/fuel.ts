@@ -1,7 +1,8 @@
 import type { FuelEntry as FuelEntryRow } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { FuelEntry, FuelPaymentStatus } from "@/types";
-import { addMonth, monthKeyOf } from "@/utils/format";
+import { monthRange } from "@/utils/format";
+import { type PaymentTotals, sumByMonth, sumByPaymentStatus } from "@/utils/totals";
 
 function toFuelEntry(r: FuelEntryRow): FuelEntry {
   return {
@@ -22,10 +23,7 @@ function toFuelEntry(r: FuelEntryRow): FuelEntry {
 export async function getFuelEntries(monthKey?: string): Promise<FuelEntry[]> {
   const where = monthKey
     ? {
-        refuelDate: {
-          gte: `${monthKey}-01`,
-          lt: `${addMonth(monthKey, 1)}-01`,
-        },
+        refuelDate: monthRange(monthKey),
       }
     : undefined;
   const rows = await prisma.fuelEntry.findMany({
@@ -35,32 +33,13 @@ export async function getFuelEntries(monthKey?: string): Promise<FuelEntry[]> {
   return rows.map(toFuelEntry);
 }
 
-export async function getFuelMonthTotals(monthKey: string): Promise<{
-  total: number;
-  paid: number;
-  unpaid: number;
-  count: number;
-}> {
+export async function getFuelMonthTotals(monthKey: string): Promise<PaymentTotals> {
   const entries = await getFuelEntries(monthKey);
-  return entries.reduce(
-    (acc, entry) => {
-      acc.total += entry.amount;
-      acc.count += 1;
-      if (entry.paymentStatus === "paid") acc.paid += entry.amount;
-      else acc.unpaid += entry.amount;
-      return acc;
-    },
-    { total: 0, paid: 0, unpaid: 0, count: 0 }
-  );
+  return sumByPaymentStatus(entries);
 }
 
 /** Tổng tiền dầu theo từng tháng (YYYY-MM) — 1 query, gom ở JS (thay vì N query/tháng). */
 export async function getFuelMonthMap(): Promise<Map<string, number>> {
   const rows = await prisma.fuelEntry.findMany({ select: { refuelDate: true, amount: true } });
-  const map = new Map<string, number>();
-  for (const r of rows) {
-    const k = monthKeyOf(r.refuelDate);
-    map.set(k, (map.get(k) ?? 0) + r.amount);
-  }
-  return map;
+  return sumByMonth(rows, (r) => r.refuelDate, (r) => r.amount);
 }
