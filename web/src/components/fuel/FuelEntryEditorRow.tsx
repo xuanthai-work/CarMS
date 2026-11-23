@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Button from "@/components/common/Button";
+import SideDrawer from "@/components/common/SideDrawer";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import DatePicker from "@/components/common/DatePicker";
 import Combobox from "@/components/common/Combobox";
@@ -10,7 +11,7 @@ import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import { deleteFuelEntry, saveFuelEntry } from "@/api/fuel";
 import { companyVehicles } from "@/utils/vehicles";
 import { fmtDate } from "@/utils/format";
-import { DetailCell, Field, inputCls } from "@/components/common/ui";
+import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
 import type { FuelEntry, Vehicle } from "@/types";
 
 /** Bề rộng cột bảng tiền dầu — DÙNG CHUNG cho header (FuelScreen). Giữ nguyên. */
@@ -39,6 +40,7 @@ export default function FuelEntryForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const formId = "fuel-entry-form";
   const [isPending, startTransition] = useTransition();
   const [vehicleId, setVehicleId] = useState(entry?.vehicleId ?? "");
   const [refuelDate, setRefuelDate] = useState(entry?.refuelDate ?? defaultDate);
@@ -52,80 +54,110 @@ export default function FuelEntryForm({
     [vehicles],
   );
 
-  function submitForm(fd: FormData) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (isPending) return;
     if (!vehicleId) return setErr("Vui lòng chọn xe.");
+    const fd = new FormData(e.currentTarget);
     const amt = String(fd.get("amount") || "").replace(/[^\d]/g, "");
     if (!amt) return setErr("Vui lòng nhập số tiền.");
     setErr(null);
     startTransition(async () => {
-      await saveFuelEntry(fd);
+      const r = await saveFuelEntry(fd);
+      if (!r.ok) {
+        setErr(r.error);
+        return;
+      }
       onDone();
     });
   }
 
   return (
-    <form action={submitForm} className="space-y-3">
-      {entry && <input type="hidden" name="id" value={entry.id} />}
-      <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
-        <DetailCell>
-          <Field label="Ngày đổ"><DatePicker name="refuelDate" value={refuelDate} onChange={setRefuelDate} /></Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Xe">
-            <Combobox
-              name="vehicleId"
-              value={vehicleId}
-              onChange={setVehicleId}
-              options={vehicleOptions}
-              placeholder="Chọn xe…"
-              emptyText="Không thấy xe"
+    <SideDrawer
+      title={entry ? "Sửa phiếu dầu" : "Thêm phiếu dầu"}
+      onClose={onCancel}
+      footer={
+        entry ? (
+          <div className="flex w-full items-center justify-between">
+            <ConfirmDeleteButton
+              action={deleteFuelEntry}
+              id={entry.id}
+              label={`phiếu dầu ngày ${fmtDate(entry.refuelDate)}`}
             />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Số tiền"><MoneyInput name="amount" defaultValue={entry?.amount ?? null} required placeholder="Số tiền" /></Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Người đổ"><input name="payerName" defaultValue={entry?.payerName ?? ""} placeholder="Người đổ" className={inputCls} /></Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Trạng thái"><FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} /></Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Ngày thanh toán">
-            <DatePicker name="paymentDate" value={paymentStatus === "paid" ? paymentDate : ""} onChange={setPaymentDate} disabled={paymentStatus !== "paid"} />
-          </Field>
-        </DetailCell>
-        <DetailCell className="sm:col-span-2">
-          <Field label="Ghi chú"><input name="note" defaultValue={entry?.note ?? ""} placeholder="Ghi chú" className={inputCls} /></Field>
-        </DetailCell>
-      </div>
-      {err && <div className="text-sm font-medium text-rose-600">{err}</div>}
-      <div className="flex items-center justify-between gap-2 border-t border-hairline pt-3">
-        {entry ? (
-          <ConfirmDeleteButton
-            action={deleteFuelEntry}
-            id={entry.id}
-            label={`phiếu dầu ngày ${fmtDate(entry.refuelDate)}`}
-          />
+            <Button type="submit" form={formId} disabled={isPending}>
+              {isPending ? "Đang lưu…" : "Lưu"}
+            </Button>
+          </div>
         ) : (
-          <span />
-        )}
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={onCancel}>
-            Hủy
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending
-              ? entry
-                ? "Đang lưu…"
-                : "Đang thêm…"
-              : entry
-              ? "Lưu"
-              : "Thêm phiếu dầu"}
-          </Button>
+          <>
+            <Button variant="secondary" onClick={onCancel}>
+              Hủy
+            </Button>
+            <Button type="submit" form={formId} disabled={isPending}>
+              {isPending ? "Đang thêm…" : "Thêm phiếu dầu"}
+            </Button>
+          </>
+        )
+      }
+    >
+      <FormError message={err} />
+      <form
+        id={formId}
+        onSubmit={handleSubmit}
+        onInput={() => err && setErr(null)}
+        className="space-y-3"
+      >
+        {entry && <input type="hidden" name="id" value={entry.id} />}
+        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
+          <DetailCell>
+            <Field label="Ngày đổ">
+              <DatePicker name="refuelDate" value={refuelDate} onChange={setRefuelDate} />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Xe">
+              <Combobox
+                name="vehicleId"
+                value={vehicleId}
+                onChange={setVehicleId}
+                options={vehicleOptions}
+                placeholder="Chọn xe…"
+                emptyText="Không thấy xe"
+              />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Số tiền">
+              <MoneyInput name="amount" defaultValue={entry?.amount ?? null} required placeholder="Số tiền" />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Người đổ">
+              <input name="payerName" defaultValue={entry?.payerName ?? ""} placeholder="Người đổ" className={inputCls} />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Trạng thái">
+              <FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Ngày thanh toán">
+              <DatePicker
+                name="paymentDate"
+                value={paymentStatus === "paid" ? paymentDate : ""}
+                onChange={setPaymentDate}
+                disabled={paymentStatus !== "paid"}
+              />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Ghi chú">
+              <input name="note" defaultValue={entry?.note ?? ""} placeholder="Ghi chú" className={inputCls} />
+            </Field>
+          </DetailCell>
         </div>
-      </div>
-    </form>
+      </form>
+    </SideDrawer>
   );
 }

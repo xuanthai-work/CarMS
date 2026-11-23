@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import FuelEntryForm, {
   FuelColgroup,
 } from "@/components/fuel/FuelEntryEditorRow";
-import Modal from "@/components/common/Modal";
 import FilterTabs from "@/components/common/FilterTabs";
 import { useDismiss } from "@/hooks/common/useDismiss";
 import { addMonth, fmtDate, monthLabel } from "@/utils/format";
@@ -325,29 +324,20 @@ export default function FuelScreen({
         const editing = editingId ? rows.find((e) => e.id === editingId) : undefined;
         if (editingId && !editing) return null;
         return (
-          <Modal
-            title={editing ? "Sửa phiếu dầu" : "Thêm phiếu dầu"}
-            onClose={() => {
+          <FuelEntryForm
+            entry={editing}
+            vehicles={vehicles}
+            defaultDate={editing ? editing.refuelDate : `${monthKey}-01`}
+            onDone={() => {
+              setAdding(false);
+              setEditingId(null);
+              router.refresh();
+            }}
+            onCancel={() => {
               setAdding(false);
               setEditingId(null);
             }}
-            maxWidthClass="max-w-2xl"
-          >
-            <FuelEntryForm
-              entry={editing}
-              vehicles={vehicles}
-              defaultDate={editing ? editing.refuelDate : `${monthKey}-01`}
-              onDone={() => {
-                setAdding(false);
-                setEditingId(null);
-                router.refresh();
-              }}
-              onCancel={() => {
-                setAdding(false);
-                setEditingId(null);
-              }}
-            />
-          </Modal>
+          />
         );
       })()}
     </div>
