@@ -284,6 +284,28 @@ describe("getDailySummaryTool", () => {
     // Ngày về: mới ghi nhận doanh thu.
     expect(out0209).toContain(`Doanh thu ghi nhận: ${vnd(1_000_000)} đ`);
   });
+
+  it("chuyến khứ hồi có hasReturn=true nhưng returnDate=null: không ghi nhận doanh thu ngày đi", async () => {
+    db.tripFindMany.mockResolvedValue([
+      tripRow({
+        id: "r_no_return",
+        outboundDate: "2026-07-15",
+        hasReturn: true,
+        returnDate: null,
+        status: "pending",
+        price: 1_500_000,
+        deposit: 500_000,
+      }),
+    ]);
+    db.fuelEntryFindMany.mockResolvedValue([]);
+
+    const tool = getDailySummaryTool(MANAGER);
+    const out = (await tool.execute!({ date: "2026-07-15" }, callOptions(tool))) as string;
+
+    expect(out).toContain("Lượt chuyến hoạt động: 1");
+    expect(out).toContain("Số chuyến hoàn tất hôm nay: 0");
+    expect(out).toContain(`Doanh thu ghi nhận: ${vnd(0)} đ`);
+  });
 });
 
 describe("getMonthlyFinanceTool", () => {

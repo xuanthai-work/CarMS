@@ -6,7 +6,7 @@ import type { Trip, TourType } from "@/types";
  * Prisma lưu lượt đi/về ở dạng cột phẳng (outboundDate, returnDate, ...);
  * mapper dưới đây chuyển về đúng model của app (Trip có outbound/return lồng nhau).
  */
-function toTrip(r: TripRow): Trip {
+export function toTrip(r: TripRow): Trip {
   return {
     id: r.id,
     customerName: r.customerName,

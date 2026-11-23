@@ -1,11 +1,10 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import type { Trip } from "@/types";
 import { monthKeyOf, monthLabel, todayStr } from "@/utils/format";
-import { buildMonthFinance, tripMoney } from "@/utils/revenue";
+import { buildMonthFinance, summarize, tripMoney } from "@/utils/revenue";
 import { buildSalaryRows, salariedPeople, salaryCostForMonth } from "@/utils/salary";
-import { getTrips } from "@/services/trips";
+import { getTrips, toTrip } from "@/services/trips";
 import { getFuelMonthTotals } from "@/services/fuel";
 import { getOtherExpenseMonthTotals } from "@/services/expenses";
 import { getSalaryMonths, getPartnerPayouts } from "@/services/salary";
@@ -40,18 +39,6 @@ export function getDailySummaryTool(ctx: UserRoleContext) {
         // Tập VẬN HÀNH: mọi chuyến có lượt đi hoặc lượt về trong ngày.
         const trips = await prisma.trip.findMany({
           where: { OR: [{ outboundDate: targetDate }, { returnDate: targetDate }] },
-          select: {
-            id: true,
-            price: true,
-            deposit: true,
-            status: true,
-            tollCost: true,
-            partnerCost: true,
-            otherCost: true,
-            outboundDate: true,
-            returnDate: true,
-            hasReturn: true,
-          },
         });
 
         const totalOps = trips.length;
@@ -66,11 +53,7 @@ export function getDailySummaryTool(ctx: UserRoleContext) {
         const finished = trips.filter(
           (t) => (t.hasReturn ? t.returnDate : t.outboundDate) === targetDate
         );
-        const moneys = finished.map((t) => tripMoney(t as unknown as Trip));
-        const totalRevenue = moneys.reduce((acc, m) => acc + m.recognized, 0);
-        const totalCollected = moneys.reduce((acc, m) => acc + m.collected, 0);
-        const totalOutstanding = moneys.reduce((acc, m) => acc + m.outstanding, 0);
-        const totalTripCosts = moneys.reduce((acc, m) => acc + m.cost, 0);
+        const money = summarize(finished.map((t) => tripMoney(toTrip(t))));
 
         // Tiền dầu trong ngày.
         const fuelEntries = await prisma.fuelEntry.findMany({
@@ -86,15 +69,15 @@ export function getDailySummaryTool(ctx: UserRoleContext) {
           `• Lượt chuyến hoạt động: ${totalOps} (Đã xong: ${completedOps}, Đang chạy/chờ: ${activeOps}, Đã hủy: ${cancelledOps})\n\n` +
           `2. Tài chính — doanh thu ghi nhận theo NGÀY HOÀN TẤT ${targetDate}:\n` +
           `• Số chuyến hoàn tất hôm nay: ${finished.length}\n` +
-          `• Doanh thu ghi nhận: ${vnd(totalRevenue)} đ\n` +
-          `• Đã thu (cọc/thu trước): ${vnd(totalCollected)} đ\n` +
-          `• Còn phải thu: ${vnd(totalOutstanding)} đ\n` +
-          `• Chi phí chuyến (cầu đường, đối tác, khác): ${vnd(totalTripCosts)} đ\n\n` +
+          `• Doanh thu ghi nhận: ${vnd(money.recognized)} đ\n` +
+          `• Đã thu (cọc/thu trước): ${vnd(money.collected)} đ\n` +
+          `• Còn phải thu: ${vnd(money.outstanding)} đ\n` +
+          `• Chi phí chuyến (cầu đường, đối tác, khác): ${vnd(money.cost)} đ\n\n` +
           `3. Tiêu hao nhiên liệu (Tiền dầu):\n` +
           `• Lượt đổ dầu: ${totalFuelCount} lượt\n` +
           `• Tổng tiền dầu: ${vnd(totalFuelCost)} đ\n\n` +
           `• Lợi nhuận tạm tính theo ngày (chỉ trừ chi phí chuyến và tiền dầu; chưa gồm lương, chi phí khác): ${vnd(
-            totalRevenue - totalTripCosts - totalFuelCost
+            money.recognized - money.cost - totalFuelCost
           )} đ`
         );
       } catch (err) {
