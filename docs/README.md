@@ -36,6 +36,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-026** | 2026-11-23 | Báo Cáo Ngày Dùng Hàm Tính Tiền Chuẩn (Clean Code Đợt 3) | Code Quality / AI Assistant |  **Đã xong** | [TASK-026](tasks/TASK-026-daily-summary-use-shared-money.md) |
 | **TASK-027** | 2026-11-23 | Gom Truy Vấn Và Phép Tổng Theo Tháng Bị Lặp (Clean Code Đợt 4) | Code Quality / Operational Finance |  **Đã xong** | [TASK-027](tasks/TASK-027-dedupe-month-queries.md) |
 | **TASK-028** | 2026-11-23 | Sửa Xung Đột File Icon Trùng | Tooling / Frontend |  **Đã xong** | [TASK-028](tasks/TASK-028-fix-duplicate-icon-files.md) |
+| **TASK-029** | 2026-11-23 | Tạm Tắt Trợ Lý AI | AI Assistant / Layout |  **Đã xong** | [TASK-029](tasks/TASK-029-disable-ai-assistant.md) |
 
 ---
 

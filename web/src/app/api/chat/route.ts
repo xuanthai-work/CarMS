@@ -6,6 +6,7 @@ import { hasTavilyKey } from "@/services/tavily";
 import { systemReadTools } from "@/services/systemTools";
 import { buildSystemPrompt } from "@/configs/systemPrompt";
 import { isManager } from "@/utils/office";
+import { AI_ASSISTANT_ENABLED } from "@/configs/features";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -25,6 +26,10 @@ const VN_DATETIME = new Intl.DateTimeFormat("vi-VN", {
 });
 
 export async function POST(req: Request) {
+  if (!AI_ASSISTANT_ENABLED) {
+    return new Response("Trợ lý AI đang tạm tắt", { status: 410 });
+  }
+
   const user = await getCurrentUser();
   if (!user) return new Response("Chưa đăng nhập", { status: 401 });
 
