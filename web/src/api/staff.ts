@@ -5,8 +5,9 @@ import { requireManagerEditor } from "@/services/auth";
 import { s, optStr, optNum, dayOfMonth } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
+import { OK, fail, type ActionResult } from "@/utils/actionResult";
 
-export async function saveOfficeStaff(fd: FormData): Promise<void> {
+export async function saveOfficeStaff(fd: FormData): Promise<ActionResult> {
   await requireManagerEditor();
   const id = s(fd, "id");
   const data = {
@@ -30,7 +31,7 @@ export async function saveOfficeStaff(fd: FormData): Promise<void> {
       where: { email: { equals: data.email, mode: "insensitive" }, ...(id ? { id: { not: id } } : {}) },
       select: { id: true },
     });
-    if (dup) throw new Error("Email này đã được gán cho nhân sự khác");
+    if (dup) return fail("Email này đã được gán cho nhân sự khác.");
   }
   if (id) {
     await prisma.officeStaff.update({ where: { id }, data });
@@ -38,6 +39,7 @@ export async function saveOfficeStaff(fd: FormData): Promise<void> {
     await prisma.officeStaff.create({ data: { id: newId("os"), ...data } });
   }
   revalidateAll();
+  return OK;
 }
 
 export async function deleteOfficeStaff(fd: FormData): Promise<void> {

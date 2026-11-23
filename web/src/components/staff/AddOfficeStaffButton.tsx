@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { saveOfficeStaff } from "@/api/staff";
 import Modal from "@/components/common/Modal";
 import MoneyInput from "@/components/common/MoneyInput";
 import DatePicker from "@/components/common/DatePicker";
 import SelectMenu from "@/components/common/SelectMenu";
-import { DetailCell, Field, inputCls } from "@/components/common/ui";
+import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
 import { OFFICE_POSITIONS, GENDERS } from "@/utils/office";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
@@ -15,13 +15,29 @@ const EMPTY_FORM = { startDate: "", position: "Nhân viên", dob: "", gender: ""
 export default function AddOfficeStaffButton() {
   const { canEdit } = usePermissions();
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState(EMPTY_FORM);
   const set = (k: keyof typeof EMPTY_FORM) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  async function handleAdd(fd: FormData) {
-    await saveOfficeStaff(fd);
+  function handleClose() {
+    setError(null);
     setForm(EMPTY_FORM);
     setOpen(false);
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (isPending) return;
+    const fd = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const r = await saveOfficeStaff(fd);
+      if (!r.ok) {
+        setError(r.error);
+        return;
+      }
+      handleClose();
+    });
   }
 
   if (!canEdit) return null;
@@ -30,15 +46,19 @@ export default function AddOfficeStaffButton() {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setError(null);
+          setOpen(true);
+        }}
         className="h-9 rounded-xl bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98]"
       >
         + Thêm nhân sự văn phòng
       </button>
 
       {open && (
-        <Modal title="Thêm nhân sự văn phòng" onClose={() => setOpen(false)}>
-          <form action={handleAdd} className="space-y-3">
+        <Modal title="Thêm nhân sự văn phòng" onClose={handleClose}>
+          <FormError message={error} />
+          <form onSubmit={handleSubmit} onInput={() => error && setError(null)} className="space-y-3">
             <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
               <DetailCell><Field label="Họ tên *"><input name="name" required placeholder="VD: Trần Thị B" className={inputCls} /></Field></DetailCell>
               <DetailCell><Field label="SĐT"><input name="phone" placeholder="VD: 0912xxxxxx" className={inputCls} /></Field></DetailCell>
@@ -56,13 +76,17 @@ export default function AddOfficeStaffButton() {
             <div className="flex justify-end gap-2 border-t border-hairline pt-3">
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 className="rounded-xl border border-hairline px-4 py-2 text-sm font-medium text-muted hover:bg-canvas"
               >
                 Hủy
               </button>
-              <button className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">
-                Thêm nhân sự
+              <button
+                type="submit"
+                disabled={isPending}
+                className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+              >
+                {isPending ? "Đang thêm..." : "Thêm nhân sự"}
               </button>
             </div>
           </form>

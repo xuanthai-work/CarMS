@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cardMotion } from "@/utils/motion";
 import { saveVehicle, deleteVehicle } from "@/api/vehicles";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS, seatLabel, statusLabel, ownerLabel } from "@/utils/vehicles";
-import { DetailCell, Field, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import { DetailCell, Field, FormError, Info, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
 import EditIconButton from "@/components/common/EditIconButton";
 import SelectMenu from "@/components/common/SelectMenu";
 import DatePicker from "@/components/common/DatePicker";
@@ -33,21 +33,32 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
   const { canEdit } = usePermissions();
   const [editing, setEditing] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const reduceMotion = useReducedMotion();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
 
-  async function handleSave(fd: FormData) {
-    await saveVehicle(fd);
-    setEditing(false);
-    setDetailOpen(false);
-  }
-
   function closeModal() {
+    setError(null);
     formRef.current?.reset();
     reset();
     setEditing(false);
     setDetailOpen(false);
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (isPending) return;
+    const fd = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const r = await saveVehicle(fd);
+      if (!r.ok) {
+        setError(r.error);
+        return;
+      }
+      closeModal();
+    });
   }
 
   function onCardKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
@@ -59,7 +70,8 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
 
   const editForm = () => (
     <>
-      <form id={`veh-${v.id}`} ref={formRef} action={handleSave}>
+      <FormError message={error} />
+      <form id={`veh-${v.id}`} ref={formRef} onSubmit={handleSubmit} onInput={() => error && setError(null)}>
         <input type="hidden" name="id" value={v.id} />
         {/* Thứ tự + span phải khớp block xem ở dưới, lệch là bấm ✎ thấy field nhảy ô. */}
         <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
@@ -81,7 +93,12 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
       </form>
       <div className="mt-3 flex items-center justify-between">
         <ConfirmDeleteButton action={deleteVehicle} id={v.id} label={`xe ${v.plate}`} />
-        <div className="flex gap-2"><CancelButton onClick={closeModal} /><SaveButton form={`veh-${v.id}`} /></div>
+        <div className="flex gap-2">
+          <CancelButton onClick={closeModal} />
+          <SaveButton form={`veh-${v.id}`}>
+            {isPending ? "Đang lưu..." : "Lưu"}
+          </SaveButton>
+        </div>
       </div>
     </>
   );
@@ -130,7 +147,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
               </div>
               {canEdit && (
                 <div className="mt-5 flex justify-end border-t border-hairline pt-4">
-                  <EditIconButton onClick={() => setEditing(true)} />
+                  <EditIconButton onClick={() => { setError(null); setEditing(true); }} />
                 </div>
               )}
             </>
