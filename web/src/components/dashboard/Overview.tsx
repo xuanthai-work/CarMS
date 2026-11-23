@@ -176,7 +176,7 @@ function collectTodayLegs(
       rows.push({
         time: leg.time,
         customer: t.customerName,
-        route: legRoute(leg),
+        route: legRoute(leg, t.note),
         vehicle: v?.plate ?? (leg.seatClass ? `${leg.seatClass} chỗ` : "Chưa xếp"),
         partner: v?.type === "partner",
         driver: d?.name ?? "Chưa gán",

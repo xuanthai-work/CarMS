@@ -230,9 +230,9 @@ export default function VehicleSchedule({
                     <td className="px-4 py-4 align-top">
                       <div className="space-y-1">
                         {row.legs.map(({ leg, label }) => (
-                          <div key={label} className="truncate text-[13px] text-slate-600" title={legRoute(leg)}>
+                          <div key={label} className="truncate text-[13px] text-slate-600" title={legRoute(leg, trip.note)}>
                             {multi && <span className="mr-1 text-[11px] font-semibold text-muted">{label}</span>}
-                            {legRoute(leg)}
+                            {legRoute(leg, trip.note)}
                           </div>
                         ))}
                       </div>

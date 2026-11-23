@@ -50,6 +50,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-040** | 2026-11-23 | Modal Chuyến Khung Cố Định, Footer Dính Đáy, Gom Dòng | Schedule / UX |  **Đã xong** | [TASK-040](tasks/TASK-040-trip-modal-fixed-frame.md) |
 | **TASK-041** | 2026-11-23 | Gộp Dòng Ngày Đi/Về, Giảm Chiều Cao Modal Chuyến | Schedule / UX |  **Đã xong** | [TASK-041](tasks/TASK-041-trip-date-row-and-height.md) |
 | **TASK-042** | 2026-11-23 | Hiệu Ứng Mở/Thu Phần Lượt Về Trong Modal Chuyến | Schedule / UX |  **Đã xong** | [TASK-042](tasks/TASK-042-trip-form-reveal-motion.md) |
+| **TASK-043** | 2026-11-23 | Gộp Ô Lộ Trình Và Ghi Chú Thành "Lộ trình/Note" | Schedule / UX |  **Đã xong** | [TASK-043](tasks/TASK-043-trip-route-note-merge.md) |
 
 ---
 

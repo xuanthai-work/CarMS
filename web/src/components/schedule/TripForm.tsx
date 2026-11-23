@@ -152,14 +152,13 @@ export default function TripForm({
     (d) => !hasLeft(d.endDate, rDate || todayStr()) || d.id === rDrvId
   );
 
-  // Giá trị ban đầu ô Lộ trình: ghép lộ trình lượt đi; nếu lượt về khác thì nối thêm · Về: ...
-  const defaultRoute = useMemo(() => {
+  // Giá trị ban đầu ô Lộ trình/Note: ghép lộ trình cũ (nếu có) và ghi chú cũ, ngăn cách bởi \n
+  const defaultNote = useMemo(() => {
     const ob = [trip?.outbound.from, trip?.outbound.to].map((x) => x?.trim()).filter(Boolean).join(" → ");
     const ret = [trip?.return?.from, trip?.return?.to].map((x) => x?.trim()).filter(Boolean).join(" → ");
-    if (ret && ret !== ob) {
-      return ob ? `${ob} · Về: ${ret}` : `Về: ${ret}`;
-    }
-    return ob;
+    const route = ret && ret !== ob ? (ob ? `${ob} · Về: ${ret}` : `Về: ${ret}`) : ob;
+    const note = trip?.note?.trim() ?? "";
+    return [route, note].filter(Boolean).join("\n");
   }, [trip]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -372,14 +371,6 @@ export default function TripForm({
             }
           />
 
-          {/* Lộ trình (một ô duy nhất) */}
-          <Row label="Lộ trình">
-            <input
-              name="o_route"
-              className={inputCls}
-              defaultValue={defaultRoute}
-            />
-          </Row>
 
           {/* Xe · Lái xe (đi) */}
           {isOutboundPartnerVeh ? (
@@ -486,12 +477,13 @@ export default function TripForm({
             </div>
           </Collapse>
 
-          {/* Ghi chú */}
-          <Row label="Ghi chú" className="!items-start pt-1 flex-1 min-h-[4.5rem]">
+          {/* Lộ trình / Note */}
+          <Row label="Lộ trình/Note" className="!items-start pt-1 flex-1 min-h-[4.5rem]">
             <textarea
               name="note"
               rows={3}
-              defaultValue={trip?.note ?? ""}
+              defaultValue={defaultNote}
+              placeholder="Điểm đón → điểm đến, ghi chú…"
               className={`${inputCls} h-full min-h-[4.5rem] resize-none`}
             />
           </Row>

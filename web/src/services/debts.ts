@@ -21,6 +21,7 @@ export async function getPartnerDebts(monthKey?: string | null): Promise<Partner
           outboundTo: true,
           outboundDate: true,
           returnDate: true,
+          note: true,
         },
       },
     },

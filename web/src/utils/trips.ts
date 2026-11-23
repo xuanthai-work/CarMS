@@ -51,9 +51,18 @@ export function sameVehicleBothLegs(trip: Trip): boolean {
   return !!trip.return && trip.outbound.vehicleId === trip.return.vehicleId;
 }
 
-/** Lộ trình "điểm đón → điểm đến" (bỏ phần rỗng); không có -> "—". */
-export function legRoute(leg: { from: string; to: string }): string {
-  return [leg.from, leg.to].map((x) => x?.trim()).filter(Boolean).join(" → ") || "—";
+/** Lộ trình "điểm đón → điểm đến" (bỏ phần rỗng); không có thì lấy dòng đầu của note; không có nữa -> "—". */
+export function legRoute(leg: { from: string; to: string }, note?: string | null): string {
+  const fromTo = [leg.from, leg.to].map((x) => x?.trim()).filter(Boolean).join(" → ");
+  if (fromTo) return fromTo;
+  if (note) {
+    const firstLine = note
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line.length > 0);
+    if (firstLine) return firstLine;
+  }
+  return "—";
 }
 
 /** Tiền: 1500000 -> "1.500.000"; null -> "—". Không kèm đơn vị (mặc định là VND, ai cũng hiểu). */

@@ -16,7 +16,7 @@ function legFields(fd: FormData, prefix: string) {
   return {
     date: s(fd, `${prefix}_date`),
     time: optStr(fd, `${prefix}_time`),
-    from: s(fd, `${prefix}_route`),
+    from: "",
     to: "",
     vehicleId: seatClass != null ? null : rawVeh, // placeholder ⇒ không gán xe thật
     seatClass,
@@ -64,7 +64,7 @@ export async function saveTrip(fd: FormData): Promise<ActionResult> {
     hasReturn,
     returnDate: r?.date ?? null,
     returnTime: r?.time ?? null,
-    returnFrom: r ? o.from : null,
+    returnFrom: r ? "" : null,
     returnTo: r ? "" : null,
     returnVehicleId: r?.vehicleId ?? null,
     returnDriverId: r?.driverId ?? null,

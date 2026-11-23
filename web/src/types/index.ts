@@ -177,5 +177,6 @@ export type PartnerDebt = {
     outboundTo: string;
     outboundDate: string;
     returnDate: string | null;
+    note?: string | null;
   };
 };

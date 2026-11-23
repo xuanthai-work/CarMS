@@ -7,7 +7,7 @@ import FilterTabs from "@/components/common/FilterTabs";
 import DebtPayModal from "@/components/debts/DebtPayModal";
 import { addMonth, fmtDate, monthLabel } from "@/utils/format";
 import { normalizeVn } from "@/utils/search";
-import { fmtMoney, fmtMoneyUnit } from "@/utils/trips";
+import { fmtMoney, fmtMoneyUnit, legRoute } from "@/utils/trips";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
@@ -68,7 +68,9 @@ export default function DebtScreen({
     return debts.filter((d) => {
       if (statusFilter !== "all" && d.paymentStatus !== statusFilter) return false;
       if (!nq) return true;
-      const route = [d.trip?.outboundFrom, d.trip?.outboundTo].filter(Boolean).join(" ");
+      const route = d.trip
+        ? legRoute({ from: d.trip.outboundFrom, to: d.trip.outboundTo }, d.trip.note)
+        : "";
       return [d.partnerName, d.trip?.customerName, route].some((v) =>
         normalizeVn(v ?? "").includes(nq),
       );
@@ -180,8 +182,9 @@ export default function DebtScreen({
               </thead>
               <tbody>
                 {rows.map((d) => {
-                  const route =
-                    [d.trip?.outboundFrom, d.trip?.outboundTo].filter(Boolean).join(" → ") || "—";
+                  const route = d.trip
+                    ? legRoute({ from: d.trip.outboundFrom, to: d.trip.outboundTo }, d.trip.note)
+                    : "—";
                   const paid = d.paymentStatus === "paid";
                   return (
                     <tr
