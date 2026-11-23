@@ -37,6 +37,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-027** | 2026-11-23 | Gom Truy Vấn Và Phép Tổng Theo Tháng Bị Lặp (Clean Code Đợt 4) | Code Quality / Operational Finance |  **Đã xong** | [TASK-027](tasks/TASK-027-dedupe-month-queries.md) |
 | **TASK-028** | 2026-11-23 | Sửa Xung Đột File Icon Trùng | Tooling / Frontend |  **Đã xong** | [TASK-028](tasks/TASK-028-fix-duplicate-icon-files.md) |
 | **TASK-029** | 2026-11-23 | Tạm Tắt Trợ Lý AI | AI Assistant / Layout |  **Đã xong** | [TASK-029](tasks/TASK-029-disable-ai-assistant.md) |
+| **TASK-030** | 2026-11-23 | Bộ Script SQL Kiểm Tra Và Đồng Bộ Production | Database / Security / Tooling |  **Đã xong** | [TASK-030](tasks/TASK-030-prod-sql-scripts.md) |
 
 ---
 

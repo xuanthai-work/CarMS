@@ -1,7 +1,14 @@
+-- =============================================================================
+-- 03-backfill-partner-debt-workdate.sql
 -- Cập nhật workDate của PartnerDebt theo ngày hoàn tất của chuyến (ngày về nếu có lượt về, ngược lại ngày đi).
 -- Chạy trên Postgres (Supabase SQL Editor).
 -- Script CHỈ ĐỂ USER CHẠY TAY, Dev không tự chạy.
 --
+-- QUAN TRỌNG:
+-- Chạy SAU 01-audit-readonly.sql và SAU khi sao lưu database;
+-- Xem kỹ kết quả Bước 1 rồi mới chạy Bước 2.
+-- =============================================================================
+
 -- BƯỚC 1 — Xem trước các bản ghi có workDate khác ngày hoàn tất của chuyến (chỉ SELECT, không đổi dữ liệu):
 
 SELECT
@@ -26,9 +33,14 @@ WHERE pd."workDate" <> (
 )
 ORDER BY pd."workDate" DESC;
 
--- BƯỚC 2 — Cập nhật workDate trong transaction:
--- Chỉ cập nhật các dòng thực sự khác, không đụng paymentStatus / paymentDate / amount.
+-- =============================================================================
+-- BƯỚC 2 & 3 — Cập nhật workDate và kiểm tra lại:
+-- AN TOÀN MẶC ĐỊNH: Khối bên dưới đã được đóng dấu ghi chú comment /* ... */.
+-- CHỈ SAU KHI ĐÃ XEM BƯỚC 1 VÀ ĐÃ SAO LƯU:
+-- Xóa hai ký tự /* ở đầu và */ ở cuối rồi bôi đen chạy riêng khối này.
+-- =============================================================================
 
+/*
 BEGIN;
 
 UPDATE "PartnerDebt" pd
@@ -59,3 +71,4 @@ WHERE pd."workDate" <> (
     ELSE t."outboundDate"
   END
 );
+*/

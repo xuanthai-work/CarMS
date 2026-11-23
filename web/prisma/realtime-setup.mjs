@@ -19,18 +19,24 @@ import { PrismaPg } from "@prisma/adapter-pg";
  *     trong src/components/layout/RealtimeRefresh.tsx.
  *
  *  2. PRIVATE_TABLES — CỐ Ý bật RLS mà không có policy nào ⇒ PostgREST trả 0 dòng cho
- *     mọi role. Đây là dữ liệu nhạy cảm (CCCD, ngày sinh, lương) mà UI đã giới hạn
- *     theo chức vụ; nếu để policy "authenticated đọc hết" thì một nhân viên thường
- *     vẫn lấy được bằng anon key + token phiên của họ, vòng qua RBAC. App không bị
- *     ảnh hưởng: mọi truy vấn dữ liệu đi qua Prisma bằng role `postgres` (owner bảng,
- *     bỏ qua RLS), trong src không có lời gọi `.from()` nào.
+ *     mọi role. Đây là dữ liệu nhạy cảm (CCCD, ngày sinh, lương, chi phí khác, công nợ
+ *     đối tác) mà UI đã giới hạn theo chức vụ; nếu để policy "authenticated đọc hết"
+ *     thì một nhân viên thường vẫn lấy được bằng anon key + token phiên của họ, vòng qua
+ *     RBAC. App không bị ảnh hưởng: mọi truy vấn dữ liệu đi qua Prisma bằng role
+ *     `postgres` (owner bảng, bỏ qua RLS), trong src không có lời gọi `.from()` nào.
  *
  * KHÔNG có policy ghi ở bất kỳ bảng nào ⇒ mọi INSERT/UPDATE/DELETE chỉ đi được qua
  * Prisma ở server, tức là phải qua guard requireEditor/requireManagerEditor.
  */
 
 const REALTIME_TABLES = ["Vehicle", "Driver", "Trip", "FuelEntry"];
-const PRIVATE_TABLES = ["OfficeStaff", "SalaryMonth", "PartnerPayout"];
+const PRIVATE_TABLES = [
+  "OfficeStaff",
+  "SalaryMonth",
+  "PartnerPayout",
+  "OtherExpense",
+  "PartnerDebt",
+];
 
 const inPublication = (table) =>
   `SELECT 1 FROM pg_publication_tables
