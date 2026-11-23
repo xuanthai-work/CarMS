@@ -16,8 +16,8 @@ function legFields(fd: FormData, prefix: string) {
   return {
     date: s(fd, `${prefix}_date`),
     time: optStr(fd, `${prefix}_time`),
-    from: s(fd, `${prefix}_from`),
-    to: s(fd, `${prefix}_to`),
+    from: s(fd, `${prefix}_route`),
+    to: "",
     vehicleId: seatClass != null ? null : rawVeh, // placeholder ⇒ không gán xe thật
     seatClass,
     driverId: optStr(fd, `${prefix}_driverId`),
@@ -42,7 +42,7 @@ export async function saveTrip(fd: FormData): Promise<ActionResult> {
 
   const data = {
     customerName,
-    customerPhone: optStr(fd, "customerPhone"),
+    ...(fd.has("customerPhone") ? { customerPhone: optStr(fd, "customerPhone") } : {}),
     tourType: tourTypeFromDates(o.date, r?.date ?? null),
     price: optNum(fd, "price"),
     deposit: optNum(fd, "deposit"),

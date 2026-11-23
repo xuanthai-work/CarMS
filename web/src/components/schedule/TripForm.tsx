@@ -8,18 +8,17 @@ import Button from "@/components/common/Button";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import { Field, inputCls } from "@/components/common/ui";
 import DatePicker from "@/components/common/DatePicker";
-import TimePicker from "@/components/common/TimePicker";
 import Combobox from "@/components/common/Combobox";
 import MoneyInput from "@/components/common/MoneyInput";
 import SelectMenu from "@/components/common/SelectMenu";
-import { hasPartnerVehicle, tourTypeLabel, tourTypeFromDates, TRIP_STATUSES } from "@/utils/trips";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
+import { hasPartnerVehicle, tourTypeLabel, tourTypeFromDates, TRIP_STATUSES, fmtMoney } from "@/utils/trips";
 import { seatLabel, VEHICLE_TYPES } from "@/utils/vehicles";
 import { fmtDateFull, todayStr } from "@/utils/format";
 import { hasLeft } from "@/utils/office";
 import type { Trip, Vehicle, Driver, Leg } from "@/types";
 
 type Prefill = { vehicleId?: string; date?: string };
-
 
 /** Nhóm ô nhập cho một lượt (đi/về), tiền tố "o" hoặc "r". */
 function LegFields({
@@ -33,6 +32,7 @@ function LegFields({
   setVehId,
   drvId,
   setDrvId,
+  canEdit,
 }: {
   prefix: string;
   leg?: Leg;
@@ -44,28 +44,47 @@ function LegFields({
   setVehId: (v: string) => void;
   drvId: string;
   setDrvId: (v: string) => void;
+  canEdit: boolean;
 }) {
   // Xe đối tác/thuê ngoài thường đi kèm lái xe của họ → ẩn ô lái xe (không gửi driverId → lưu null).
   const isPartnerVeh = !!vehId && vehicles.find((v) => v.id === vehId)?.type === "partner";
   const pickable = drivers.filter((d) => !hasLeft(d.endDate, date || todayStr()) || d.id === drvId);
 
+  // Chuyến cũ có cả from/to: ghép "from → to"
+  const defaultRoute = [leg?.from, leg?.to].map((x) => x?.trim()).filter(Boolean).join(" → ");
+
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <Field label="Ngày">
-        <DatePicker name={`${prefix}_date`} value={date} onChange={(v) => onDateChange?.(v)} disabled={!onDateChange} />
+        <DatePicker
+          name={`${prefix}_date`}
+          value={date}
+          onChange={(v) => onDateChange?.(v)}
+          disabled={!canEdit || !onDateChange}
+        />
         {date && (
           <p className="mt-1 text-xs font-semibold text-brand-600">📅 {fmtDateFull(date)}</p>
         )}
       </Field>
       <Field label="Giờ đón">
-        <TimePicker name={`${prefix}_time`} defaultValue={leg?.time ?? ""} />
+        <input
+          name={`${prefix}_time`}
+          className={inputCls}
+          placeholder="VD: 6h30, sáng sớm"
+          maxLength={60}
+          defaultValue={leg?.time ?? ""}
+        />
       </Field>
-      <Field label="Điểm đón">
-        <input name={`${prefix}_from`} defaultValue={leg?.from ?? ""} placeholder="VD: Hà Nội" className={inputCls} />
-      </Field>
-      <Field label="Điểm đến">
-        <input name={`${prefix}_to`} defaultValue={leg?.to ?? ""} placeholder="VD: Sapa" className={inputCls} />
-      </Field>
+      <div className="sm:col-span-2">
+        <Field label="Lộ trình">
+          <input
+            name={`${prefix}_route`}
+            className={inputCls}
+            placeholder="VD: Hà Nội → Sapa, đón ở khách sạn X"
+            defaultValue={defaultRoute}
+          />
+        </Field>
+      </div>
       <Field label="Xe">
         <Combobox
           name={`${prefix}_vehicleId`}
@@ -118,6 +137,7 @@ export default function TripForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const { canEdit } = usePermissions();
   const formId = `trip-form-${trip?.id ?? "new"}`;
   const [hasReturn, setHasReturn] = useState<boolean>(trip ? !!trip.return : true);
   const [oDate, setODate] = useState<string>(trip?.outbound.date ?? prefill?.date ?? "");
@@ -154,8 +174,19 @@ export default function TripForm({
   // Loại tour suy ra từ ngày đi/về (+ có lượt về hay không) — thay cho việc chọn tay.
   const derivedType = tourTypeFromDates(oDate, hasReturn ? rDate : null);
 
-  function handleSave(fd: FormData) {
+  const legacyCostTexts: string[] = [];
+  if (trip?.tollCost != null && trip.tollCost > 0) {
+    legacyCostTexts.push(`VETC/cầu đường ${fmtMoney(trip.tollCost)}`);
+  }
+  if (trip?.otherCost != null && trip.otherCost > 0) {
+    legacyCostTexts.push(`Khác ${fmtMoney(trip.otherCost)}`);
+  }
+  const hasLegacyCosts = legacyCostTexts.length > 0;
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     if (isSubmittingRef.current) return;
+    const fd = new FormData(e.currentTarget);
     isSubmittingRef.current = true;
     setError(null);
     startTransition(async () => {
@@ -173,6 +204,7 @@ export default function TripForm({
       }
     });
   }
+
   async function handleDelete(fd: FormData): Promise<void> {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
@@ -206,85 +238,133 @@ export default function TripForm({
       )}
       <form
         id={formId}
-        action={handleSave}
-        className="space-y-4"
+        onSubmit={handleSubmit}
         onInput={() => error && setError(null)}
       >
         {trip && <input type="hidden" name="id" value={trip.id} />}
-
-        {/* Khách + tour */}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Tên Zalo khách *">
-            <input name="customerName" required defaultValue={trip?.customerName ?? ""} placeholder="VD: Chị Lan" className={inputCls} />
-          </Field>
-          <Field label="SĐT khách">
-            <input name="customerPhone" defaultValue={trip?.customerPhone ?? ""} placeholder="VD: 0987xxxxxx" className={inputCls} />
-          </Field>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="Tiền chuyến">
-              <MoneyInput name="price" defaultValue={trip?.price ?? null} placeholder="VD: 5.000.000" />
+        <fieldset disabled={!canEdit} className={`space-y-4 ${!canEdit ? "opacity-90" : ""}`}>
+          {/* Hàng khách */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Tên Zalo khách *">
+              <input
+                name="customerName"
+                required
+                defaultValue={trip?.customerName ?? ""}
+                placeholder="VD: Chị Lan"
+                className={inputCls}
+              />
             </Field>
-            <Field label="Đã cọc">
-              <MoneyInput name="deposit" defaultValue={trip?.deposit ?? null} placeholder="0" />
+            <Field label="Trạng thái">
+              <SelectMenu name="status" value={status} onChange={setStatus} options={TRIP_STATUSES} />
             </Field>
           </div>
-          <Field label="Trạng thái">
-            <SelectMenu name="status" value={status} onChange={setStatus} options={TRIP_STATUSES} />
-          </Field>
-        </div>
 
-        {/* Loại tour tự tính theo ngày đi/về */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500">Loại tour (tự tính):</span>
-          <span className="rounded-md bg-brand-50 px-2 py-0.5 font-semibold text-brand-700">
-            {oDate ? tourTypeLabel(derivedType) : "—"}
-          </span>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {/* Lượt đi */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-3">
-            <div className="mb-2 text-sm font-semibold text-blue-700">Lượt đi</div>
-            <LegFields prefix="o" leg={trip?.outbound} vehicles={vehicles} drivers={drivers} date={oDate} onDateChange={changeODate} vehId={oVehId} setVehId={setOVehId} drvId={oDrvId} setDrvId={setODrvId} />
-          </div>
-
-          {/* Lượt về */}
-          <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 flex flex-col">
-            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-700">
-              <input type="checkbox" name="hasReturn" checked={hasReturn} onChange={(e) => setHasReturn(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
-              Có lượt về
-            </label>
-            {hasReturn && (
-              <>
-                <LegFields prefix="r" leg={trip?.return ?? undefined} vehicles={vehicles} drivers={drivers} date={rDate} onDateChange={setRDate} vehId={rVehId} setVehId={setRVehId} drvId={rDrvId} setDrvId={setRDrvId} />
-                <label className="mt-3 flex items-start gap-2 text-xs text-slate-600">
-                  <input type="checkbox" name="heldThroughTour" defaultChecked={trip?.heldThroughTour ?? false} className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300" />
-                  <span>Giữ xe suốt tour (xe bận cả các ngày giữa) — chỉ áp dụng khi lượt đi & về cùng một xe</span>
-                </label>
-              </>
+          {/* Dải tiền */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Tiền</div>
+            <div className={`grid gap-3 sm:grid-cols-2 ${usesPartnerVehicle ? "lg:grid-cols-3" : ""}`}>
+              <Field label="Tiền chuyến">
+                <MoneyInput name="price" defaultValue={trip?.price ?? null} placeholder="VD: 5.000.000" />
+              </Field>
+              <Field label="Đã cọc">
+                <MoneyInput name="deposit" defaultValue={trip?.deposit ?? null} placeholder="0" />
+              </Field>
+              {usesPartnerVehicle && (
+                <Field label="Tiền thuê đối tác">
+                  <MoneyInput name="partnerCost" defaultValue={trip?.partnerCost ?? null} placeholder="0" />
+                </Field>
+              )}
+            </div>
+            {hasLegacyCosts && (
+              <p className="mt-2 text-xs text-slate-500">
+                Chi phí cũ ghi trên chuyến: {legacyCostTexts.join(" · ")}
+              </p>
             )}
           </div>
-        </div>
 
-        {/* Chi phí thuê xe đối tác (nếu có) */}
-        {usesPartnerVehicle && (
-          <div>
-            <div className="mb-2 text-sm font-semibold text-slate-700">Chi phí</div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <Field label="Tiền thuê đối tác">
-                <MoneyInput name="partnerCost" defaultValue={trip?.partnerCost ?? null} placeholder="0" />
-              </Field>
+          {/* Dải xếp lịch */}
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-500">Loại tour (tự tính):</span>
+            <span className="rounded-md bg-brand-50 px-2 py-0.5 font-semibold text-brand-700">
+              {oDate ? tourTypeLabel(derivedType) : "—"}
+            </span>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Lượt đi */}
+            <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-3">
+              <div className="mb-2 text-sm font-semibold text-blue-700">Lượt đi</div>
+              <LegFields
+                prefix="o"
+                leg={trip?.outbound}
+                vehicles={vehicles}
+                drivers={drivers}
+                date={oDate}
+                onDateChange={changeODate}
+                vehId={oVehId}
+                setVehId={setOVehId}
+                drvId={oDrvId}
+                setDrvId={setODrvId}
+                canEdit={canEdit}
+              />
+            </div>
+
+            {/* Lượt về */}
+            <div className="flex flex-col rounded-lg border border-amber-200 bg-amber-50/40 p-3">
+              <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-700">
+                <input
+                  type="checkbox"
+                  name="hasReturn"
+                  checked={hasReturn}
+                  onChange={(e) => setHasReturn(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                Có lượt về
+              </label>
+              {hasReturn && (
+                <>
+                  <LegFields
+                    prefix="r"
+                    leg={trip?.return ?? undefined}
+                    vehicles={vehicles}
+                    drivers={drivers}
+                    date={rDate}
+                    onDateChange={setRDate}
+                    vehId={rVehId}
+                    setVehId={setRVehId}
+                    drvId={rDrvId}
+                    setDrvId={setRDrvId}
+                    canEdit={canEdit}
+                  />
+                  <label className="mt-3 flex items-start gap-2 text-xs text-slate-600">
+                    <input
+                      type="checkbox"
+                      name="heldThroughTour"
+                      defaultChecked={trip?.heldThroughTour ?? false}
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300"
+                    />
+                    <span>Giữ xe suốt tour (xe bận cả các ngày giữa) — chỉ áp dụng khi lượt đi & về cùng một xe</span>
+                  </label>
+                </>
+              )}
             </div>
           </div>
-        )}
 
-        <Field label="Ghi chú">
-          <input name="note" defaultValue={trip?.note ?? ""} placeholder="Ghi chú thêm" className={inputCls} />
-        </Field>
+          {/* Ô ghi chú lớn */}
+          <Field label="Ghi chú (tự do)">
+            <textarea
+              name="note"
+              rows={8}
+              defaultValue={trip?.note ?? ""}
+              className={`${inputCls} min-h-[10rem] resize-y`}
+              placeholder="SĐT khách, yêu cầu đặc biệt, điểm dừng, mọi thứ cần nhớ…"
+            />
+          </Field>
+        </fieldset>
       </form>
 
       <div className="mt-4 flex items-center justify-between">
-        {trip ? (
+        {trip && canEdit ? (
           <ConfirmDeleteButton action={handleDelete} id={trip.id} label={`chuyến của ${trip.customerName}`} />
         ) : (
           <span />
@@ -295,15 +375,17 @@ export default function TripForm({
             onClick={onCancel}
             disabled={isPending}
           >
-            Hủy
+            {canEdit ? "Hủy" : "Đóng"}
           </Button>
-          <Button
-            type="submit"
-            form={formId}
-            disabled={isPending}
-          >
-            {isPending ? (trip ? "Đang lưu…" : "Đang thêm…") : trip ? "Lưu" : "Thêm chuyến"}
-          </Button>
+          {canEdit && (
+            <Button
+              type="submit"
+              form={formId}
+              disabled={isPending}
+            >
+              {isPending ? (trip ? "Đang lưu…" : "Đang thêm…") : trip ? "Lưu" : "Thêm chuyến"}
+            </Button>
+          )}
         </div>
       </div>
     </div>
