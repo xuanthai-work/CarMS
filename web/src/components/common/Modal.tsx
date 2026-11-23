@@ -27,11 +27,15 @@ export default function Modal({
   onClose,
   children,
   maxWidthClass = "max-w-xl",
+  fixedHeight = false,
+  footer,
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
   maxWidthClass?: string;
+  fixedHeight?: boolean;
+  footer?: React.ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
   const { closing, requestClose } = useOverlayClose(onClose, CLOSE_MS, reduceMotion);
@@ -80,10 +84,14 @@ export default function Modal({
           initial={initialPanel}
           animate={animatePanel}
           transition={transitionPanel}
-          className={`w-full ${maxWidthClass} rounded-xl bg-white p-5 shadow-xl`}
+          className={
+            fixedHeight
+              ? `flex flex-col h-[min(46rem,calc(100dvh-2rem))] w-full ${maxWidthClass} overflow-hidden rounded-xl bg-white p-4 shadow-xl`
+              : `w-full ${maxWidthClass} rounded-xl bg-white p-5 shadow-xl`
+          }
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="mb-4 flex items-center justify-between">
+          <div className={`${fixedHeight ? "mb-3 shrink-0" : "mb-4"} flex items-center justify-between`}>
             <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
             <button
               type="button"
@@ -94,7 +102,18 @@ export default function Modal({
               ✕
             </button>
           </div>
-          {children}
+          {fixedHeight ? (
+            <div className="min-h-0 flex-1 overflow-y-auto scroll-thin pr-1">
+              {children}
+            </div>
+          ) : (
+            children
+          )}
+          {footer && (
+            <div className={fixedHeight ? "shrink-0 border-t border-slate-100 pt-2 mt-2" : "mt-4"}>
+              {footer}
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.div>,

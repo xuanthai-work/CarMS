@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Modal from "@/components/common/Modal";
 import TripForm from "@/components/schedule/TripForm";
 import type { Trip, Vehicle, Driver } from "@/types";
@@ -15,11 +16,15 @@ type Props = {
 };
 
 export default function TripModal({ trip, prefill, vehicles, drivers, onClose }: Props) {
+  const [footer, setFooter] = useState<React.ReactNode>(null);
+
   return (
     <Modal
-      title={trip ? "Sửa chuyến" : "Thêm chuyến"}
+      title={trip ? "Chuyến" : "Thêm chuyến"}
       onClose={onClose}
       maxWidthClass="max-w-2xl"
+      fixedHeight
+      footer={footer}
     >
       <TripForm
         trip={trip ?? undefined}
@@ -27,7 +32,7 @@ export default function TripModal({ trip, prefill, vehicles, drivers, onClose }:
         vehicles={vehicles}
         drivers={drivers}
         onDone={onClose}
-        onCancel={onClose}
+        renderFooter={setFooter}
       />
     </Modal>
   );
