@@ -51,6 +51,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-041** | 2026-11-23 | Gộp Dòng Ngày Đi/Về, Giảm Chiều Cao Modal Chuyến | Schedule / UX |  **Đã xong** | [TASK-041](tasks/TASK-041-trip-date-row-and-height.md) |
 | **TASK-042** | 2026-11-23 | Hiệu Ứng Mở/Thu Phần Lượt Về Trong Modal Chuyến | Schedule / UX |  **Đã xong** | [TASK-042](tasks/TASK-042-trip-form-reveal-motion.md) |
 | **TASK-043** | 2026-11-23 | Gộp Ô Lộ Trình Và Ghi Chú Thành "Lộ trình/Note" | Schedule / UX |  **Đã xong** | [TASK-043](tasks/TASK-043-trip-route-note-merge.md) |
+| **TASK-044** | 2026-11-23 | Lịch Chọn Ngày Căn Phải Cho Ô Ngày Về | UI / Schedule |  **Đã xong** | [TASK-044](tasks/TASK-044-datepicker-align-right.md) |
 
 ---
 

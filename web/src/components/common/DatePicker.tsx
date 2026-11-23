@@ -47,11 +47,13 @@ export default function DatePicker({
   value,
   onChange,
   disabled,
+  align = "left",
 }: {
   name: string;
   value: string; // YYYY-MM-DD | ""
   onChange: (v: string) => void;
   disabled?: boolean;
+  align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
   const reduceMotion = useReducedMotion();
@@ -136,7 +138,7 @@ export default function DatePicker({
         {open && !disabled && (
           <motion.div
             {...dropdownMotion(reduceMotion)}
-            className="absolute left-0 top-full z-30 mt-1 w-[268px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl"
+            className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-30 mt-1 w-[268px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl`}
           >
           {/* Header: « năm ‹ tháng › tháng » năm */}
           <div className="mb-2 flex items-center justify-between">

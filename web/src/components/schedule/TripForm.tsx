@@ -330,6 +330,7 @@ export default function TripForm({
                       value={rDate}
                       onChange={setRDate}
                       disabled={!canEdit}
+                      align="right"
                     />
                   </motion.div>
                 )}
