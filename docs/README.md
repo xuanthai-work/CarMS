@@ -44,6 +44,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-034** | 2026-11-23 | Form Chuyến Dùng ActionResult (Lỗi Tiếng Việt Trên Production) | Schedule / UX |  **Đã xong** | [TASK-034](tasks/TASK-034-trip-form-action-result.md) |
 | **TASK-035** | 2026-11-23 | Component Nút Dùng Chung (Button) | UI / Design system |  **Đã xong** | [TASK-035](tasks/TASK-035-shared-button.md) |
 | **TASK-036** | 2026-11-23 | Hiệu Ứng Zoom Từ Vị Trí Bấm Cho Modal | UI / Design system |  **Đã xong** | [TASK-036](tasks/TASK-036-modal-zoom.md) |
+| **TASK-037** | 2026-11-23 | Khung SideDrawer Dùng Chung | UI / Design system |  **Đã xong** | [TASK-037](tasks/TASK-037-side-drawer.md) |
 
 ---
 

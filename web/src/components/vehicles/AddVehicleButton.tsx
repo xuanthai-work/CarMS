@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { saveVehicle } from "@/api/vehicles";
-import Modal from "@/components/common/Modal";
+import SideDrawer from "@/components/common/SideDrawer";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS } from "@/utils/vehicles";
 import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
 import Button from "@/components/common/Button";
@@ -53,9 +53,27 @@ export default function AddVehicleButton() {
       </Button>
 
       {open && (
-        <Modal title="Thêm xe" onClose={handleClose}>
+        <SideDrawer
+          title="Thêm xe"
+          onClose={handleClose}
+          footer={
+            <>
+              <Button variant="secondary" onClick={handleClose}>
+                Hủy
+              </Button>
+              <Button type="submit" form="add-vehicle-form" disabled={isPending}>
+                {isPending ? "Đang thêm..." : "Thêm xe"}
+              </Button>
+            </>
+          }
+        >
           <FormError message={error} />
-          <form onSubmit={handleSubmit} onInput={() => error && setError(null)} className="space-y-3">
+          <form
+            id="add-vehicle-form"
+            onSubmit={handleSubmit}
+            onInput={() => error && setError(null)}
+            className="space-y-3"
+          >
             <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
               <DetailCell><Field label="Biển số *"><input name="plate" required placeholder="VD: 29B-301.48" className={inputCls} /></Field></DetailCell>
               <DetailCell><Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field></DetailCell>
@@ -71,16 +89,8 @@ export default function AddVehicleButton() {
               )}
               <DetailCell className="sm:col-span-2"><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
             </div>
-            <div className="flex justify-end gap-2 border-t border-hairline pt-3">
-              <Button variant="secondary" onClick={handleClose}>
-                Hủy
-              </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Đang thêm..." : "Thêm xe"}
-              </Button>
-            </div>
           </form>
-        </Modal>
+        </SideDrawer>
       )}
     </>
   );

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, useReducedMotion, type Transition } from "framer-motion";
 import { freshOrigin, originOffset, type Point } from "@/utils/modalOrigin";
+import { useOverlayClose } from "@/hooks/common/useOverlayClose";
 
 const ZOOM_FROM = 0.35;
 const OFFSET_RATIO = 0.85;
@@ -33,14 +34,7 @@ export default function Modal({
   maxWidthClass?: string;
 }) {
   const reduceMotion = useReducedMotion();
-  const [closing, setClosing] = useState(false);
-  const isClosingRef = useRef(false);
-  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const onCloseRef = useRef(onClose);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  const { closing, requestClose } = useOverlayClose(onClose, CLOSE_MS, reduceMotion);
 
   const [origin] = useState<Point | null>(() => {
     if (typeof window === "undefined") return null;
@@ -51,34 +45,6 @@ export default function Modal({
     if (typeof window === "undefined" || !origin) return { x: 0, y: 0 };
     return originOffset(origin, { w: window.innerWidth, h: window.innerHeight });
   });
-
-  const requestClose = useCallback(() => {
-    if (isClosingRef.current) return;
-    isClosingRef.current = true;
-    if (reduceMotion) {
-      onCloseRef.current();
-      return;
-    }
-    setClosing(true);
-    closeTimerRef.current = setTimeout(() => {
-      onCloseRef.current();
-    }, CLOSE_MS);
-  }, [reduceMotion]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        requestClose();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    };
-  }, [requestClose]);
 
   const initialPanel = reduceMotion
     ? { opacity: 0 }
