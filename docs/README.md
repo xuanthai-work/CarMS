@@ -63,10 +63,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-053** | 2026-11-25 | Bỏ Trường Ngày Trả Của Phiếu Công Ngày (PartnerPayout) | Salary / Schema |  **Đã xong** | [TASK-053](tasks/TASK-053-drop-partnerpayout-paymentdate.md) |
 | **TASK-054** | 2026-11-25 | Hủy Chuyến Có Phí Hủy (Giai Đoạn 3, Dữ Liệu + Logic Tiền) | Revenue / Schema |  **Đã xong** | [TASK-054](tasks/TASK-054-cancel-trip-fee.md) |
 | **TASK-055** | 2026-11-25 | Chặn Đổi Sang Đã Hủy Không Phí Hủy Ở Dropdown Trạng Thái | Revenue / Trips |  **Đã xong** | [TASK-055](tasks/TASK-055-block-quick-cancel.md) |
-| **TASK-056** | 2026-11-25 | Hàm Gom Sổ Chi Phí Theo Tháng (Giai Đoạn 4, Logic Thuần) | Finance / Chi phí |  **Đã xong** | [TASK-056](tasks/TASK-056-cost-ledger-util.md) |
-| **TASK-057** | 2026-11-25 | Màn Tổng Chi Phí (Giai Đoạn 4, Giao Diện) | Finance / Chi phí |  **Đã xong** | [TASK-057](tasks/TASK-057-cost-ledger-screen.md) |
-| **TASK-058** | 2026-11-25 | Sổ Chi Phí: Thêm Trường Nguồn/Xe Và Tổng Chưa Chi | Finance / Chi phí |  **Đã xong** | [TASK-058](tasks/TASK-058-cost-ledger-source-fields.md) |
-| **TASK-059** | 2026-11-25 | Gộp Tiền Dầu + Chi Phí Khác Vào Trang Tổng Chi Phí | Finance / UX |  **Đã xong** | [TASK-059](tasks/TASK-059-merge-fuel-expense-into-ledger.md) |
+| **TASK-056..059** | 2026-11-25 | Màn Tổng Chi Phí + Gộp Tiền Dầu/Chi Phí Khác (ĐÃ RÚT LẠI theo yêu cầu User) | Finance / UX |  **Đã rút lại** | [TASK-056..059](tasks/TASK-056-059-cost-ledger-reverted.md) |
 
 ---
 

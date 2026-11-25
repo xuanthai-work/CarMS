@@ -10,7 +10,8 @@ export function revalidateAll() {
   revalidatePath("/xe");
   revalidatePath("/nhan-su");
   revalidatePath("/doanh-thu");
-  revalidatePath("/tong-chi-phi");
+  revalidatePath("/tien-dau");
+  revalidatePath("/chi-phi-khac");
   revalidatePath("/cong-no");
   revalidatePath("/luong");
 }

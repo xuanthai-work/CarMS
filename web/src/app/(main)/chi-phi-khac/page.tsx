@@ -1,12 +1,15 @@
-import { redirect } from "next/navigation";
+import ExpenseScreen from "@/components/expenses/ExpenseScreen";
+import { getOtherExpenses } from "@/services/expenses";
+import { monthKeyOf, todayStr } from "@/utils/format";
 
-export default async function ChiPhiKhacRedirectPage({
+export default async function OtherExpensePage({
   searchParams,
 }: {
   searchParams: Promise<{ m?: string }>;
 }) {
   const sp = await searchParams;
-  const params = new URLSearchParams({ g: "other" });
-  if (sp.m) params.set("m", sp.m);
-  redirect(`/tong-chi-phi?${params.toString()}`);
+  const monthKey = sp.m || monthKeyOf(todayStr());
+  const entries = await getOtherExpenses(monthKey);
+
+  return <ExpenseScreen entries={entries} monthKey={monthKey} />;
 }

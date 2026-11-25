@@ -41,6 +41,11 @@ const RevenueIcon = ({ className }: IconProps) => (
     <rect x="16.1" y="9" width="3.4" height="9" rx="1" />
   </svg>
 );
+const FuelIcon = ({ className }: IconProps) => (
+  <svg {...svg(className)}>
+    <path d="M12 3s6 6.4 6 10.4A6 6 0 0 1 6 13.4C6 9.4 12 3 12 3z" />
+  </svg>
+);
 const ReceiptIcon = ({ className }: IconProps) => (
   <svg {...svg(className)}>
     <path d="M4 3h16a1 1 0 0 1 1 1v16.5l-3-1.5-3 1.5-3-1.5-3 1.5-3-1.5-3 1.5V4a1 1 0 0 1 1-1z" />
@@ -92,7 +97,8 @@ const LINKS: NavLink[] = [
   { href: "/", label: "Tổng quan", icon: GridIcon },
   { href: "/lich", label: "Lịch", icon: CalendarIcon },
   { href: "/doanh-thu", label: "Doanh thu", icon: RevenueIcon, managerOnly: true },
-  { href: "/tong-chi-phi", label: "Tổng chi phí", icon: ReceiptIcon },
+  { href: "/tien-dau", label: "Tiền dầu", icon: FuelIcon },
+  { href: "/chi-phi-khac", label: "Chi phí khác", icon: ReceiptIcon },
   { href: "/cong-no", label: "Công nợ", icon: DebtIcon },
   { href: "/xe", label: "Quản lý xe", icon: TruckIcon },
   { href: "/nhan-su", label: "Nhân sự", icon: UsersIcon },
