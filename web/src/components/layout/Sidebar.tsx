@@ -97,6 +97,7 @@ const LINKS: NavLink[] = [
   { href: "/", label: "Tổng quan", icon: GridIcon },
   { href: "/lich", label: "Lịch", icon: CalendarIcon },
   { href: "/doanh-thu", label: "Doanh thu", icon: RevenueIcon, managerOnly: true },
+  { href: "/tong-chi-phi", label: "Tổng chi phí", icon: ReceiptIcon, managerOnly: true },
   { href: "/tien-dau", label: "Tiền dầu", icon: FuelIcon },
   { href: "/chi-phi-khac", label: "Chi phí khác", icon: ReceiptIcon },
   { href: "/cong-no", label: "Công nợ", icon: DebtIcon },

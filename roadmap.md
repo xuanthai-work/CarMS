@@ -33,7 +33,7 @@ Cập nhật: 2026-11-25. Người quyết định: User (Product owner). Tài l
 | 1 | Bộ giao diện chung: nút chung, hiệu ứng zoom cho Modal, khung SideDrawer; giữ sidebar 3D và lưới lịch | **Xong** (TASK-035..037). Drawer chỉ làm khung ở đây; chuyển các màn sang drawer ở giai đoạn 6 |
 | 2 | Modal chuyến thống nhất cho thêm/xem/sửa, có ô ghi chú tự do | **Xong** (TASK-038..044). Không đổi dữ liệu |
 | 3 | Nâng dữ liệu tiền: chỉ làm hủy chuyến + phí hủy | **Xong** (TASK-054, 055). Thu nhiều đợt và số nguyên đã bỏ |
-| 4 | Gom chi phí (dầu, cầu đường, đối tác, khác) | Giữ kết quả `buildMonthFinance` không đổi nếu dữ liệu giống nhau |
+| 4 | Gom chi phí (dầu, cầu đường, đối tác, khác) | **Xong** (TASK-056, 057): màn tổng hợp `/tong-chi-phi`, không đổi dữ liệu; tổng khớp `buildMonthFinance` |
 | 5 | Làm lại lương | Cần phiên làm rõ nghiệp vụ lương với User trước khi viết đặc tả |
 | 6 | Đổi các màn còn lại (xe, lái xe, nhân sự, chi phí, dầu, công nợ) sang drawer và bộ giao diện chung | **Xong** (TASK-045..052: xe, lái xe, nhân sự, dầu, chi phí khác, công nợ, lương tháng, phiếu công ngày). Tất cả màn ngoài chuyến: thêm và sửa đều qua Drawer |
 
