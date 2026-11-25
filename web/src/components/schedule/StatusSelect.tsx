@@ -68,7 +68,7 @@ export default function StatusSelect({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition ${statusChipClass(
+        className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition md:min-h-0 ${statusChipClass(
           status
         )} ${open ? "ring-2 ring-brand-400" : "hover:brightness-95"}`}
       >
@@ -100,7 +100,7 @@ export default function StatusSelect({
                         if (!active) onPick(s.value);
                         setOpen(false);
                       }}
-                      className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-left text-sm transition ${
+                      className={`flex w-full items-center gap-2 whitespace-nowrap rounded-md px-2.5 py-2.5 text-left text-sm transition md:py-1.5 ${
                         active ? "bg-brand-600 font-semibold text-white" : "text-slate-700 hover:bg-slate-100"
                       }`}
                     >

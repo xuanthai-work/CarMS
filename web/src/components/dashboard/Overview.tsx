@@ -331,7 +331,7 @@ function TodayList({ legs }: { legs: LegRow[] }) {
       <ul className="divide-y divide-hairline">
         {shown.map((l, i) => (
           <li key={i} className="flex items-center gap-3 px-1 py-2.5">
-            <span className="w-12 shrink-0 text-sm font-bold text-ink tabular-nums">
+            <span className="w-14 shrink-0 whitespace-nowrap text-sm font-bold text-ink tabular-nums">
               {l.time ?? "Chưa giờ"}
             </span>
             <span
@@ -350,7 +350,7 @@ function TodayList({ legs }: { legs: LegRow[] }) {
         ))}
       </ul>
       {legs.length > shown.length && (
-        <Link href="/lich" className="mt-2 block px-1 text-xs font-medium text-dispatch-600 hover:underline">
+        <Link href="/lich" className="mt-2 inline-flex min-h-11 items-center px-1 text-xs font-medium text-dispatch-600 hover:underline md:min-h-0">
           + {legs.length - shown.length} lượt nữa · xem lịch →
         </Link>
       )}
@@ -394,7 +394,7 @@ function WarningList({ warnings }: { warnings: Warning[] }) {
         })}
       </ul>
       {warnings.length > shown.length && (
-        <Link href="/xe" className="mt-2 block text-xs font-medium text-dispatch-600 hover:underline">
+        <Link href="/xe" className="mt-2 inline-flex min-h-11 items-center text-xs font-medium text-dispatch-600 hover:underline md:min-h-0">
           + {warnings.length - shown.length} xe khác · quản lý xe →
         </Link>
       )}

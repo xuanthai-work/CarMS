@@ -226,7 +226,7 @@ export default function DebtScreen({
                         {paid ? (
                           <>
                             <span className="block tabular-nums">{fmtDate(d.paymentDate)}</span>
-                            <span className="block text-[12px] text-muted">{d.payerName || "—"}</span>
+                            {d.payerName && <span className="block text-[12px] text-muted">{d.payerName}</span>}
                           </>
                         ) : (
                           <span className="text-slate-300">—</span>

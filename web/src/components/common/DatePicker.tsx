@@ -102,7 +102,7 @@ export default function DatePicker({
     else if (inputRef.current) inputRef.current.value = displayText; // gõ sai → trả về giá trị cũ
   }
 
-  const navBtn = "grid h-7 w-7 place-items-center rounded-md text-slate-500 hover:bg-slate-100";
+  const navBtn = "grid h-10 w-10 place-items-center rounded-md text-slate-500 hover:bg-slate-100 md:h-7 md:w-7";
 
   return (
     <div className="relative" ref={wrapRef}>
@@ -138,7 +138,7 @@ export default function DatePicker({
         {open && !disabled && (
           <motion.div
             {...dropdownMotion(reduceMotion)}
-            className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-30 mt-1 w-[268px] rounded-xl border border-slate-200 bg-white p-3 shadow-xl`}
+            className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full z-30 mt-1 w-[292px] max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-3 shadow-xl md:w-[268px]`}
           >
           {/* Header: « năm ‹ tháng › tháng » năm */}
           <div className="mb-2 flex items-center justify-between">
@@ -146,7 +146,7 @@ export default function DatePicker({
               <button type="button" onClick={() => shiftYear(-1)} className={navBtn} aria-label="Năm trước">«</button>
               <button type="button" onClick={() => shiftMonth(-1)} className={navBtn} aria-label="Tháng trước">‹</button>
             </div>
-            <span className="text-sm font-semibold text-slate-700">
+            <span className="whitespace-nowrap text-sm font-semibold text-slate-700">
               Tháng {view.m + 1}, {view.y}
             </span>
             <div className="flex items-center gap-0.5">
