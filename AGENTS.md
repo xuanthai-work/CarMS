@@ -25,3 +25,11 @@ Tests use Vitest and are colocated with the code as `*.test.ts` (currently under
 ## Commit & Pull Request Guidelines
 
 Commit history uses short, imperative, lower-case summaries, often with a category such as `fix:` (for example, `fix: ghi nhan doanh thu theo ngay hoan tat`). Keep each commit focused. Pull requests should explain the behavior change, list validation commands, mention any Prisma/schema or environment changes, and include screenshots for UI changes. Never commit secrets from `.env`; update `.env.example` when configuration keys change.
+
+## Architecture decisions
+
+- Logic tính tiền (doanh thu, lợi nhuận, lương) nằm ở `web/src/utils/revenue.ts` và `web/src/utils/salary.ts`; hệ thống đang vận hành thực tế với tiền cọc, doanh thu chuyến, cầu đường, đối tác, tiền dầu và lương, nên mọi thay đổi không được làm lệch logic này và phải có test hồi quy.
+- Mọi tool của trợ lý AI tương tác DB mặc định là READ-ONLY (chỉ dùng hàm đọc của Prisma), trừ khi yêu cầu nghiệp vụ ghi rõ cho phép ghi.
+- Ngày giờ dùng múi giờ Việt Nam (`Asia/Ho_Chi_Minh`) qua helper `todayStr()` tại `web/src/utils/format.ts`, để tránh lệch ngày gần nửa đêm.
+- Mọi lệnh cài đặt, typecheck, test và build chạy từ thư mục `web/`.
+- Dự án chưa cấu hình ESLint (`npm run lint` gọi `next lint` sẽ hỏi cài đặt), nên không có gate lint.
