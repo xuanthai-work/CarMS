@@ -33,3 +33,4 @@ Commit history uses short, imperative, lower-case summaries, often with a catego
 - Ngày giờ dùng múi giờ Việt Nam (`Asia/Ho_Chi_Minh`) qua helper `todayStr()` tại `web/src/utils/format.ts`, để tránh lệch ngày gần nửa đêm.
 - Mọi lệnh cài đặt, typecheck, test và build chạy từ thư mục `web/`.
 - Dự án chưa cấu hình ESLint (`npm run lint` gọi `next lint` sẽ hỏi cài đặt), nên không có gate lint.
+- Phân quyền đang mở tạm (2026-11-25): `isManager()` trả true cho mọi chức vụ, chỉ CEO vẫn chỉ xem; khi làm phân quyền thật phải đổi lại `isManager` ở `web/src/utils/office.ts` (xem comment tại hàm).

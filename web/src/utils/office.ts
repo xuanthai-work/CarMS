@@ -13,7 +13,7 @@ export function officePositionOptions(current: string | null): readonly string[]
 
 /**
  * Quyền tách làm 2 trục độc lập:
- *  - isManager → PHẠM VI XEM (thấy Doanh thu, lương văn phòng, nhân sự văn phòng)
+ *  - isManager → PHẠM VI XEM (thấy Doanh thu, lương văn phòng, nhân sự văn phòng; hiện đang mở tạm cho mọi chức vụ khác null)
  *  - canEdit   → QUYỀN GHI (thêm/sửa/xoá)
  * CEO nằm ở nhóm quản lý (xem hết) nhưng chỉ được xem, không ghi.
  */
@@ -21,9 +21,14 @@ export function officePositionOptions(current: string | null): readonly string[]
 // Chức vụ được coi là "quản lý" — xem được mọi trang.
 export const MANAGER_POSITIONS = ["CEO", "COO"] as const;
 
-/** True nếu chức vụ thuộc nhóm quản lý (CEO/COO). */
+/**
+ * True nếu chức vụ thuộc nhóm quản lý.
+ * Đang mở tạm theo yêu cầu User ngày 2026-11-25 (mọi chức vụ khác null đều true).
+ * Muốn khôi phục phân quyền thật thì đổi lại thành:
+ * `position != null && (MANAGER_POSITIONS as readonly string[]).includes(position)`.
+ */
 export function isManager(position: string | null): boolean {
-  return position != null && (MANAGER_POSITIONS as readonly string[]).includes(position);
+  return position != null;
 }
 
 // Chức vụ chỉ được xem — thấy đủ thông tin nhưng không sửa được gì.

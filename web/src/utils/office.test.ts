@@ -20,14 +20,28 @@ describe("canEdit", () => {
   });
 });
 
+describe("isManager (mở tạm cho mọi chức vụ khác null)", () => {
+  it("CEO, COO, Nhân viên và chức vụ cũ ngoài enum đều là manager", () => {
+    expect(isManager("CEO")).toBe(true);
+    expect(isManager("COO")).toBe(true);
+    expect(isManager("Nhân viên")).toBe(true);
+    expect(isManager("Điều hành")).toBe(true);
+  });
+
+  it("chưa gán chức vụ (null) → false", () => {
+    expect(isManager(null)).toBe(false);
+  });
+});
+
 describe("canEdit độc lập với isManager", () => {
   it("CEO xem được hết nhưng không ghi", () => {
     expect(isManager("CEO")).toBe(true);
     expect(canEdit("CEO")).toBe(false);
   });
 
-  it("nhân viên ghi được nhưng không xem được trang quản lý", () => {
-    expect(isManager("Nhân viên")).toBe(false);
+  // Mở tạm: nhân viên xem và ghi như COO
+  it("nhân viên xem và ghi như COO (mở tạm)", () => {
+    expect(isManager("Nhân viên")).toBe(true);
     expect(canEdit("Nhân viên")).toBe(true);
   });
 });
