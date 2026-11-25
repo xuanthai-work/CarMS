@@ -65,6 +65,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-055** | 2026-11-25 | Chặn Đổi Sang Đã Hủy Không Phí Hủy Ở Dropdown Trạng Thái | Revenue / Trips |  **Đã xong** | [TASK-055](tasks/TASK-055-block-quick-cancel.md) |
 | **TASK-056..059** | 2026-11-25 | Màn Tổng Chi Phí + Gộp Tiền Dầu/Chi Phí Khác (ĐÃ RÚT LẠI theo yêu cầu User) | Finance / UX |  **Đã rút lại** | [TASK-056..059](tasks/TASK-056-059-cost-ledger-reverted.md) |
 | **TASK-060** | 2026-11-25 | Mở Phân Quyền Tạm Thời (Mọi Nhân Sự Như COO, CEO Chỉ Xem) | Auth |  **Đã xong** | [TASK-060](tasks/TASK-060-open-permissions-temp.md) |
+| **TASK-061** | 2026-11-25 | Sửa Lỗi Giao Diện Bảng Màn Doanh Thu | Revenue / UI |  **Đã xong** | [TASK-061](tasks/TASK-061-revenue-table-ui-fixes.md) |
 
 ---
 

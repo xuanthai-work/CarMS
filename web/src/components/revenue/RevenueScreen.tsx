@@ -43,18 +43,18 @@ function Stat({
   const content = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
+        <div className="min-w-0 text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
         {onClick && hint && (
           <ArrowUpRight size={18} weight="bold" className="shrink-0 text-muted" aria-hidden="true" />
         )}
       </div>
       <div className={`mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 ${toneText}`}>
-        <span className="text-2xl font-bold leading-none tracking-tight tabular-nums">{value}</span>
+        <span className="whitespace-nowrap text-lg font-bold leading-none tracking-tight tabular-nums sm:text-2xl">{value}</span>
         {hint && !onClick && <span className="text-xs text-muted">{hint}</span>}
       </div>
     </>
   );
-  const className = `w-full rounded-2xl border border-hairline bg-surface p-5 text-left shadow-card ${
+  const className = `min-w-0 w-full rounded-2xl border border-hairline bg-surface p-4 text-left shadow-card sm:p-5 ${
     onClick ? "cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2" : ""
   }`;
   return onClick ? (
@@ -206,18 +206,18 @@ export default function RevenueScreen({
             </div>
           ) : (
             <div className="overflow-x-auto thin-scroll">
-            <table className="w-full min-w-[900px] table-fixed text-sm">
+            <table className="w-full min-w-[960px] table-fixed text-sm">
             <colgroup>
-              <col style={{ width: "18%" }} />
-              <col style={{ width: "13%" }} />
+              <col style={{ width: "17%" }} />
               <col style={{ width: "11%" }} />
-              <col style={{ width: "11%" }} />
-              <col style={{ width: "12%" }} />
               <col style={{ width: "10%" }} />
-              <col style={{ width: "14%" }} />
               <col style={{ width: "11%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "18%" }} />
             </colgroup>
-            <thead className="bg-canvas/70">
+            <thead className="bg-canvas">
               <tr className="border-b border-hairline text-left text-xs font-semibold text-muted">
                 <th className="sticky left-0 z-10 bg-canvas px-3 py-2.5">Khách</th>
                 <th className="px-3 py-2.5">Ngày đi</th>
@@ -247,7 +247,17 @@ export default function RevenueScreen({
                   <td className="px-3 py-2.5 text-muted">{fmtDate(trip.outbound.date)}</td>
                   <td className="px-3 py-2.5 text-muted">{tourTypeLabel(trip.tourType)}</td>
                   <td className="px-3 py-2.5 text-right font-semibold text-ink">
-                    {trip.price == null ? (
+                    {trip.status === "cancelled" ? (
+                      <>
+                        <div>{fmtMoney(money.recognized)}</div>
+                        <div className="text-xs font-normal text-slate-400">phí hủy</div>
+                        {money.refund > 0 && (
+                          <div className="text-xs font-normal text-slate-400">
+                            hoàn lại {fmtMoney(money.refund)}
+                          </div>
+                        )}
+                      </>
+                    ) : trip.price == null ? (
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-400">
                         chưa có giá
                       </span>
