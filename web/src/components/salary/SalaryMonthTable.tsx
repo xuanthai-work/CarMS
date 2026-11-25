@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveSalaryMonth } from "@/api/salary";
-import { DetailCell, PaymentStatusBadge, Field, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import Button from "@/components/common/Button";
+import SideDrawer from "@/components/common/SideDrawer";
+import { DetailCell, PaymentStatusBadge, Field, FormError, inputCls } from "@/components/common/ui";
 import MoneyInput from "@/components/common/MoneyInput";
 import DatePicker from "@/components/common/DatePicker";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
-import Modal from "@/components/common/Modal";
 import { fmtMoney } from "@/utils/trips";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import { fmtDate } from "@/utils/format";
@@ -25,52 +26,76 @@ function SalaryEditForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const formId = "salary-edit-form";
   const [isPending, start] = useTransition();
   const [paidDate, setPaidDate] = useState(row.paidDate ?? "");
   const [paymentStatus, setPaymentStatus] = useState<"paid" | "unpaid">(row.paid ? "paid" : "unpaid");
+  const [err, setErr] = useState<string | null>(null);
 
-  function submit(fd: FormData) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (isPending) return;
+    if (paymentStatus === "paid" && !paidDate) return setErr("Vui lòng chọn ngày trả lương.");
+    const fd = new FormData(e.currentTarget);
+    setErr(null);
     start(async () => {
-      await saveSalaryMonth(fd); // form đã có paymentStatus + paidDate → 1 lần ghi
+      const r = await saveSalaryMonth(fd); // form đã có paymentStatus + paidDate → 1 lần ghi
+      if (!r.ok) {
+        setErr(r.error);
+        return;
+      }
       onDone();
     });
   }
 
   return (
-    <form action={submit} className="space-y-3">
-      <input type="hidden" name="personType" value={row.personType} />
-      <input type="hidden" name="personId" value={row.personId} />
-      <input type="hidden" name="monthKey" value={monthKey} />
-      <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
-        <DetailCell>
-          <Field label="Thưởng / phụ cấp (cộng)">
-            <MoneyInput name="additions" defaultValue={row.additions || null} placeholder="0" />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Tạm ứng / khấu trừ (trừ)">
-            <MoneyInput name="deductions" defaultValue={row.deductions || null} placeholder="0" />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Ngày trả lương">
-            <DatePicker name="paidDate" value={paidDate} onChange={setPaidDate} />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Trạng thái">
-            <FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} />
-          </Field>
-        </DetailCell>
-        <DetailCell className="sm:col-span-2">
-          <Field label="Ghi chú"><input name="note" defaultValue={row.note} className={inputCls} /></Field>
-        </DetailCell>
-      </div>
-      <div className="flex justify-end gap-2 border-t border-hairline pt-3">
-        <CancelButton onClick={onCancel} />
-        <SaveButton>{isPending ? "Đang lưu…" : "Lưu"}</SaveButton>
-      </div>
-    </form>
+    <SideDrawer
+      title={`Sửa lương — ${row.name}`}
+      onClose={onCancel}
+      footer={
+        <Button type="submit" form={formId} disabled={isPending}>
+          {isPending ? "Đang lưu…" : "Lưu"}
+        </Button>
+      }
+    >
+      <FormError message={err} />
+      <form
+        id={formId}
+        noValidate
+        onSubmit={handleSubmit}
+        onInput={() => err && setErr(null)}
+        className="space-y-3"
+      >
+        <input type="hidden" name="personType" value={row.personType} />
+        <input type="hidden" name="personId" value={row.personId} />
+        <input type="hidden" name="monthKey" value={monthKey} />
+        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
+          <DetailCell>
+            <Field label="Thưởng / phụ cấp (cộng)">
+              <MoneyInput name="additions" defaultValue={row.additions || null} placeholder="0" />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Tạm ứng / khấu trừ (trừ)">
+              <MoneyInput name="deductions" defaultValue={row.deductions || null} placeholder="0" />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Ngày trả lương">
+              <DatePicker name="paidDate" value={paidDate} onChange={setPaidDate} />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Trạng thái">
+              <FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Ghi chú"><input name="note" defaultValue={row.note} className={inputCls} /></Field>
+          </DetailCell>
+        </div>
+      </form>
+    </SideDrawer>
   );
 }
 
@@ -192,21 +217,15 @@ export default function SalaryMonthTable({
           const editing = filteredRows.find((r) => keyOf(r) === editingKey);
           if (!editing) return null;
           return (
-            <Modal
-              title={`Sửa lương — ${editing.name}`}
-              onClose={() => setEditingKey(null)}
-              maxWidthClass="max-w-lg"
-            >
-              <SalaryEditForm
-                row={editing}
-                monthKey={monthKey}
-                onDone={() => {
-                  setEditingKey(null);
-                  router.refresh();
-                }}
-                onCancel={() => setEditingKey(null)}
-              />
-            </Modal>
+            <SalaryEditForm
+              row={editing}
+              monthKey={monthKey}
+              onDone={() => {
+                setEditingKey(null);
+                router.refresh();
+              }}
+              onCancel={() => setEditingKey(null)}
+            />
           );
         })()}
     </div>

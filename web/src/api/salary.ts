@@ -5,6 +5,7 @@ import { requireEditor, requireManagerEditor } from "@/services/auth";
 import { s, optStr, optNum, reqNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
+import { OK, fail, type ActionResult } from "@/utils/actionResult";
 
 /** Lương cơ bản hiện tại của người (để snapshot khi tạo dòng lương tháng). */
 async function lookupBaseSalary(personType: string, personId: string): Promise<number> {
@@ -17,13 +18,20 @@ async function lookupBaseSalary(personType: string, personId: string): Promise<n
 }
 
 /** Sửa điều chỉnh lương tháng (thưởng/phụ cấp, tạm ứng/khấu trừ, ghi chú). Upsert theo (personType, personId, monthKey). */
-export async function saveSalaryMonth(fd: FormData): Promise<void> {
+export async function saveSalaryMonth(fd: FormData): Promise<ActionResult> {
   const personType = s(fd, "personType");
   if (personType === "office") await requireManagerEditor();
   else await requireEditor();
 
   const personId = s(fd, "personId");
   const monthKey = s(fd, "monthKey");
+  if (!personId || !monthKey || (personType !== "office" && personType !== "driver")) {
+    return fail("Không xác định được người hoặc tháng lương.");
+  }
+  if (fd.has("paymentStatus") && s(fd, "paymentStatus") === "paid" && !optStr(fd, "paidDate")) {
+    return fail("Vui lòng chọn ngày trả lương.");
+  }
+
   const baseSalary = await lookupBaseSalary(personType, personId);
 
   // Gộp điều chỉnh + trạng thái trả (paymentStatus) + ngày trả (paidDate) vào một lần ghi.
@@ -42,12 +50,17 @@ export async function saveSalaryMonth(fd: FormData): Promise<void> {
   if (fd.has("paymentStatus")) fields.paid = s(fd, "paymentStatus") === "paid";
   if (fd.has("paidDate")) fields.paidDate = optStr(fd, "paidDate");
 
-  await prisma.salaryMonth.upsert({
-    where: { personType_personId_monthKey: { personType, personId, monthKey } },
-    create: { id: newId("sm"), personType, personId, monthKey, baseSalary, ...fields },
-    update: fields, // giữ nguyên baseSalary snapshot cũ
-  });
+  try {
+    await prisma.salaryMonth.upsert({
+      where: { personType_personId_monthKey: { personType, personId, monthKey } },
+      create: { id: newId("sm"), personType, personId, monthKey, baseSalary, ...fields },
+      update: fields, // giữ nguyên baseSalary snapshot cũ
+    });
+  } catch {
+    return fail("Không lưu được. Vui lòng thử lại.");
+  }
   revalidateAll();
+  return OK;
 }
 
 /** Tạo/sửa phiếu trả công lái xe đối tác. */
