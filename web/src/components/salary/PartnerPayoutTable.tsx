@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { savePartnerPayout, deletePartnerPayout } from "@/api/salary";
-import { DetailCell, PaymentStatusBadge, Field, inputCls, CancelButton, SaveButton } from "@/components/common/ui";
+import Button from "@/components/common/Button";
+import SideDrawer from "@/components/common/SideDrawer";
+import { DetailCell, PaymentStatusBadge, Field, FormError, inputCls } from "@/components/common/ui";
 import SelectMenu from "@/components/common/SelectMenu";
 import DatePicker from "@/components/common/DatePicker";
 import MoneyInput from "@/components/common/MoneyInput";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
-import Modal from "@/components/common/Modal";
 import { useFormState } from "@/hooks/common/useFormState";
 import { fmtDate } from "@/utils/format";
 import { fmtMoney } from "@/utils/trips";
@@ -30,6 +31,9 @@ function PartnerPayoutForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const formId = "partner-payout-form";
+  const [isPending, startTransition] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
   const { form, set } = useFormState(() => ({
     driverId: payout?.driverId ?? "",
     workDate: payout?.workDate ?? defaultDate,
@@ -39,34 +43,68 @@ function PartnerPayoutForm({
     .filter((d) => d.type === "partner" && (!hasLeft(d.endDate, form.workDate || defaultDate) || d.id === form.driverId))
     .map((d) => ({ value: d.id, label: d.name }));
 
-  async function submit(fd: FormData) {
-    await savePartnerPayout(fd);
-    onDone();
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (isPending) return;
+    if (!form.driverId) return setErr("Vui lòng chọn lái xe.");
+    if (!form.workDate) return setErr("Vui lòng chọn ngày làm.");
+    const fd = new FormData(e.currentTarget);
+    const amt = String(fd.get("amount") || "").replace(/[^\d]/g, "");
+    if (!amt) return setErr("Vui lòng nhập số tiền.");
+    setErr(null);
+    startTransition(async () => {
+      const r = await savePartnerPayout(fd);
+      if (!r.ok) {
+        setErr(r.error);
+        return;
+      }
+      onDone();
+    });
   }
 
   return (
-    <form id={`pp-${payout?.id ?? "new"}`} action={submit} className="space-y-2">
-      {payout && <input type="hidden" name="id" value={payout.id} />}
-      <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
-        <DetailCell><Field label="Lái xe đối tác"><SelectMenu name="driverId" value={form.driverId} onChange={set("driverId")} options={options} placeholder="Chọn lái xe" /></Field></DetailCell>
-        <DetailCell><Field label="Ngày làm"><DatePicker name="workDate" value={form.workDate} onChange={set("workDate")} /></Field></DetailCell>
-        <DetailCell><Field label="Số tiền"><MoneyInput name="amount" defaultValue={payout?.amount ?? null} placeholder="VD: 800.000" /></Field></DetailCell>
-        <DetailCell><Field label="Trạng thái"><FuelPaymentStatusSelect name="paymentStatus" value={form.paymentStatus} onChange={set("paymentStatus")} /></Field></DetailCell>
-        <DetailCell><Field label="Người trả"><input name="payerName" defaultValue={payout?.payerName ?? ""} className={inputCls} /></Field></DetailCell>
-        <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={payout?.note ?? ""} className={inputCls} /></Field></DetailCell>
-      </div>
-      <div className="flex items-center justify-between border-t border-hairline pt-3">
-        {payout ? (
-          <ConfirmDeleteButton action={deletePartnerPayout} id={payout.id} label={`phiếu của lái xe`} />
+    <SideDrawer
+      title={payout ? "Sửa phiếu trả công" : "Thêm phiếu trả công"}
+      onClose={onCancel}
+      footer={
+        payout ? (
+          <div className="flex w-full items-center justify-between">
+            <ConfirmDeleteButton action={deletePartnerPayout} id={payout.id} label={`phiếu của lái xe`} />
+            <Button type="submit" form={formId} disabled={isPending}>
+              {isPending ? "Đang lưu…" : "Lưu"}
+            </Button>
+          </div>
         ) : (
-          <span />
-        )}
-        <div className="flex gap-2">
-          <CancelButton onClick={onCancel} />
-          <SaveButton />
+          <>
+            <Button variant="secondary" onClick={onCancel}>
+              Hủy
+            </Button>
+            <Button type="submit" form={formId} disabled={isPending}>
+              {isPending ? "Đang thêm…" : "Thêm phiếu"}
+            </Button>
+          </>
+        )
+      }
+    >
+      <FormError message={err} />
+      <form
+        id={formId}
+        noValidate
+        onSubmit={handleSubmit}
+        onInput={() => err && setErr(null)}
+        className="space-y-3"
+      >
+        {payout && <input type="hidden" name="id" value={payout.id} />}
+        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
+          <DetailCell><Field label="Lái xe đối tác"><SelectMenu name="driverId" value={form.driverId} onChange={set("driverId")} options={options} placeholder="Chọn lái xe" /></Field></DetailCell>
+          <DetailCell><Field label="Ngày làm"><DatePicker name="workDate" value={form.workDate} onChange={set("workDate")} /></Field></DetailCell>
+          <DetailCell><Field label="Số tiền"><MoneyInput name="amount" defaultValue={payout?.amount ?? null} placeholder="VD: 800.000" /></Field></DetailCell>
+          <DetailCell><Field label="Trạng thái"><FuelPaymentStatusSelect name="paymentStatus" value={form.paymentStatus} onChange={set("paymentStatus")} /></Field></DetailCell>
+          <DetailCell><Field label="Người trả"><input name="payerName" defaultValue={payout?.payerName ?? ""} className={inputCls} /></Field></DetailCell>
+          <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={payout?.note ?? ""} className={inputCls} /></Field></DetailCell>
         </div>
-      </div>
-    </form>
+      </form>
+    </SideDrawer>
   );
 }
 
@@ -157,9 +195,7 @@ export default function PartnerPayoutTable({
         const editing = editingId ? payouts.find((p) => p.id === editingId) : undefined;
         if (editingId && !editing) return null; // bản ghi đã biến mất (VD sau khi xoá) → ẩn modal thay vì lật sang "Thêm"
         return (
-          <Modal title={editing ? "Sửa phiếu trả công" : "Thêm phiếu trả công"} onClose={close} maxWidthClass="max-w-xl">
-            <PartnerPayoutForm payout={editing} drivers={drivers} defaultDate={defaultDate} onDone={done} onCancel={close} />
-          </Modal>
+          <PartnerPayoutForm payout={editing} drivers={drivers} defaultDate={defaultDate} onDone={done} onCancel={close} />
         );
       })()}
     </div>

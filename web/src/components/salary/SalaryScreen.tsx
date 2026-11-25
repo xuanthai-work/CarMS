@@ -16,9 +16,9 @@ import { usePermissions } from "@/states/permissions/PermissionsProvider";
 function Tile({ label, value, tone = "ink" }: { label: string; value: string; tone?: "ink" | "amber" | "emerald" }) {
   const color = tone === "amber" ? "text-signal" : tone === "emerald" ? "text-emerald-600" : "text-ink";
   return (
-    <div className="rounded-2xl border border-hairline bg-surface p-5 shadow-card">
+    <div className="min-w-0 rounded-2xl border border-hairline bg-surface p-5 shadow-card">
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
-      <div className={`mt-3 text-2xl font-bold leading-none tracking-tight tabular-nums ${color}`}>{value}</div>
+      <div className={`mt-3 truncate text-xl font-bold leading-none tracking-tight tabular-nums sm:text-2xl ${color}`}>{value}</div>
     </div>
   );
 }

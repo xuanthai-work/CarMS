@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireEditor, requireManagerEditor } from "@/services/auth";
-import { s, optStr, optNum, reqNum } from "@/utils/formData";
+import { s, optStr, optNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
 import { OK, fail, type ActionResult } from "@/utils/actionResult";
@@ -64,21 +64,33 @@ export async function saveSalaryMonth(fd: FormData): Promise<ActionResult> {
 }
 
 /** Tạo/sửa phiếu trả công lái xe đối tác. */
-export async function savePartnerPayout(fd: FormData): Promise<void> {
+export async function savePartnerPayout(fd: FormData): Promise<ActionResult> {
   await requireEditor();
   const id = s(fd, "id");
+  const driverId = s(fd, "driverId");
+  const workDate = s(fd, "workDate");
+  if (!driverId) return fail("Vui lòng chọn lái xe.");
+  if (!workDate) return fail("Vui lòng chọn ngày làm.");
+  const amt = String(fd.get("amount") || "").replace(/[^\d]/g, "");
+  if (!amt) return fail("Vui lòng nhập số tiền.");
+
   const data = {
-    driverId: s(fd, "driverId"),
-    workDate: s(fd, "workDate"),
-    amount: reqNum(fd, "amount"),
+    driverId,
+    workDate,
+    amount: Number(amt),
     paymentStatus: s(fd, "paymentStatus") || "unpaid",
     paymentDate: optStr(fd, "paymentDate"),
     payerName: s(fd, "payerName"),
     note: s(fd, "note"),
   };
-  if (id) await prisma.partnerPayout.update({ where: { id }, data });
-  else await prisma.partnerPayout.create({ data: { id: newId("pp"), ...data } });
+  try {
+    if (id) await prisma.partnerPayout.update({ where: { id }, data });
+    else await prisma.partnerPayout.create({ data: { id: newId("pp"), ...data } });
+  } catch {
+    return fail("Không lưu được. Vui lòng thử lại.");
+  }
   revalidateAll();
+  return OK;
 }
 
 export async function deletePartnerPayout(fd: FormData): Promise<void> {

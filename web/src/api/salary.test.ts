@@ -8,6 +8,7 @@ const { mockRequireEditor, mockRequireManagerEditor, mockRevalidateAll, mockPris
     officeStaff: { findUnique: vi.fn() },
     driver: { findUnique: vi.fn() },
     salaryMonth: { upsert: vi.fn() },
+    partnerPayout: { create: vi.fn(), update: vi.fn() },
   },
 }));
 
@@ -18,7 +19,7 @@ vi.mock("@/services/auth", () => ({
 vi.mock("./revalidate", () => ({ revalidateAll: mockRevalidateAll }));
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 
-import { saveSalaryMonth } from "./salary";
+import { saveSalaryMonth, savePartnerPayout } from "./salary";
 
 function makeFd(entries: Record<string, string>): FormData {
   const fd = new FormData();
@@ -32,6 +33,8 @@ describe("saveSalaryMonth", () => {
     mockPrisma.officeStaff.findUnique.mockResolvedValue({ baseSalary: 10_000_000 });
     mockPrisma.driver.findUnique.mockResolvedValue({ baseSalary: 8_000_000 });
     mockPrisma.salaryMonth.upsert.mockResolvedValue({});
+    mockPrisma.partnerPayout.create.mockResolvedValue({});
+    mockPrisma.partnerPayout.update.mockResolvedValue({});
   });
 
   it("báo lỗi khi thiếu personId hoặc monthKey", async () => {
@@ -107,6 +110,83 @@ describe("saveSalaryMonth", () => {
     mockPrisma.salaryMonth.upsert.mockRejectedValueOnce(new Error("DB error"));
     const r = await saveSalaryMonth(
       makeFd({ personType: "driver", personId: "d1", monthKey: "2026-11", paymentStatus: "unpaid" }),
+    );
+    expect(r).toEqual({ ok: false, error: "Không lưu được. Vui lòng thử lại." });
+    expect(mockRevalidateAll).not.toHaveBeenCalled();
+  });
+});
+
+describe("savePartnerPayout", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.partnerPayout.create.mockResolvedValue({});
+    mockPrisma.partnerPayout.update.mockResolvedValue({});
+  });
+
+  it("báo lỗi khi thiếu driverId", async () => {
+    const r = await savePartnerPayout(makeFd({ workDate: "2026-11-01", amount: "500000" }));
+    expect(r).toEqual({ ok: false, error: "Vui lòng chọn lái xe." });
+    expect(mockPrisma.partnerPayout.create).not.toHaveBeenCalled();
+  });
+
+  it("báo lỗi khi thiếu workDate", async () => {
+    const r = await savePartnerPayout(makeFd({ driverId: "d1", amount: "500000" }));
+    expect(r).toEqual({ ok: false, error: "Vui lòng chọn ngày làm." });
+    expect(mockPrisma.partnerPayout.create).not.toHaveBeenCalled();
+  });
+
+  it("báo lỗi khi thiếu amount (rỗng hoặc chỉ chữ)", async () => {
+    const r1 = await savePartnerPayout(makeFd({ driverId: "d1", workDate: "2026-11-01", amount: "" }));
+    expect(r1).toEqual({ ok: false, error: "Vui lòng nhập số tiền." });
+
+    const r2 = await savePartnerPayout(makeFd({ driverId: "d1", workDate: "2026-11-01", amount: "abc" }));
+    expect(r2).toEqual({ ok: false, error: "Vui lòng nhập số tiền." });
+  });
+
+  it("tạo mới hợp lệ với amount đúng số và paymentStatus mặc định unpaid", async () => {
+    const r = await savePartnerPayout(
+      makeFd({ driverId: "d1", workDate: "2026-11-01", amount: "800.000", payerName: "A", note: "Ghi chú" }),
+    );
+    expect(mockRequireEditor).toHaveBeenCalledTimes(1);
+    expect(r).toEqual({ ok: true });
+    expect(mockPrisma.partnerPayout.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        driverId: "d1",
+        workDate: "2026-11-01",
+        amount: 800_000,
+        paymentStatus: "unpaid",
+        paymentDate: null,
+        payerName: "A",
+        note: "Ghi chú",
+      }),
+    });
+    expect(mockRevalidateAll).toHaveBeenCalledTimes(1);
+  });
+
+  it("sửa hợp lệ gọi update", async () => {
+    const r = await savePartnerPayout(
+      makeFd({ id: "pp1", driverId: "d1", workDate: "2026-11-02", amount: "1.200.000", paymentStatus: "paid" }),
+    );
+    expect(r).toEqual({ ok: true });
+    expect(mockPrisma.partnerPayout.update).toHaveBeenCalledWith({
+      where: { id: "pp1" },
+      data: {
+        driverId: "d1",
+        workDate: "2026-11-02",
+        amount: 1_200_000,
+        paymentStatus: "paid",
+        paymentDate: null,
+        payerName: "",
+        note: "",
+      },
+    });
+    expect(mockRevalidateAll).toHaveBeenCalledTimes(1);
+  });
+
+  it("trả fail khi prisma create lỗi và không revalidateAll", async () => {
+    mockPrisma.partnerPayout.create.mockRejectedValueOnce(new Error("DB error"));
+    const r = await savePartnerPayout(
+      makeFd({ driverId: "d1", workDate: "2026-11-01", amount: "500000" }),
     );
     expect(r).toEqual({ ok: false, error: "Không lưu được. Vui lòng thử lại." });
     expect(mockRevalidateAll).not.toHaveBeenCalled();

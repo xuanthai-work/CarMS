@@ -59,6 +59,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-049** | 2026-11-25 | Thêm/Sửa Khoản Chi Khác Bằng SideDrawer (Phase 6, Màn Chi Phí Khác) | Expenses / UX |  **Đã xong** | [TASK-049](tasks/TASK-049-expense-drawer.md) |
 | **TASK-050** | 2026-11-25 | Cập Nhật Thanh Toán Công Nợ Bằng SideDrawer (Phase 6, Màn Công Nợ) | Debts / UX |  **Đã xong** | [TASK-050](tasks/TASK-050-debt-drawer.md) |
 | **TASK-051** | 2026-11-25 | Sửa Lương Tháng Bằng SideDrawer (Phase 6, Màn Lương) | Salary / UX |  **Đã xong** | [TASK-051](tasks/TASK-051-salary-month-drawer.md) |
+| **TASK-052** | 2026-11-25 | Thêm/Sửa Phiếu Công Ngày Bằng SideDrawer + Sửa Tràn Ngang Trang Lương (Phase 6) | Salary / UX |  **Đã xong** | [TASK-052](tasks/TASK-052-partner-payout-drawer.md) |
 
 ---
 
