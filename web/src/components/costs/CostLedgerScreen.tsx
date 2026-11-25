@@ -1,10 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import Button from "@/components/common/Button";
 import FilterTabs from "@/components/common/FilterTabs";
 import MonthNav from "@/components/common/MonthNav";
 import { SearchInput, Toolbar } from "@/components/common/ui";
+import ExpenseModal from "@/components/expenses/ExpenseModal";
+import FuelEntryForm from "@/components/fuel/FuelEntryEditorRow";
+import VehicleFilterSelect from "@/components/fuel/VehicleFilterSelect";
+import { usePermissions } from "@/states/permissions/PermissionsProvider";
+import type { FuelEntry, OtherExpense, Vehicle } from "@/types";
 import { COST_GROUPS, type CostGroup, type CostLedger } from "@/utils/costLedger";
 import { addMonth, fmtDate, monthLabel } from "@/utils/format";
 import { normalizeVn } from "@/utils/search";
@@ -26,26 +33,29 @@ const GROUP_LABEL = Object.fromEntries(COST_GROUPS.map((g) => [g.value, g.label]
 function Stat({
   label,
   value,
-  highlight = false,
+  tone = "default",
+  hint,
 }: {
   label: string;
   value: string;
-  highlight?: boolean;
+  tone?: "default" | "highlight" | "amber";
+  hint?: string;
 }) {
   return (
     <div
       className={`min-w-0 rounded-2xl border p-5 shadow-card ${
-        highlight ? "border-brand-200 bg-brand-50/40" : "border-hairline bg-surface"
+        tone === "highlight" ? "border-brand-200 bg-brand-50/40" : "border-hairline bg-surface"
       }`}
     >
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">{label}</div>
       <div
         className={`mt-3 truncate text-xl font-bold leading-none tracking-tight tabular-nums sm:text-2xl ${
-          highlight ? "text-signal" : "text-ink"
+          tone === "default" ? "text-ink" : "text-signal"
         }`}
       >
         {value}
       </div>
+      {hint && <div className="mt-1.5 truncate text-[11px] text-muted">{hint}</div>}
     </div>
   );
 }
@@ -53,21 +63,39 @@ function Stat({
 export default function CostLedgerScreen({
   ledger,
   monthKey,
+  fuel,
+  expenses,
+  vehicles,
+  initialGroup,
 }: {
   ledger: CostLedger;
   monthKey: string;
+  fuel: FuelEntry[];
+  expenses: OtherExpense[];
+  vehicles: Vehicle[];
+  initialGroup: "all" | CostGroup;
 }) {
-  const [group, setGroup] = useState<"all" | CostGroup>("all");
+  const router = useRouter();
+  const { canEdit } = usePermissions();
+  const [group, setGroup] = useState<"all" | CostGroup>(initialGroup);
+  const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "unpaid">("all");
+  const [vehicleId, setVehicleId] = useState("all");
   const [q, setQ] = useState("");
+  const [form, setForm] = useState<{ type: "fuel" | "expense"; id?: string } | null>(null);
 
   const filtered = useMemo(() => {
     const nq = normalizeVn(q);
     return ledger.lines.filter((line) => {
       if (group !== "all" && line.group !== group) return false;
+      if (statusFilter === "paid" && line.paid !== true) return false;
+      if (statusFilter === "unpaid" && line.paid !== false) return false;
+      if (vehicleId !== "all" && (line.kind !== "fuel" || line.vehicleId !== vehicleId)) {
+        return false;
+      }
       if (nq && !normalizeVn(`${line.title} ${line.category}`).includes(nq)) return false;
       return true;
     });
-  }, [ledger.lines, group, q]);
+  }, [ledger.lines, group, statusFilter, vehicleId, q]);
 
   const filteredTotal = useMemo(
     () => filtered.reduce((sum, line) => sum + line.amount, 0),
@@ -82,6 +110,11 @@ export default function CostLedgerScreen({
       ] as const,
     []
   );
+
+  function done() {
+    setForm(null);
+    router.refresh();
+  }
 
   return (
     <div className="space-y-6">
@@ -99,8 +132,14 @@ export default function CostLedgerScreen({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Stat label="Tổng chi phí" value={fmtMoneyUnit(ledger.total)} highlight />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
+        <Stat label="Tổng chi phí" value={fmtMoneyUnit(ledger.total)} tone="highlight" />
+        <Stat
+          label="Chưa chi"
+          value={fmtMoneyUnit(ledger.unpaid)}
+          tone="amber"
+          hint="dầu & chi phí khác"
+        />
         {COST_GROUPS.map((g) => (
           <Stat key={g.value} label={g.label} value={fmtMoneyUnit(ledger.byGroup[g.value])} />
         ))}
@@ -113,7 +152,30 @@ export default function CostLedgerScreen({
           ariaLabel="Lọc theo nhóm chi phí"
           options={filterOptions}
         />
+        <FilterTabs
+          value={statusFilter}
+          onChange={setStatusFilter}
+          ariaLabel="Lọc trạng thái thanh toán"
+          options={
+            [
+              ["all", "Tất cả"],
+              ["paid", "Đã chi"],
+              ["unpaid", "Chưa chi"],
+            ] as const
+          }
+        />
+        <VehicleFilterSelect value={vehicleId} vehicles={vehicles} onChange={setVehicleId} />
         <SearchInput value={q} onChange={setQ} placeholder="Tìm nội dung, phân loại…" />
+        {canEdit && (
+          <>
+            <Button size="toolbar" onClick={() => setForm({ type: "fuel" })}>
+              + Phiếu dầu
+            </Button>
+            <Button size="toolbar" onClick={() => setForm({ type: "expense" })}>
+              + Chi phí khác
+            </Button>
+          </>
+        )}
       </Toolbar>
 
       <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-panel">
@@ -137,54 +199,74 @@ export default function CostLedgerScreen({
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((line) => (
-                    <tr
-                      key={line.id}
-                      className="border-b border-slate-100 last:border-0"
-                    >
-                      <td className="whitespace-nowrap px-4 py-3.5 text-muted tabular-nums">
-                        {fmtDate(line.date)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${GROUP_BADGE[line.group]}`}
-                        >
-                          {GROUP_LABEL[line.group]}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5 text-slate-700">
-                        {line.category}
-                      </td>
-                      <td className="max-w-[280px] truncate px-4 py-3.5 font-medium text-ink">
-                        {line.title}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5 text-right font-semibold text-ink tabular-nums">
-                        {fmtMoney(line.amount)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5">
-                        {line.paid === true ? (
-                          <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                            Đã chi
+                  {filtered.map((line) => {
+                    const editable = canEdit && (line.kind === "fuel" || line.kind === "expense");
+                    return (
+                      <tr
+                        key={line.id}
+                        onClick={
+                          editable
+                            ? () =>
+                                setForm({
+                                  type: line.kind as "fuel" | "expense",
+                                  id: line.refId ?? undefined,
+                                })
+                            : undefined
+                        }
+                        className={
+                          editable
+                            ? "cursor-pointer border-b border-slate-100 last:border-0 transition hover:bg-slate-50"
+                            : "border-b border-slate-100 last:border-0"
+                        }
+                      >
+                        <td className="whitespace-nowrap px-4 py-3.5 text-muted tabular-nums">
+                          {fmtDate(line.date)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3.5">
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${GROUP_BADGE[line.group]}`}
+                          >
+                            {GROUP_LABEL[line.group]}
                           </span>
-                        ) : line.paid === false ? (
-                          <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
-                            Chưa chi
-                          </span>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5 text-right">
-                        <Link
-                          href={line.href}
-                          aria-label="Mở màn nguồn"
-                          className="text-xs font-semibold text-brand-600 hover:underline"
-                        >
-                          Mở
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3.5 text-slate-700">
+                          {line.category}
+                        </td>
+                        <td className="max-w-[280px] truncate px-4 py-3.5 font-medium text-ink">
+                          {line.title}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3.5 text-right font-semibold text-ink tabular-nums">
+                          {fmtMoney(line.amount)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3.5">
+                          {line.paid === true ? (
+                            <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                              Đã chi
+                            </span>
+                          ) : line.paid === false ? (
+                            <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                              Chưa chi
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3.5 text-right">
+                          {line.kind === "trip" || line.kind === "salary" ? (
+                            <Link
+                              href={line.href}
+                              aria-label="Mở màn nguồn"
+                              className="text-xs font-semibold text-brand-600 hover:underline"
+                            >
+                              Mở
+                            </Link>
+                          ) : (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -200,6 +282,35 @@ export default function CostLedgerScreen({
           </>
         )}
       </div>
+
+      {form?.type === "fuel" &&
+        (() => {
+          const entry = form.id ? fuel.find((f) => f.id === form.id) : undefined;
+          if (form.id && !entry) return null;
+          return (
+            <FuelEntryForm
+              entry={entry}
+              vehicles={vehicles}
+              defaultDate={entry ? entry.refuelDate : `${monthKey}-01`}
+              onDone={done}
+              onCancel={() => setForm(null)}
+            />
+          );
+        })()}
+
+      {form?.type === "expense" &&
+        (() => {
+          const expense = form.id ? expenses.find((e) => e.id === form.id) : undefined;
+          if (form.id && !expense) return null;
+          return (
+            <ExpenseModal
+              expense={expense}
+              defaultDate={`${monthKey}-01`}
+              onDone={done}
+              onCancel={() => setForm(null)}
+            />
+          );
+        })()}
     </div>
   );
 }

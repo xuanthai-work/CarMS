@@ -1,16 +1,12 @@
-import FuelScreen from "@/components/fuel/FuelScreen";
-import { getFuelEntries } from "@/services/fuel";
-import { getVehicles } from "@/services/vehicles";
-import { monthKeyOf, todayStr } from "@/utils/format";
+import { redirect } from "next/navigation";
 
-export default async function FuelPage({
+export default async function TienDauRedirectPage({
   searchParams,
 }: {
   searchParams: Promise<{ m?: string }>;
 }) {
   const sp = await searchParams;
-  const monthKey = sp.m || monthKeyOf(todayStr());
-  const [vehicles, entries] = await Promise.all([getVehicles(), getFuelEntries(monthKey)]);
-
-  return <FuelScreen entries={entries} vehicles={vehicles} monthKey={monthKey} />;
+  const params = new URLSearchParams({ g: "fuel" });
+  if (sp.m) params.set("m", sp.m);
+  redirect(`/tong-chi-phi?${params.toString()}`);
 }

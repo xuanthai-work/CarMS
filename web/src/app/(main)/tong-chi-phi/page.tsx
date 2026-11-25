@@ -5,20 +5,22 @@ import { getDrivers } from "@/services/drivers";
 import { getTrips } from "@/services/trips";
 import { getOfficeStaff } from "@/services/staff";
 import { getSalaryMonths, getPartnerPayouts } from "@/services/salary";
-import { requireManager } from "@/services/auth";
 import { monthKeyOf, todayStr } from "@/utils/format";
 import { salaryCostByMonth } from "@/utils/salary";
-import { buildCostLedger } from "@/utils/costLedger";
+import { buildCostLedger, type CostGroup } from "@/utils/costLedger";
 import CostLedgerScreen from "@/components/costs/CostLedgerScreen";
+
+const VALID_GROUPS = new Set<CostGroup>(["fuel", "partner", "toll", "other", "salary"]);
 
 export default async function TongChiPhiPage({
   searchParams,
 }: {
-  searchParams: Promise<{ m?: string }>;
+  searchParams: Promise<{ m?: string; g?: string }>;
 }) {
-  await requireManager();
   const sp = await searchParams;
   const monthKey = sp.m && /^\d{4}-\d{2}$/.test(sp.m) ? sp.m : monthKeyOf(todayStr());
+  const initialGroup: "all" | CostGroup =
+    sp.g && VALID_GROUPS.has(sp.g as CostGroup) ? (sp.g as CostGroup) : "all";
 
   const [trips, fuel, expenses, vehicles, drivers, office, months, payouts] = await Promise.all([
     getTrips(),
@@ -41,5 +43,14 @@ export default async function TongChiPhiPage({
     salary,
   });
 
-  return <CostLedgerScreen ledger={ledger} monthKey={monthKey} />;
+  return (
+    <CostLedgerScreen
+      ledger={ledger}
+      monthKey={monthKey}
+      fuel={fuel}
+      expenses={expenses}
+      vehicles={vehicles}
+      initialGroup={initialGroup}
+    />
+  );
 }
