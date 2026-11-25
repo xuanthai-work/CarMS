@@ -14,9 +14,9 @@ import { fmtDate, todayStr } from "@/utils/format";
 import { GENDERS, officePositionOptions, hasLeft } from "@/utils/office";
 import { useFormState } from "@/hooks/common/useFormState";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
-import type { OfficeStaff } from "@/types";
+import type { OfficeStaff, SalaryRate } from "@/types";
 
-export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
+export default function OfficeStaffCard({ staff: p, rates = [] }: { staff: OfficeStaff; rates?: SalaryRate[] }) {
   const initialForm = () => ({
     startDate: p.startDate ?? "",
     endDate: p.endDate ?? "",
@@ -27,12 +27,16 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
   const { canEdit } = usePermissions();
   const [detailOpen, setDetailOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [salaryChanged, setSalaryChanged] = useState(false);
+  const [effectiveFrom, setEffectiveFrom] = useState(() => todayStr());
   const [isPending, startTransition] = useTransition();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
 
   function closeModal() {
     setError(null);
+    setSalaryChanged(false);
+    setEffectiveFrom(todayStr());
     formRef.current?.reset();
     reset();
     setDetailOpen(false);
@@ -41,6 +45,9 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isPending) return;
+    if (salaryChanged && !effectiveFrom) {
+      return setError("Vui lòng chọn ngày hiệu lực của mức lương mới.");
+    }
     const fd = new FormData(e.currentTarget);
     startTransition(async () => {
       const r = await saveOfficeStaff(fd);
@@ -109,7 +116,21 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
           }
         >
           <FormError message={error} />
-          <form id={`os-${p.id}`} ref={formRef} onSubmit={handleSubmit} onInput={() => error && setError(null)}>
+          <form
+            id={`os-${p.id}`}
+            ref={formRef}
+            noValidate
+            onSubmit={handleSubmit}
+            onInput={(e) => {
+              if (error) setError(null);
+              const t = e.target as HTMLInputElement;
+              if (t.name === "baseSalary") {
+                const digits = t.value.replace(/[^\d]/g, "");
+                const v = digits ? Number(digits) : 0;
+                setSalaryChanged(v > 0 && v !== (p.baseSalary ?? 0));
+              }
+            }}
+          >
             <input type="hidden" name="id" value={p.id} />
             <fieldset disabled={!canEdit} className="space-y-3">
               <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
@@ -122,6 +143,13 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
                 <DetailCell><Field label="CCCD"><input name="idNumber" defaultValue={p.idNumber ?? ""} className={inputCls} /></Field></DetailCell>
                 <DetailCell><Field label="Số BHXH"><input name="socialInsurance" defaultValue={p.socialInsurance ?? ""} className={inputCls} /></Field></DetailCell>
                 <DetailCell><Field label="Lương cơ bản"><MoneyInput name="baseSalary" defaultValue={p.baseSalary} placeholder="0" /></Field></DetailCell>
+                {salaryChanged && (
+                  <DetailCell>
+                    <Field label="Có hiệu lực từ">
+                      <DatePicker name="salaryEffectiveFrom" value={effectiveFrom} onChange={setEffectiveFrom} />
+                    </Field>
+                  </DetailCell>
+                )}
                 <DetailCell><Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} defaultValue={p.payday ?? ""} placeholder="VD: 5" className={`${inputCls} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`} /></Field></DetailCell>
                 <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
                 <DetailCell>
@@ -142,6 +170,19 @@ export default function OfficeStaffCard({ staff: p }: { staff: OfficeStaff }) {
               </div>
             </fieldset>
           </form>
+          {rates.length > 0 && (
+            <div className="mt-4 space-y-1.5 border-t border-hairline pt-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">Lịch sử lương</div>
+              <ul className="space-y-1 text-xs text-slate-600">
+                {rates.map((r) => (
+                  <li key={r.id} className="flex items-center justify-between">
+                    <span>{r.effectiveFrom === "1970-01-01" ? "Từ trước tới nay" : `Từ ${fmtDate(r.effectiveFrom)}`}</span>
+                    <span className="font-semibold text-ink tabular-nums">{fmtMoney(r.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </SideDrawer>
       )}
     </>

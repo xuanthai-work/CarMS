@@ -7,6 +7,7 @@ const db = vi.hoisted(() => ({
   fuelEntryFindMany: vi.fn(),
   salaryMonthFindMany: vi.fn(),
   salaryAdvanceFindMany: vi.fn(),
+  salaryRateFindMany: vi.fn(),
   partnerPayoutFindMany: vi.fn(),
   officeStaffFindMany: vi.fn(),
   driverFindMany: vi.fn(),
@@ -20,6 +21,7 @@ vi.mock("@/lib/prisma", () => ({
     fuelEntry: { findMany: db.fuelEntryFindMany },
     salaryMonth: { findMany: db.salaryMonthFindMany },
     salaryAdvance: { findMany: db.salaryAdvanceFindMany },
+    salaryRate: { findMany: db.salaryRateFindMany },
     partnerPayout: { findMany: db.partnerPayoutFindMany },
     officeStaff: { findMany: db.officeStaffFindMany },
     driver: { findMany: db.driverFindMany },
@@ -91,6 +93,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   db.salaryMonthFindMany.mockResolvedValue([]);
   db.salaryAdvanceFindMany.mockResolvedValue([]);
+  db.salaryRateFindMany.mockResolvedValue([]);
   db.partnerPayoutFindMany.mockResolvedValue([]);
   db.officeStaffFindMany.mockResolvedValue([]);
   db.driverFindMany.mockResolvedValue([]);

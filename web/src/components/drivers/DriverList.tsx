@@ -1,12 +1,20 @@
 "use client";
 
-import type { Driver } from "@/types";
+import type { Driver, SalaryRate } from "@/types";
 import DriverCard from "@/components/drivers/DriverCard";
 import GroupColumn from "@/components/schedule/GroupColumn";
 import { normalizeVn } from "@/utils/search";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
-export default function DriverList({ drivers, query }: { drivers: Driver[]; query: string }) {
+export default function DriverList({
+  drivers,
+  rates = [],
+  query,
+}: {
+  drivers: Driver[];
+  rates?: SalaryRate[];
+  query: string;
+}) {
   const { canEdit } = usePermissions();
   const nq = normalizeVn(query);
   const filtered = nq ? drivers.filter((d) => normalizeVn(d.name).includes(nq)) : drivers;
@@ -31,7 +39,13 @@ export default function DriverList({ drivers, query }: { drivers: Driver[]; quer
               emoji="🏢"
               items={own}
               empty="Không có lái xe của công ty."
-              renderItem={(d) => <DriverCard key={d.id} driver={d} />}
+              renderItem={(d) => (
+                <DriverCard
+                  key={d.id}
+                  driver={d}
+                  rates={rates.filter((r) => r.personType === "driver" && r.personId === d.id)}
+                />
+              )}
             />
           </div>
           <div className="min-w-0">
@@ -40,7 +54,13 @@ export default function DriverList({ drivers, query }: { drivers: Driver[]; quer
               emoji="🤝"
               items={partner}
               empty="Không có lái xe cộng tác ngoài."
-              renderItem={(d) => <DriverCard key={d.id} driver={d} />}
+              renderItem={(d) => (
+                <DriverCard
+                  key={d.id}
+                  driver={d}
+                  rates={rates.filter((r) => r.personType === "driver" && r.personId === d.id)}
+                />
+              )}
             />
           </div>
         </div>

@@ -1,11 +1,19 @@
 "use client";
 
-import type { OfficeStaff } from "@/types";
+import type { OfficeStaff, SalaryRate } from "@/types";
 import OfficeStaffCard from "@/components/staff/OfficeStaffCard";
 import { normalizeVn } from "@/utils/search";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
-export default function OfficeStaffList({ staff, query }: { staff: OfficeStaff[]; query: string }) {
+export default function OfficeStaffList({
+  staff,
+  rates = [],
+  query,
+}: {
+  staff: OfficeStaff[];
+  rates?: SalaryRate[];
+  query: string;
+}) {
   const { canEdit } = usePermissions();
   const nq = normalizeVn(query);
   const filtered = nq
@@ -28,7 +36,10 @@ export default function OfficeStaffList({ staff, query }: { staff: OfficeStaff[]
         <div className="grid grid-cols-1 items-start gap-x-6 gap-y-4 sm:grid-cols-2">
           {filtered.map((p) => (
             <div key={p.id} className="min-w-0">
-              <OfficeStaffCard staff={p} />
+              <OfficeStaffCard
+                staff={p}
+                rates={rates.filter((r) => r.personType === "office" && r.personId === p.id)}
+              />
             </div>
           ))}
         </div>

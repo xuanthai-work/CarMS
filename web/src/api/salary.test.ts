@@ -8,6 +8,7 @@ const { mockRequireEditor, mockRequireManagerEditor, mockRevalidateAll, mockPris
     officeStaff: { findUnique: vi.fn() },
     driver: { findUnique: vi.fn() },
     salaryMonth: { upsert: vi.fn() },
+    salaryRate: { findMany: vi.fn() },
     partnerPayout: { create: vi.fn(), update: vi.fn() },
     salaryAdvance: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   },
@@ -34,6 +35,7 @@ describe("saveSalaryMonth", () => {
     mockPrisma.officeStaff.findUnique.mockResolvedValue({ baseSalary: 10_000_000 });
     mockPrisma.driver.findUnique.mockResolvedValue({ baseSalary: 8_000_000 });
     mockPrisma.salaryMonth.upsert.mockResolvedValue({});
+    mockPrisma.salaryRate.findMany.mockResolvedValue([]);
     mockPrisma.partnerPayout.create.mockResolvedValue({});
     mockPrisma.partnerPayout.update.mockResolvedValue({});
   });
@@ -114,6 +116,22 @@ describe("saveSalaryMonth", () => {
     );
     expect(r).toEqual({ ok: false, error: "Không lưu được. Vui lòng thử lại." });
     expect(mockRevalidateAll).not.toHaveBeenCalled();
+  });
+
+  it("dùng mức lương từ SalaryRate theo tháng khi tạo dòng SalaryMonth mới", async () => {
+    mockPrisma.salaryRate.findMany.mockResolvedValueOnce([
+      { personType: "driver", personId: "d1", effectiveFrom: "1970-01-01", amount: 7_000_000 },
+      { personType: "driver", personId: "d1", effectiveFrom: "2026-12-01", amount: 9_000_000 },
+    ]);
+    const r = await saveSalaryMonth(
+      makeFd({ personType: "driver", personId: "d1", monthKey: "2026-11", paymentStatus: "unpaid" })
+    );
+    expect(r).toEqual({ ok: true });
+    expect(mockPrisma.salaryMonth.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ baseSalary: 7_000_000 }),
+      })
+    );
   });
 });
 
@@ -263,6 +281,22 @@ describe("savePartnerPayout", () => {
     );
     expect(r).toEqual({ ok: false, error: "Không lưu được. Vui lòng thử lại." });
     expect(mockRevalidateAll).not.toHaveBeenCalled();
+  });
+
+  it("dùng mức lương từ SalaryRate theo tháng khi tạo dòng SalaryMonth mới", async () => {
+    mockPrisma.salaryRate.findMany.mockResolvedValueOnce([
+      { personType: "driver", personId: "d1", effectiveFrom: "1970-01-01", amount: 7_000_000 },
+      { personType: "driver", personId: "d1", effectiveFrom: "2026-12-01", amount: 9_000_000 },
+    ]);
+    const r = await saveSalaryMonth(
+      makeFd({ personType: "driver", personId: "d1", monthKey: "2026-11", paymentStatus: "unpaid" })
+    );
+    expect(r).toEqual({ ok: true });
+    expect(mockPrisma.salaryMonth.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ baseSalary: 7_000_000 }),
+      })
+    );
   });
 });
 

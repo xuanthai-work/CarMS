@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { monthKeyOf, monthLabel, todayStr } from "@/utils/format";
 import { buildSalaryRows, salariedPeople } from "@/utils/salary";
-import { getSalaryMonths, getPartnerPayouts, getSalaryAdvances } from "@/services/salary";
+import { getSalaryMonths, getPartnerPayouts, getSalaryAdvances, getSalaryRates } from "@/services/salary";
 import { getOfficeStaff } from "@/services/staff";
 import { getDrivers } from "@/services/drivers";
 import { NO_PERMISSION, type UserRoleContext, vnd } from "./shared";
@@ -34,12 +34,13 @@ export function getSalaryBreakdownTool(ctx: UserRoleContext) {
       }
 
       try {
-        const [office, drivers, months, payouts, advances] = await Promise.all([
+        const [office, drivers, months, payouts, advances, rates] = await Promise.all([
           getOfficeStaff(),
           getDrivers(),
           getSalaryMonths(key),
           getPartnerPayouts(key),
           getSalaryAdvances(key),
+          getSalaryRates(),
         ]);
 
         const name = personName?.trim().toLowerCase();
@@ -51,7 +52,7 @@ export function getSalaryBreakdownTool(ctx: UserRoleContext) {
           return NO_PERMISSION;
         }
 
-        const rows = buildSalaryRows(salariedPeople(office, drivers, key), months, advances);
+        const rows = buildSalaryRows(salariedPeople(office, drivers, key, rates), months, advances);
         const officeIds = new Set(matchedOffice.map((o) => o.id));
         const driverIds = new Set(matchedDrivers.map((d) => d.id));
         const driverNameById = new Map(drivers.map((d) => [d.id, d.name]));

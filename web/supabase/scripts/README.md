@@ -22,6 +22,7 @@ flowchart TD
     E --> G["05-drop-partnerpayout-paymentdate.sql (Bỏ cột paymentDate của PartnerPayout)"]
     G --> H["06-add-trip-cancelfee.sql (Thêm cột cancelFee cho Trip)"]
     H --> I["07-add-salary-advance.sql (Thêm bảng SalaryAdvance & bật RLS)"]
+    I --> J["08-add-salary-rate.sql (Thêm bảng SalaryRate & bật RLS)"]
 ```
 
 ### Bước 1: Khảo sát hiện trạng (`01-audit-readonly.sql`)
@@ -57,7 +58,11 @@ Bắt buộc thực hiện sao lưu trước khi chạy bất kỳ script chỉn
 
 ### Bước 8: Thêm bảng `SalaryAdvance` (`07-add-salary-advance.sql`)
 - **Chạy SAU khi code mới đã deploy** (tạm ứng lương riêng).
-- Tạo bảng `SalaryAdvance`, 2 index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại an toàn.
+- Tạo bảng `SalaryAdvance`, 2 index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại lại an toàn.
+
+### Bước 9: Thêm bảng `SalaryRate` (`08-add-salary-rate.sql`)
+- **Chạy SAU khi code mới đã deploy** (mức lương cơ bản có ngày hiệu lực).
+- Tạo bảng `SalaryRate`, index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại an toàn.
 
 ---
 

@@ -153,6 +153,15 @@ export type SalaryAdvance = {
   updatedAt?: string;
 };
 
+export type SalaryRate = {
+  id: string;
+  personType: SalaryPersonType;
+  personId: string;
+  effectiveFrom: string;
+  amount: number;
+  createdAt?: string;
+};
+
 export type PartnerPayout = {
   id: string;
   driverId: string;

@@ -7,7 +7,7 @@ import { buildSalaryRows, salariedPeople, salaryCostForMonth } from "@/utils/sal
 import { getTrips, toTrip } from "@/services/trips";
 import { getFuelMonthTotals } from "@/services/fuel";
 import { getOtherExpenseMonthTotals } from "@/services/expenses";
-import { getSalaryMonths, getPartnerPayouts, getSalaryAdvances } from "@/services/salary";
+import { getSalaryMonths, getPartnerPayouts, getSalaryAdvances, getSalaryRates } from "@/services/salary";
 import { getOfficeStaff } from "@/services/staff";
 import { getDrivers } from "@/services/drivers";
 import { NO_PERMISSION, type UserRoleContext, vnd } from "./shared";
@@ -119,7 +119,7 @@ export function getMonthlyFinanceTool(ctx: UserRoleContext) {
 
       try {
         // Cùng bộ dữ liệu trang Doanh thu dùng (lấy tất cả rồi lọc theo tháng ở hàm chuẩn).
-        const [trips, fuelMonth, otherExpenseMonth, office, drivers, months, payouts, advances] = await Promise.all([
+        const [trips, fuelMonth, otherExpenseMonth, office, drivers, months, payouts, advances, rates] = await Promise.all([
           getTrips(),
           getFuelMonthTotals(key),
           getOtherExpenseMonthTotals(key),
@@ -128,11 +128,12 @@ export function getMonthlyFinanceTool(ctx: UserRoleContext) {
           getSalaryMonths(),
           getPartnerPayouts(),
           getSalaryAdvances(key),
+          getSalaryRates(),
         ]);
 
         const fuelTotal = fuelMonth.total;
         const otherExpenseTotal = otherExpenseMonth.total;
-        const people = salariedPeople(office, drivers, key);
+        const people = salariedPeople(office, drivers, key, rates);
         const salaryRows = buildSalaryRows(
           people,
           months.filter((m) => m.monthKey === key),

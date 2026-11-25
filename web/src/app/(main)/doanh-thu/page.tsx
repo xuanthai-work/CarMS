@@ -4,7 +4,7 @@ import { getVehicles } from "@/services/vehicles";
 import { getDrivers } from "@/services/drivers";
 import { getTrips } from "@/services/trips";
 import { getOfficeStaff } from "@/services/staff";
-import { getSalaryMonths, getPartnerPayouts, getSalaryAdvances } from "@/services/salary";
+import { getSalaryMonths, getPartnerPayouts, getSalaryAdvances, getSalaryRates } from "@/services/salary";
 import RevenueScreen from "@/components/revenue/RevenueScreen";
 import { monthKeyOf, monthsBetween, todayStr } from "@/utils/format";
 import { requireManager } from "@/services/auth";
@@ -15,7 +15,7 @@ export default async function DoanhThuPage() {
   await requireManager();
   // Tính tháng mặc định phía server để tránh lệch SSR/CSR (như trang /lich).
   const defaultMonthKey = monthKeyOf(todayStr());
-  const [vehicles, drivers, trips, fuelMonthMap, otherExpenseMonthMap, office, months, payouts, advances] =
+  const [vehicles, drivers, trips, fuelMonthMap, otherExpenseMonthMap, office, months, payouts, advances, rates] =
     await Promise.all([
       getVehicles(),
       getDrivers(),
@@ -26,6 +26,7 @@ export default async function DoanhThuPage() {
       getSalaryMonths(),
       getPartnerPayouts(),
       getSalaryAdvances(),
+      getSalaryRates(),
     ]);
 
   const allMonths = [
@@ -46,7 +47,7 @@ export default async function DoanhThuPage() {
   }
 
   const monthKeys = monthsBetween(minKey, maxKey);
-  const salaryCostBreakdownByMonth = salaryCostByMonth(office, drivers, months, payouts, monthKeys, advances);
+  const salaryCostBreakdownByMonth = salaryCostByMonth(office, drivers, months, payouts, monthKeys, advances, rates);
 
   return (
     <RevenueScreen

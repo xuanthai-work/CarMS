@@ -15,19 +15,23 @@ import { fmtMoney } from "@/utils/trips";
 import { fmtDate, todayStr } from "@/utils/format";
 import { useFormState } from "@/hooks/common/useFormState";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
-import type { Driver } from "@/types";
+import type { Driver, SalaryRate } from "@/types";
 
-export default function DriverCard({ driver: d }: { driver: Driver }) {
+export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; rates?: SalaryRate[] }) {
   const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own", endDate: d.endDate ?? "" });
   const { canEdit } = usePermissions();
   const [detailOpen, setDetailOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [salaryChanged, setSalaryChanged] = useState(false);
+  const [effectiveFrom, setEffectiveFrom] = useState(() => todayStr());
   const [isPending, startTransition] = useTransition();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
 
   function closeModal() {
     setError(null);
+    setSalaryChanged(false);
+    setEffectiveFrom(todayStr());
     formRef.current?.reset();
     reset();
     setDetailOpen(false);
@@ -36,6 +40,9 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isPending) return;
+    if (salaryChanged && !effectiveFrom) {
+      return setError("Vui lòng chọn ngày hiệu lực của mức lương mới.");
+    }
     const fd = new FormData(e.currentTarget);
     startTransition(async () => {
       const r = await saveDriver(fd);
@@ -105,7 +112,21 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
           }
         >
           <FormError message={error} />
-          <form id={`drv-${d.id}`} ref={formRef} onSubmit={handleSubmit} onInput={() => error && setError(null)}>
+          <form
+            id={`drv-${d.id}`}
+            ref={formRef}
+            noValidate
+            onSubmit={handleSubmit}
+            onInput={(e) => {
+              if (error) setError(null);
+              const t = e.target as HTMLInputElement;
+              if (t.name === "baseSalary") {
+                const digits = t.value.replace(/[^\d]/g, "");
+                const v = digits ? Number(digits) : 0;
+                setSalaryChanged(v > 0 && v !== (d.baseSalary ?? 0));
+              }
+            }}
+          >
             <input type="hidden" name="id" value={d.id} />
             <fieldset disabled={!canEdit} className="space-y-3">
               <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
@@ -114,6 +135,13 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
                 <DetailCell><Field label="SĐT / Zalo"><input name="phone" defaultValue={d.phone ?? ""} className={inputCls} /></Field></DetailCell>
                 <DetailCell><Field label="Hạng bằng"><SelectMenu name="licenseClass" value={form.licenseClass} onChange={set("licenseClass")} options={LICENSE_OPTIONS} /></Field></DetailCell>
                 {form.type === "own" && <DetailCell><Field label="Lương tháng"><MoneyInput name="baseSalary" defaultValue={d.baseSalary} placeholder="VD: 12.000.000" /></Field></DetailCell>}
+                {form.type === "own" && salaryChanged && (
+                  <DetailCell>
+                    <Field label="Có hiệu lực từ">
+                      <DatePicker name="salaryEffectiveFrom" value={effectiveFrom} onChange={setEffectiveFrom} />
+                    </Field>
+                  </DetailCell>
+                )}
                 <DetailCell>
                   <Field label="Ngày nghỉ việc">
                     <DatePicker name="endDate" value={form.endDate} onChange={set("endDate")} />
@@ -132,6 +160,19 @@ export default function DriverCard({ driver: d }: { driver: Driver }) {
               </div>
             </fieldset>
           </form>
+          {rates.length > 0 && (
+            <div className="mt-4 space-y-1.5 border-t border-hairline pt-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">Lịch sử lương</div>
+              <ul className="space-y-1 text-xs text-slate-600">
+                {rates.map((r) => (
+                  <li key={r.id} className="flex items-center justify-between">
+                    <span>{r.effectiveFrom === "1970-01-01" ? "Từ trước tới nay" : `Từ ${fmtDate(r.effectiveFrom)}`}</span>
+                    <span className="font-semibold text-ink tabular-nums">{fmtMoney(r.amount)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </SideDrawer>
       )}
     </>

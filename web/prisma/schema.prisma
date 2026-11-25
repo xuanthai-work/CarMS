@@ -171,6 +171,17 @@ model SalaryAdvance {
   @@index([date])
 }
 
+model SalaryRate {
+  id            String   @id
+  personType    String   // 'office' | 'driver'
+  personId      String
+  effectiveFrom String   // YYYY-MM-DD ('1970-01-01' = mức gốc từ trước tới nay)
+  amount        Float
+  createdAt     DateTime @default(now())
+
+  @@index([personType, personId, effectiveFrom])
+}
+
 model OtherExpense {
   id            String   @id
   date          String   // YYYY-MM-DD (ngày phát sinh / ngày chi)

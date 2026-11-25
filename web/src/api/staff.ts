@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireManagerEditor } from "@/services/auth";
+import { recordSalaryRate } from "@/services/salary";
 import { s, optStr, optNum, dayOfMonth } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
@@ -34,7 +35,26 @@ export async function saveOfficeStaff(fd: FormData): Promise<ActionResult> {
     if (dup) return fail("Email này đã được gán cho nhân sự khác.");
   }
   if (id) {
-    await prisma.officeStaff.update({ where: { id }, data });
+    const prev = await prisma.officeStaff.findUnique({ where: { id }, select: { baseSalary: true } });
+    const oldSalary = prev?.baseSalary ?? 0;
+    const newSalary = data.baseSalary ?? 0;
+    const salaryChanged = newSalary > 0 && newSalary !== oldSalary;
+    const effectiveFrom = salaryChanged ? s(fd, "salaryEffectiveFrom") : "";
+    if (salaryChanged && !effectiveFrom) {
+      return fail("Vui lòng chọn ngày hiệu lực của mức lương mới.");
+    }
+    await prisma.$transaction(async (tx) => {
+      await tx.officeStaff.update({ where: { id }, data });
+      if (salaryChanged) {
+        await recordSalaryRate(tx, {
+          personType: "office",
+          personId: id,
+          oldSalary,
+          newSalary,
+          effectiveFrom,
+        });
+      }
+    });
   } else {
     await prisma.officeStaff.create({ data: { id: newId("os"), ...data } });
   }

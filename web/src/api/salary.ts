@@ -6,15 +6,20 @@ import { s, optStr, optNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
 import { OK, fail, type ActionResult } from "@/utils/actionResult";
+import { resolveBaseSalary } from "@/utils/salary";
 
-/** Lương cơ bản hiện tại của người (để snapshot khi tạo dòng lương tháng). */
-async function lookupBaseSalary(personType: string, personId: string): Promise<number> {
-  if (personType === "office") {
-    const p = await prisma.officeStaff.findUnique({ where: { id: personId } });
-    return p?.baseSalary ?? 0;
-  }
-  const d = await prisma.driver.findUnique({ where: { id: personId } });
-  return d?.baseSalary ?? 0;
+/** Lương cơ bản của người cho `monthKey` (ưu tiên `SalaryRate`, fallback lương hiện lưu). */
+async function lookupBaseSalary(personType: string, personId: string, monthKey: string): Promise<number> {
+  const [fallback, rates] = await Promise.all([
+    personType === "office"
+      ? prisma.officeStaff.findUnique({ where: { id: personId }, select: { baseSalary: true } }).then((p) => p?.baseSalary ?? 0)
+      : prisma.driver.findUnique({ where: { id: personId }, select: { baseSalary: true } }).then((d) => d?.baseSalary ?? 0),
+    prisma.salaryRate.findMany({
+      where: { personType, personId },
+      orderBy: [{ effectiveFrom: "asc" }, { createdAt: "asc" }],
+    }),
+  ]);
+  return resolveBaseSalary(rates, personType, personId, monthKey, fallback);
 }
 
 /** Sửa điều chỉnh lương tháng (thưởng/phụ cấp, tạm ứng/khấu trừ, ghi chú). Upsert theo (personType, personId, monthKey). */
@@ -32,7 +37,7 @@ export async function saveSalaryMonth(fd: FormData): Promise<ActionResult> {
     return fail("Vui lòng chọn ngày trả lương.");
   }
 
-  const baseSalary = await lookupBaseSalary(personType, personId);
+  const baseSalary = await lookupBaseSalary(personType, personId, monthKey);
 
   // Gộp điều chỉnh + trạng thái trả (paymentStatus) + ngày trả (paidDate) vào một lần ghi.
   // fd.has(...) để nơi gọi không kèm trường thì KHÔNG ghi đè giá trị đang có.

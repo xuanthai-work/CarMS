@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Driver, OfficeStaff } from "@/types";
+import type { Driver, OfficeStaff, SalaryRate } from "@/types";
 import DriverList from "@/components/drivers/DriverList";
 import OfficeStaffList from "@/components/staff/OfficeStaffList";
 import FilterTabs from "@/components/common/FilterTabs";
@@ -13,10 +13,12 @@ import { Toolbar, SearchInput } from "@/components/common/ui";
 export default function StaffTabs({
   drivers,
   staff,
+  rates = [],
   canSeeOffice,
 }: {
   drivers: Driver[];
   staff: OfficeStaff[];
+  rates?: SalaryRate[];
   canSeeOffice: boolean;
 }) {
   const [tab, setTab] = useState<"driver" | "office">("driver");
@@ -48,9 +50,9 @@ export default function StaffTabs({
     <div className="space-y-5">
       {toolbar}
       {tab === "driver" || !canSeeOffice ? (
-        <DriverList drivers={drivers} query={query} />
+        <DriverList drivers={drivers} rates={rates} query={query} />
       ) : (
-        <OfficeStaffList staff={staff} query={query} />
+        <OfficeStaffList staff={staff} rates={rates} query={query} />
       )}
     </div>
   );

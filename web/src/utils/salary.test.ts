@@ -8,6 +8,7 @@ import {
   salaryCostForMonth,
   visibleSalaryRows,
   salaryCostByMonth,
+  resolveBaseSalary,
   type SalaryRow,
 } from "./salary";
 
@@ -259,5 +260,33 @@ describe("salaryCostByMonth", () => {
       dailyDrivers: 0,
       total: 30_000_000,
     });
+  });
+
+  it("resolveBaseSalary & salariedPeople theo ngày hiệu lực của mức lương", () => {
+    const rates = [
+      { personType: "office", personId: "o1", effectiveFrom: "1970-01-01", amount: 15_000_000 },
+      { personType: "office", personId: "o1", effectiveFrom: "2026-12-01", amount: 18_000_000 },
+      { personType: "driver", personId: "d1", effectiveFrom: "2026-11-15", amount: 12_000_000 },
+    ];
+    // (a) không rates → như cũ
+    const office = [{ id: "o1", name: "An", position: "COO", baseSalary: 18_000_000 }];
+    const drivers = [{ id: "d1", name: "Ba", type: "own", baseSalary: 12_000_000 }];
+    expect(salariedPeople(office, drivers, "2026-11", []).map((p) => p.baseSalary)).toEqual([18_000_000, 12_000_000]);
+
+    // (b) 1 rate gốc + 1 rate mới hiệu lực 01/12 → tháng 11 mức cũ, tháng 12 mức mới
+    expect(resolveBaseSalary(rates, "office", "o1", "2026-11", 99)).toBe(15_000_000);
+    expect(resolveBaseSalary(rates, "office", "o1", "2026-12", 99)).toBe(18_000_000);
+
+    // (c) hiệu lực 15/11 → tháng 11 vẫn fallback (chưa hiệu lực đầu tháng), tháng 12 mức mới
+    expect(resolveBaseSalary(rates, "driver", "d1", "2026-11", 10_000_000)).toBe(10_000_000);
+    expect(resolveBaseSalary(rates, "driver", "d1", "2026-12", 10_000_000)).toBe(12_000_000);
+
+    // (d) tháng trước mọi rate → fallback
+    expect(resolveBaseSalary(rates, "driver", "d1", "2026-10", 10_000_000)).toBe(10_000_000);
+
+    // (e) salaryCostByMonth dùng đúng mức theo từng tháng
+    const breakdown = salaryCostByMonth(office, drivers, [], [], ["2026-11", "2026-12"], [], rates);
+    expect(breakdown["2026-11"].office).toBe(15_000_000);
+    expect(breakdown["2026-12"].office).toBe(18_000_000);
   });
 });

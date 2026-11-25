@@ -46,6 +46,29 @@ type MonthLike = {
 };
 type PayoutLike = { workDate: string; amount: number };
 type AdvanceLike = { personType: string; personId: string; amount: number };
+export type RateLike = { personType: string; personId: string; effectiveFrom: string; amount: number };
+
+/**
+ * Mức lương cơ bản của một tháng = rate có `effectiveFrom` lớn nhất mà `effectiveFrom <= ${monthKey}-01`.
+ * Không có rate nào thỏa → dùng `fallback` (lương hiện lưu trên người).
+ */
+export function resolveBaseSalary(
+  rates: RateLike[],
+  personType: string,
+  personId: string,
+  monthKey: string,
+  fallback: number
+): number {
+  const start = `${monthKey}-01`;
+  let best: RateLike | null = null;
+  for (const r of rates) {
+    if (r.personType !== personType || r.personId !== personId) continue;
+    if (r.effectiveFrom <= start && (!best || r.effectiveFrom >= best.effectiveFrom)) {
+      best = r;
+    }
+  }
+  return best ? best.amount : fallback;
+}
 
 export type SalaryCostBreakdown = {
   office: number;
@@ -71,7 +94,8 @@ export function salaryNet(x: {
 export function salariedPeople(
   office: OfficeLike[],
   drivers: DriverLike[],
-  monthKey?: string
+  monthKey?: string,
+  rates: RateLike[] = []
 ): SalariedPerson[] {
   const isEmployedInMonth = (p: { endDate?: string | null }) =>
     !monthKey || !p.endDate || monthKeyOf(p.endDate) >= monthKey;
@@ -83,7 +107,10 @@ export function salariedPeople(
       personId: p.id,
       name: p.name,
       role: p.position || "Nhân viên",
-      baseSalary: p.baseSalary ?? 0,
+      baseSalary:
+        monthKey && rates.length > 0
+          ? resolveBaseSalary(rates, "office", p.id, monthKey, p.baseSalary ?? 0)
+          : p.baseSalary ?? 0,
       payday: p.payday ?? null,
     }));
   const fromDrivers: SalariedPerson[] = drivers
@@ -93,7 +120,10 @@ export function salariedPeople(
       personId: d.id,
       name: d.name,
       role: "Lái xe",
-      baseSalary: d.baseSalary ?? 0,
+      baseSalary:
+        monthKey && rates.length > 0
+          ? resolveBaseSalary(rates, "driver", d.id, monthKey, d.baseSalary ?? 0)
+          : d.baseSalary ?? 0,
       payday: null,
     }));
   return [...fromOffice, ...fromDrivers];
@@ -174,11 +204,12 @@ export function salaryCostByMonth(
   months: (MonthLike & { monthKey: string })[],
   payouts: PayoutLike[],
   monthKeys: string[],
-  advances: (AdvanceLike & { date: string })[] = []
+  advances: (AdvanceLike & { date: string })[] = [],
+  rates: RateLike[] = []
 ): Record<string, SalaryCostBreakdown> {
   const result: Record<string, SalaryCostBreakdown> = {};
   for (const monthKey of monthKeys) {
-    const people = salariedPeople(office, drivers, monthKey);
+    const people = salariedPeople(office, drivers, monthKey, rates);
     const monthRows = months.filter((m) => m.monthKey === monthKey);
     const monthAdvances = advances.filter((a) => monthKeyOf(a.date) === monthKey);
     const rows = buildSalaryRows(people, monthRows, monthAdvances);
