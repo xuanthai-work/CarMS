@@ -17,9 +17,9 @@ Cập nhật: 2026-11-25. Người quyết định: User (Product owner). Tài l
 
 | Mục | Quyết định |
 |---|---|
-| Thu tiền nhiều đợt (cọc, thanh toán, hoàn tiền) | **Làm** (giai đoạn 3) |
-| Hủy chuyến có phí hủy | **Làm** (giai đoạn 3) |
-| Tiền kiểu số nguyên (thay số thực) | **Làm** (giai đoạn 3) |
+| Thu tiền nhiều đợt (cọc, thanh toán, hoàn tiền) | **Bỏ** (User chốt 2026-11-25: giữ 1 ô cọc + trạng thái thủ công) |
+| Hủy chuyến có phí hủy | **Xong** (TASK-054, 055) |
+| Tiền kiểu số nguyên (thay số thực) | **Bỏ** (User chốt 2026-11-25: dữ liệu không có số lẻ, rủi ro đổi cột lớn hơn lợi ích) |
 | Gom chi phí một sổ có phân loại | **Làm** (giai đoạn 4) |
 | Lương có ngày hiệu lực, phiếu lương chốt được, tạm ứng riêng | **Làm** (giai đoạn 5, sau khi User giải thích cách trả lương thực tế) |
 | Xóa mềm, nhật ký thay đổi | Để sau |
@@ -32,7 +32,7 @@ Cập nhật: 2026-11-25. Người quyết định: User (Product owner). Tài l
 | 0 | Quét lỗi v1 (Playwright + dữ liệu QA), sửa lỗi nền | Có một lỗi User báo mà BA chưa tái hiện được, xem mục 4 |
 | 1 | Bộ giao diện chung: nút chung, hiệu ứng zoom cho Modal, khung SideDrawer; giữ sidebar 3D và lưới lịch | **Xong** (TASK-035..037). Drawer chỉ làm khung ở đây; chuyển các màn sang drawer ở giai đoạn 6 |
 | 2 | Modal chuyến thống nhất cho thêm/xem/sửa, có ô ghi chú tự do | **Xong** (TASK-038..044). Không đổi dữ liệu |
-| 3 | Nâng dữ liệu tiền: thu nhiều đợt, hủy + phí hủy, số nguyên | Có đổi schema; cần script `web/supabase/scripts/` và test hồi quy tiền |
+| 3 | Nâng dữ liệu tiền: chỉ làm hủy chuyến + phí hủy | **Xong** (TASK-054, 055). Thu nhiều đợt và số nguyên đã bỏ |
 | 4 | Gom chi phí (dầu, cầu đường, đối tác, khác) | Giữ kết quả `buildMonthFinance` không đổi nếu dữ liệu giống nhau |
 | 5 | Làm lại lương | Cần phiên làm rõ nghiệp vụ lương với User trước khi viết đặc tả |
 | 6 | Đổi các màn còn lại (xe, lái xe, nhân sự, chi phí, dầu, công nợ) sang drawer và bộ giao diện chung | **Xong** (TASK-045..052: xe, lái xe, nhân sự, dầu, chi phí khác, công nợ, lương tháng, phiếu công ngày). Tất cả màn ngoài chuyến: thêm và sửa đều qua Drawer |
