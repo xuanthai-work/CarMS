@@ -170,6 +170,9 @@ export async function deleteTrip(fd: FormData): Promise<ActionResult> {
 /** Đổi trạng thái 1 chuyến (từ dropdown trạng thái ở màn Doanh thu). */
 export async function setTripStatus(id: string, status: string): Promise<void> {
   await requireManagerEditor();
-  await prisma.trip.update({ where: { id }, data: { status } });
+  if (status === "cancelled") {
+    throw new Error("Hủy chuyến phải nhập phí hủy trong form chuyến.");
+  }
+  await prisma.trip.update({ where: { id }, data: { status, cancelFee: null } });
   revalidateAll();
 }

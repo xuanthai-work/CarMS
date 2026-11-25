@@ -45,7 +45,7 @@ export default function StatusSelect({
             {...dropdownMotion(reduceMotion)}
             className="absolute right-0 top-full z-30 mt-1 w-max min-w-[150px] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-200 bg-white p-1 shadow-xl"
           >
-          {TRIP_STATUSES.map((s) => {
+          {TRIP_STATUSES.filter((s) => s.value !== "cancelled").map((s) => {
             const active = s.value === current;
             return (
               <button
