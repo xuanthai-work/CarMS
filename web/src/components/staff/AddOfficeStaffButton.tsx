@@ -87,7 +87,7 @@ export default function AddOfficeStaffButton() {
               <DetailCell><Field label="Số BHXH"><input name="socialInsurance" placeholder="Số bảo hiểm xã hội" className={inputCls} /></Field></DetailCell>
               <DetailCell><Field label="Chức vụ"><SelectMenu name="position" value={form.position} onChange={set("position")} options={OFFICE_POSITIONS} /></Field></DetailCell>
               <DetailCell><Field label="Lương cơ bản"><MoneyInput name="baseSalary" placeholder="0" /></Field></DetailCell>
-              <DetailCell><Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} placeholder="VD: 5" className={inputCls} /></Field></DetailCell>
+              <DetailCell><Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} placeholder="VD: 5" className={`${inputCls} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`} /></Field></DetailCell>
               <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
               <DetailCell><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
             </div>

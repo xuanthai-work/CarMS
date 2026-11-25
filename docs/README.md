@@ -69,6 +69,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-062** | 2026-11-25 | Sửa Lỗi Giao Diện Điện Thoại (Bảng Chồng Chữ, Ô Thống Kê, Tab Lọc) | UI / Mobile |  **Đã xong** | [TASK-062](tasks/TASK-062-mobile-ui-fixes.md) |
 | **TASK-063** | 2026-11-25 | Thanh Menu Trên Điện Thoại: Thanh Trên Cùng + Ngăn Menu Trượt | UI / Mobile |  **Đã xong** | [TASK-063](tasks/TASK-063-mobile-top-bar-menu.md) |
 | **TASK-064** | 2026-11-25 | Vùng Bấm ≥44px Trên Điện Thoại + Lỗi Giao Diện Lặt Vặt | UI / Mobile |  **Đã xong** | [TASK-064](tasks/TASK-064-mobile-tap-targets.md) |
+| **TASK-065** | 2026-11-25 | Sửa Chữ Giờ Đè Thanh Màu + Bỏ Mũi Tên Ô Ngày Nhận Lương | UI |  **Đã xong** | [TASK-065](tasks/TASK-065-time-overlap-number-spinner.md) |
 
 ---
 

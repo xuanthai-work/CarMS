@@ -331,7 +331,7 @@ function TodayList({ legs }: { legs: LegRow[] }) {
       <ul className="divide-y divide-hairline">
         {shown.map((l, i) => (
           <li key={i} className="flex items-center gap-3 px-1 py-2.5">
-            <span className="w-14 shrink-0 whitespace-nowrap text-sm font-bold text-ink tabular-nums">
+            <span className="w-16 shrink-0 break-words text-sm font-bold leading-tight text-ink tabular-nums">
               {l.time ?? "Chưa giờ"}
             </span>
             <span
