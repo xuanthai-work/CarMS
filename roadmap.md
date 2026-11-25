@@ -34,8 +34,16 @@ Cập nhật: 2026-11-25. Người quyết định: User (Product owner). Tài l
 | 2 | Modal chuyến thống nhất cho thêm/xem/sửa, có ô ghi chú tự do | **Xong** (TASK-038..044). Không đổi dữ liệu |
 | 3 | Nâng dữ liệu tiền: chỉ làm hủy chuyến + phí hủy | **Xong** (TASK-054, 055). Thu nhiều đợt và số nguyên đã bỏ |
 | 4 | Gom chi phí (dầu, cầu đường, đối tác, khác) | **Bỏ** (User chốt 2026-11-25 sau khi dùng thử: gộp màn không hợp lý, không cần màn Tổng chi phí; TASK-056..059 đã rút lại) |
-| 5 | Làm lại lương | Cần phiên làm rõ nghiệp vụ lương với User trước khi viết đặc tả |
+| 5 | Làm lại lương | **Đã chốt nghiệp vụ (2026-11-25), xem mục 3b.** Tách thành 4 task: 067 tạm ứng riêng, 068 lương có ngày hiệu lực, 069 tính theo ngày vào/nghỉ làm (26 công), 070 chốt phiếu lương |
 | 6 | Đổi các màn còn lại (xe, lái xe, nhân sự, chi phí, dầu, công nợ) sang drawer và bộ giao diện chung | **Xong** (TASK-045..052: xe, lái xe, nhân sự, dầu, chi phí khác, công nợ, lương tháng, phiếu công ngày). Tất cả màn ngoài chuyến: thêm và sửa đều qua Drawer |
+
+## 3b. Nghiệp vụ lương đã chốt (GĐ 5)
+
+- Phạm vi: chỉ lương tháng cố định (nhân viên văn phòng và lái xe nhà); không có tiền theo chuyến. Trả một lần/tháng (cờ đã trả + ngày trả như hiện tại).
+- **Tạm ứng riêng**: ghi nhiều lần (ngày, số tiền, ghi chú); tổng tạm ứng của tháng tự trừ vào lương tháng đó; không chuyển nợ sang tháng sau. Khấu trừ khác tách khỏi tạm ứng.
+- **Lương có ngày hiệu lực**: mức lương cơ bản có "hiệu lực từ ngày X" (ngày bất kỳ), có lịch sử; tháng chứa ngày X tính tỷ lệ hai mức theo ngày công.
+- **Tính theo ngày vào/nghỉ làm**: lương ngày = lương ÷ 26 ngày công; vào hoặc nghỉ giữa tháng thì nhân số ngày công đã làm (tối đa 26). Quy ước ngày công (BA đề xuất, chờ User xác nhận): các ngày không phải Chủ nhật, trong khoảng làm việc của tháng.
+- **Chốt phiếu lương**: chốt thì khóa số liệu (đóng băng lương cơ bản, tạm ứng, thưởng, thực nhận), không sửa được; "Mở chốt" cho bất kỳ ai có quyền sửa (phân quyền thật làm sau).
 
 ## 4. Lỗi đang theo dõi
 
