@@ -124,7 +124,11 @@ export default function RevenueScreen({
       ? monthMoney.filter((r) => normalizeVn(r.trip.customerName).includes(nq))
       : monthMoney;
     const filtered = searched.filter((r) => {
-      if (filter === "owing") return r.trip.status !== "completed_paid";
+      if (filter === "owing") {
+        return r.trip.status === "cancelled"
+          ? r.money.outstanding > 0
+          : r.trip.status !== "completed_paid";
+      }
       if (filter === "paid") return r.trip.status === "completed_paid";
       return true;
     });

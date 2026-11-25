@@ -277,6 +277,19 @@ export default function TripForm({
             label2="Đã cọc"
             children2={<MoneyInput name="deposit" defaultValue={trip?.deposit ?? null} />}
           />
+          {status === "cancelled" && (
+            <>
+              <Row label="Phí hủy">
+                <MoneyInput name="cancelFee" defaultValue={trip?.cancelFee ?? null} />
+              </Row>
+              <div className="grid gap-x-3 sm:grid-cols-[6rem_minmax(0,1fr)]">
+                <div />
+                <p className="text-xs text-slate-500">
+                  Doanh thu chuyến này chỉ tính phí hủy; phần cọc vượt phí hủy là tiền hoàn lại.
+                </p>
+              </div>
+            </>
+          )}
           {hasLegacyCosts && (
             <div className="grid gap-x-3 sm:grid-cols-[6rem_minmax(0,1fr)]">
               <div />

@@ -12,6 +12,7 @@ function trip(overrides: Partial<Trip> & Pick<Trip, "id" | "price">): Trip {
     tourType: "oneway",
     price,
     deposit: null,
+    cancelFee: null,
     status: "pending",
     heldThroughTour: false,
     note: "",

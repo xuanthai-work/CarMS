@@ -64,7 +64,8 @@ export type Trip = {
   tourType: TourType;
   price: number | null; // tiền chuyến
   deposit: number | null; // đặt cọc (null nếu không)
-  status?: "pending" | "info_sent" | "completed_paid";
+  cancelFee: number | null; // phí hủy (chỉ dùng khi status = "cancelled")
+  status?: "pending" | "info_sent" | "completed_paid" | "cancelled";
   heldThroughTour: boolean; // giữ xe suốt tour (chỉ có nghĩa khi cùng 1 xe cả đi & về)
   note: string;
   tollCost: number | null; // VETC / cầu đường

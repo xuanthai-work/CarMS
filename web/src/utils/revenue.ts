@@ -3,9 +3,10 @@ import { monthKeyOf } from "./format";
 
 /** Tiền của một chuyến, suy từ price/deposit/status (không đổi schema). */
 export type TripMoney = {
-  recognized: number; // doanh thu ghi nhận = price ?? 0
+  recognized: number; // doanh thu ghi nhận = price ?? 0 (hoặc cancelFee ?? 0 nếu đã hủy)
   collected: number; // đã thu
   outstanding: number; // còn phải thu (>= 0)
+  refund: number; // tiền hoàn lại cho khách khi cọc > phí hủy (0 nếu không hủy)
   cost: number; // tổng chi phí còn gắn trên chuyến = VETC + thuê đối tác + khác
   profit: number; // lợi nhuận = recognized − cost
 };
@@ -27,18 +28,33 @@ export function tripCostBreakdown(trips: Trip[]): { other: number; partner: numb
 
 /**
  * Quy tắc tiền:
+ * - cancelled       -> doanh thu = phí hủy; đã thu = min(cọc, phí hủy); dư cọc là refund
  * - completed_paid  -> đã thu đủ price
  * - còn lại         -> mới thu phần cọc (kẹp trong khoảng price)
  */
 export function tripMoney(trip: Trip): TripMoney {
+  const cost = tripCost(trip);
+  if (trip.status === "cancelled") {
+    const recognized = trip.cancelFee ?? 0;
+    const deposit = trip.deposit ?? 0;
+    const collected = Math.min(deposit, recognized);
+    return {
+      recognized,
+      collected,
+      outstanding: recognized - collected,
+      refund: Math.max(deposit - recognized, 0),
+      cost,
+      profit: recognized - cost,
+    };
+  }
   const recognized = trip.price ?? 0;
   const collected =
     trip.status === "completed_paid" ? recognized : Math.min(trip.deposit ?? 0, recognized);
-  const cost = tripCost(trip);
   return {
     recognized,
     collected,
     outstanding: Math.max(recognized - collected, 0),
+    refund: 0,
     cost,
     profit: recognized - cost,
   };

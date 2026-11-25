@@ -57,6 +57,7 @@ function tripRow(over: Record<string, unknown> = {}) {
     tourType: "1d",
     price: null,
     deposit: null,
+    cancelFee: null,
     status: "pending",
     heldThroughTour: false,
     note: null,

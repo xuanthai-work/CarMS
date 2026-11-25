@@ -14,6 +14,7 @@ export function toTrip(r: TripRow): Trip {
     tourType: r.tourType as TourType,
     price: r.price,
     deposit: r.deposit,
+    cancelFee: r.cancelFee,
     status: r.status as Trip["status"],
     heldThroughTour: r.heldThroughTour,
     note: r.note ?? "",

@@ -90,6 +90,7 @@ export const TRIP_STATUSES = [
   { value: "pending", label: "Mới/Chưa xử lý", swatch: "border border-slate-300 bg-white", bg: "bg-white text-slate-700 hover:bg-slate-50", text: "text-slate-700", chip: "border-slate-300 bg-white" },
   { value: "info_sent", label: "Đã nhắn khách", swatch: "bg-cyan-100", bg: "bg-cyan-100 text-green-900 hover:bg-cyan-200", text: "text-cyan-700", chip: "border-cyan-200 bg-cyan-100" },
   { value: "completed_paid", label: "Đã thanh toán", swatch: "bg-green-200", bg: "bg-green-200 text-green-900 hover:bg-green-300", text: "text-green-700", chip: "border-green-300 bg-green-200" },
+  { value: "cancelled", label: "Đã hủy", swatch: "bg-slate-300", bg: "bg-slate-200 text-slate-500 hover:bg-slate-300", text: "text-slate-500", chip: "border-slate-300 bg-slate-200" },
 ] as const;
 
 export function tripStatusLabel(status?: string): string {

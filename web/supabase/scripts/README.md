@@ -20,6 +20,7 @@ flowchart TD
     D --> E["03-backfill-partner-debt-workdate.sql (Chuẩn hoá workDate)"]
     E -.->|Chỉ chạy khi BA yêu cầu| F["04-cleanup-duplicate-trips.sql (Dọn chuyến trùng)"]
     E --> G["05-drop-partnerpayout-paymentdate.sql (Bỏ cột paymentDate của PartnerPayout)"]
+    G --> H["06-add-trip-cancelfee.sql (Thêm cột cancelFee cho Trip)"]
 ```
 
 ### Bước 1: Khảo sát hiện trạng (`01-audit-readonly.sql`)
@@ -48,6 +49,10 @@ Bắt buộc thực hiện sao lưu trước khi chạy bất kỳ script chỉn
 ### Bước 6: Bỏ cột `paymentDate` của `PartnerPayout` (`05-drop-partnerpayout-paymentdate.sql`)
 - **Chạy SAU khi code mới đã deploy** (code mới không còn đọc/ghi cột này).
 - Chạy an toàn (`DROP COLUMN IF EXISTS`), có thể chạy lại nếu cần.
+
+### Bước 7: Thêm cột `cancelFee` cho `Trip` (`06-add-trip-cancelfee.sql`)
+- **Chạy SAU khi code mới đã deploy** (hủy chuyến có phí hủy).
+- Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
 
 ---
 

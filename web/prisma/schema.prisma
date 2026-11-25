@@ -44,6 +44,7 @@ model Trip {
   tourType        String  @default("1d")
   price           Float?
   deposit         Float?
+  cancelFee       Float?  // phí hủy (chỉ dùng khi status = "cancelled")
   status          String  @default("pending")
   heldThroughTour Boolean @default(false)
   note            String?

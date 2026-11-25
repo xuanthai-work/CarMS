@@ -40,18 +40,21 @@ export async function saveTrip(fd: FormData): Promise<ActionResult> {
   if (!o.date.trim()) return fail("Vui lòng chọn ngày đi.");
   if (hasReturn && !r?.date?.trim()) return fail("Vui lòng chọn ngày về.");
 
+  const status = (s(fd, "status") || "pending") as "pending" | "info_sent" | "completed_paid" | "cancelled";
+
   const data = {
     customerName,
     ...(fd.has("customerPhone") ? { customerPhone: optStr(fd, "customerPhone") } : {}),
     tourType: tourTypeFromDates(o.date, r?.date ?? null),
     price: optNum(fd, "price"),
     deposit: optNum(fd, "deposit"),
+    cancelFee: status === "cancelled" ? optNum(fd, "cancelFee") ?? 0 : null,
     partnerCost: optNum(fd, "partnerCost"),
     // tollCost/otherCost không còn nhập ở form: chỉ ghi khi có trong FormData để
     // không xoá mất dữ liệu lịch sử của các chuyến cũ khi sửa.
     ...(fd.has("tollCost") ? { tollCost: optNum(fd, "tollCost") } : {}),
     ...(fd.has("otherCost") ? { otherCost: optNum(fd, "otherCost") } : {}),
-    status: (s(fd, "status") || "pending") as "pending" | "info_sent" | "completed_paid",
+    status,
     heldThroughTour: s(fd, "heldThroughTour") === "on",
     note: s(fd, "note"),
     outboundDate: o.date,
