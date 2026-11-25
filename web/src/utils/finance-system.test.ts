@@ -70,8 +70,8 @@ describe("tài chính toàn hệ thống trong một tháng", () => {
       }),
     ];
     const salaryRows: SalaryRow[] = [
-      { personType: "office", personId: "office", name: "NV", role: "Nhân viên", baseSalary: 11_000_000, additions: 0, deductions: 0, note: "", paid: true, net: 11_000_000 },
-      { personType: "driver", personId: "driver", name: "LX", role: "Lái xe", baseSalary: 9_000_000, additions: 0, deductions: 0, note: "", paid: true, net: 9_000_000 },
+      { personType: "office", personId: "office", name: "NV", role: "Nhân viên", baseSalary: 11_000_000, additions: 0, deductions: 0, advances: 0, note: "", paid: true, net: 11_000_000 },
+      { personType: "driver", personId: "driver", name: "LX", role: "Lái xe", baseSalary: 9_000_000, additions: 0, deductions: 0, advances: 0, note: "", paid: true, net: 9_000_000 },
     ];
     const payouts = [
       { workDate: "2026-08-15", amount: 1_500_000 },

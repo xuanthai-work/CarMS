@@ -97,3 +97,57 @@ export async function deletePartnerPayout(fd: FormData): Promise<void> {
   await prisma.partnerPayout.delete({ where: { id: s(fd, "id") } });
   revalidateAll();
 }
+
+/** Tạo/sửa một lần tạm ứng lương (trừ vào tháng của `date`). */
+export async function saveSalaryAdvance(fd: FormData): Promise<ActionResult> {
+  const personType = s(fd, "personType");
+  if (personType === "office") await requireManagerEditor();
+  else await requireEditor();
+
+  const id = s(fd, "id");
+  const personId = s(fd, "personId");
+  const date = s(fd, "date");
+  if (!personId || (personType !== "office" && personType !== "driver")) {
+    return fail("Không xác định được nhân sự.");
+  }
+  if (!date) return fail("Vui lòng chọn ngày ứng.");
+  const amt = String(fd.get("amount") || "").replace(/[^\d]/g, "");
+  if (!amt || Number(amt) <= 0) return fail("Vui lòng nhập số tiền.");
+
+  const data = {
+    personType,
+    personId,
+    date,
+    amount: Number(amt),
+    note: s(fd, "note"),
+  };
+  try {
+    if (id) await prisma.salaryAdvance.update({ where: { id }, data });
+    else await prisma.salaryAdvance.create({ data: { id: newId("sa"), ...data } });
+  } catch {
+    return fail("Không lưu được. Vui lòng thử lại.");
+  }
+  revalidateAll();
+  return OK;
+}
+
+/** Xóa một lần tạm ứng lương (kiểm quyền theo `personType` của bản ghi). */
+export async function deleteSalaryAdvance(fd: FormData): Promise<ActionResult> {
+  const id = s(fd, "id");
+  if (!id) return fail("Không tìm thấy khoản tạm ứng.");
+  const existing = await prisma.salaryAdvance.findUnique({
+    where: { id },
+    select: { personType: true },
+  });
+  if (!existing) return fail("Không tìm thấy khoản tạm ứng.");
+  if (existing.personType === "office") await requireManagerEditor();
+  else await requireEditor();
+
+  try {
+    await prisma.salaryAdvance.delete({ where: { id } });
+  } catch {
+    return fail("Không xóa được. Vui lòng thử lại.");
+  }
+  revalidateAll();
+  return OK;
+}

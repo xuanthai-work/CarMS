@@ -9,6 +9,7 @@ const { mockRequireEditor, mockRequireManagerEditor, mockRevalidateAll, mockPris
     driver: { findUnique: vi.fn() },
     salaryMonth: { upsert: vi.fn() },
     partnerPayout: { create: vi.fn(), update: vi.fn() },
+    salaryAdvance: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   },
 }));
 
@@ -19,7 +20,7 @@ vi.mock("@/services/auth", () => ({
 vi.mock("./revalidate", () => ({ revalidateAll: mockRevalidateAll }));
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 
-import { saveSalaryMonth, savePartnerPayout } from "./salary";
+import { saveSalaryMonth, savePartnerPayout, saveSalaryAdvance, deleteSalaryAdvance } from "./salary";
 
 function makeFd(entries: Record<string, string>): FormData {
   const fd = new FormData();
@@ -116,6 +117,80 @@ describe("saveSalaryMonth", () => {
   });
 });
 
+describe("saveSalaryAdvance", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.salaryAdvance.create.mockResolvedValue({});
+    mockPrisma.salaryAdvance.update.mockResolvedValue({});
+  });
+
+  it("kiểm tra validate date, amount và personType", async () => {
+    expect(
+      await saveSalaryAdvance(makeFd({ personType: "driver", personId: "d1", date: "", amount: "500000" }))
+    ).toEqual({ ok: false, error: "Vui lòng chọn ngày ứng." });
+
+    expect(
+      await saveSalaryAdvance(makeFd({ personType: "driver", personId: "d1", date: "2026-11-10", amount: "0" }))
+    ).toEqual({ ok: false, error: "Vui lòng nhập số tiền." });
+
+    expect(
+      await saveSalaryAdvance(makeFd({ personType: "other", personId: "d1", date: "2026-11-10", amount: "500000" }))
+    ).toEqual({ ok: false, error: "Không xác định được nhân sự." });
+  });
+
+  it("office dùng requireManagerEditor, driver dùng requireEditor và tạo mới thành công", async () => {
+    const r1 = await saveSalaryAdvance(
+      makeFd({ personType: "office", personId: "o1", date: "2026-11-10", amount: "1.000.000", note: "Ứng" })
+    );
+    expect(mockRequireManagerEditor).toHaveBeenCalledTimes(1);
+    expect(r1).toEqual({ ok: true });
+    expect(mockPrisma.salaryAdvance.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        personType: "office",
+        personId: "o1",
+        date: "2026-11-10",
+        amount: 1_000_000,
+        note: "Ứng",
+      }),
+    });
+
+    const r2 = await saveSalaryAdvance(
+      makeFd({ personType: "driver", personId: "d1", date: "2026-11-12", amount: "500000" })
+    );
+    expect(mockRequireEditor).toHaveBeenCalledTimes(1);
+    expect(r2).toEqual({ ok: true });
+  });
+});
+
+describe("deleteSalaryAdvance", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.salaryAdvance.delete.mockResolvedValue({});
+  });
+
+  it("trả lỗi nếu thiếu id hoặc không tìm thấy bản ghi", async () => {
+    expect(await deleteSalaryAdvance(makeFd({}))).toEqual({
+      ok: false,
+      error: "Không tìm thấy khoản tạm ứng.",
+    });
+
+    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce(null);
+    expect(await deleteSalaryAdvance(makeFd({ id: "sa1" }))).toEqual({
+      ok: false,
+      error: "Không tìm thấy khoản tạm ứng.",
+    });
+  });
+
+  it("áp đúng guard office/driver và xóa thành công", async () => {
+    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce({ personType: "office" });
+    const r = await deleteSalaryAdvance(makeFd({ id: "sa1" }));
+    expect(mockRequireManagerEditor).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.salaryAdvance.delete).toHaveBeenCalledWith({ where: { id: "sa1" } });
+    expect(mockRevalidateAll).toHaveBeenCalledTimes(1);
+    expect(r).toEqual({ ok: true });
+  });
+});
+
 describe("savePartnerPayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -188,5 +263,79 @@ describe("savePartnerPayout", () => {
     );
     expect(r).toEqual({ ok: false, error: "Không lưu được. Vui lòng thử lại." });
     expect(mockRevalidateAll).not.toHaveBeenCalled();
+  });
+});
+
+describe("saveSalaryAdvance", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.salaryAdvance.create.mockResolvedValue({});
+    mockPrisma.salaryAdvance.update.mockResolvedValue({});
+  });
+
+  it("kiểm tra validate date, amount và personType", async () => {
+    expect(
+      await saveSalaryAdvance(makeFd({ personType: "driver", personId: "d1", date: "", amount: "500000" }))
+    ).toEqual({ ok: false, error: "Vui lòng chọn ngày ứng." });
+
+    expect(
+      await saveSalaryAdvance(makeFd({ personType: "driver", personId: "d1", date: "2026-11-10", amount: "0" }))
+    ).toEqual({ ok: false, error: "Vui lòng nhập số tiền." });
+
+    expect(
+      await saveSalaryAdvance(makeFd({ personType: "other", personId: "d1", date: "2026-11-10", amount: "500000" }))
+    ).toEqual({ ok: false, error: "Không xác định được nhân sự." });
+  });
+
+  it("office dùng requireManagerEditor, driver dùng requireEditor và tạo mới thành công", async () => {
+    const r1 = await saveSalaryAdvance(
+      makeFd({ personType: "office", personId: "o1", date: "2026-11-10", amount: "1.000.000", note: "Ứng" })
+    );
+    expect(mockRequireManagerEditor).toHaveBeenCalledTimes(1);
+    expect(r1).toEqual({ ok: true });
+    expect(mockPrisma.salaryAdvance.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        personType: "office",
+        personId: "o1",
+        date: "2026-11-10",
+        amount: 1_000_000,
+        note: "Ứng",
+      }),
+    });
+
+    const r2 = await saveSalaryAdvance(
+      makeFd({ personType: "driver", personId: "d1", date: "2026-11-12", amount: "500000" })
+    );
+    expect(mockRequireEditor).toHaveBeenCalledTimes(1);
+    expect(r2).toEqual({ ok: true });
+  });
+});
+
+describe("deleteSalaryAdvance", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.salaryAdvance.delete.mockResolvedValue({});
+  });
+
+  it("trả lỗi nếu thiếu id hoặc không tìm thấy bản ghi", async () => {
+    expect(await deleteSalaryAdvance(makeFd({}))).toEqual({
+      ok: false,
+      error: "Không tìm thấy khoản tạm ứng.",
+    });
+
+    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce(null);
+    expect(await deleteSalaryAdvance(makeFd({ id: "sa1" }))).toEqual({
+      ok: false,
+      error: "Không tìm thấy khoản tạm ứng.",
+    });
+  });
+
+  it("áp đúng guard office/driver và xóa thành công", async () => {
+    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce({ personType: "office" });
+    const r = await deleteSalaryAdvance(makeFd({ id: "sa1" }));
+    expect(mockRequireManagerEditor).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.salaryAdvance.delete).toHaveBeenCalledWith({ where: { id: "sa1" } });
+    expect(mockRevalidateAll).toHaveBeenCalledTimes(1);
+    expect(r).toEqual({ ok: true });
   });
 });

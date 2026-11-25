@@ -6,6 +6,7 @@ const db = vi.hoisted(() => ({
   vehicleFindMany: vi.fn(),
   fuelEntryFindMany: vi.fn(),
   salaryMonthFindMany: vi.fn(),
+  salaryAdvanceFindMany: vi.fn(),
   partnerPayoutFindMany: vi.fn(),
   officeStaffFindMany: vi.fn(),
   driverFindMany: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock("@/lib/prisma", () => ({
     vehicle: { findMany: db.vehicleFindMany },
     fuelEntry: { findMany: db.fuelEntryFindMany },
     salaryMonth: { findMany: db.salaryMonthFindMany },
+    salaryAdvance: { findMany: db.salaryAdvanceFindMany },
     partnerPayout: { findMany: db.partnerPayoutFindMany },
     officeStaff: { findMany: db.officeStaffFindMany },
     driver: { findMany: db.driverFindMany },
@@ -88,6 +90,7 @@ function tripRow(over: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   db.salaryMonthFindMany.mockResolvedValue([]);
+  db.salaryAdvanceFindMany.mockResolvedValue([]);
   db.partnerPayoutFindMany.mockResolvedValue([]);
   db.officeStaffFindMany.mockResolvedValue([]);
   db.driverFindMany.mockResolvedValue([]);

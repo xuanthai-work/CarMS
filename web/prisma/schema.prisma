@@ -157,6 +157,20 @@ model PartnerPayout {
   @@index([driverId, workDate])
 }
 
+model SalaryAdvance {
+  id         String   @id
+  personType String   // 'office' | 'driver'
+  personId   String
+  date       String   // YYYY-MM-DD (ngày ứng)
+  amount     Float
+  note       String?  @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([personType, personId, date])
+  @@index([date])
+}
+
 model OtherExpense {
   id            String   @id
   date          String   // YYYY-MM-DD (ngày phát sinh / ngày chi)

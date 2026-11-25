@@ -1,9 +1,10 @@
 import type {
   SalaryMonth as SalaryMonthRow,
   PartnerPayout as PartnerPayoutRow,
+  SalaryAdvance as SalaryAdvanceRow,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { SalaryMonth, PartnerPayout } from "@/types";
+import type { SalaryMonth, PartnerPayout, SalaryAdvance, SalaryPersonType } from "@/types";
 import { monthRange } from "@/utils/format";
 
 function toSalaryMonth(r: SalaryMonthRow): SalaryMonth {
@@ -51,4 +52,26 @@ export async function getPartnerPayouts(monthKey?: string): Promise<PartnerPayou
     orderBy: [{ workDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
   });
   return rows.map(toPartnerPayout);
+}
+
+function toSalaryAdvance(r: SalaryAdvanceRow): SalaryAdvance {
+  return {
+    id: r.id,
+    personType: r.personType as SalaryPersonType,
+    personId: r.personId,
+    date: r.date,
+    amount: r.amount,
+    note: r.note ?? "",
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+  };
+}
+
+export async function getSalaryAdvances(monthKey?: string): Promise<SalaryAdvance[]> {
+  const where = monthKey ? { date: monthRange(monthKey) } : undefined;
+  const rows = await prisma.salaryAdvance.findMany({
+    where,
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+  });
+  return rows.map(toSalaryAdvance);
 }

@@ -1,7 +1,7 @@
 import SalaryScreen from "@/components/salary/SalaryScreen";
 import { getOfficeStaff } from "@/services/staff";
 import { getDrivers } from "@/services/drivers";
-import { getSalaryMonths, getPartnerPayouts } from "@/services/salary";
+import { getSalaryMonths, getPartnerPayouts, getSalaryAdvances } from "@/services/salary";
 import { getCurrentStaff } from "@/services/auth";
 import { isManager } from "@/utils/office";
 import { salariedPeople, buildSalaryRows, visibleSalaryRows, partnerPayoutMonthTotal } from "@/utils/salary";
@@ -14,14 +14,15 @@ export default async function LuongPage({ searchParams }: { searchParams: Promis
   const staff = await getCurrentStaff(); // cache theo request
   const manager = isManager(staff?.position ?? null);
 
-  const [office, drivers, months, payouts] = await Promise.all([
+  const [office, drivers, months, payouts, advances] = await Promise.all([
     getOfficeStaff(),
     getDrivers(),
     getSalaryMonths(monthKey),
     getPartnerPayouts(monthKey),
+    getSalaryAdvances(monthKey),
   ]);
 
-  const allRows = buildSalaryRows(salariedPeople(office, drivers, monthKey), months);
+  const allRows = buildSalaryRows(salariedPeople(office, drivers, monthKey), months, advances);
   const rows = visibleSalaryRows(allRows, manager);
   const payoutTotal = partnerPayoutMonthTotal(payouts, monthKey);
 
@@ -29,6 +30,7 @@ export default async function LuongPage({ searchParams }: { searchParams: Promis
     <SalaryScreen
       rows={rows}
       payouts={payouts}
+      advances={advances}
       drivers={drivers}
       monthKey={monthKey}
       isManager={manager}

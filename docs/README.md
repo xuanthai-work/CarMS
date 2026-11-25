@@ -71,6 +71,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-064** | 2026-11-25 | Vùng Bấm ≥44px Trên Điện Thoại + Lỗi Giao Diện Lặt Vặt | UI / Mobile |  **Đã xong** | [TASK-064](tasks/TASK-064-mobile-tap-targets.md) |
 | **TASK-065** | 2026-11-25 | Sửa Chữ Giờ Đè Thanh Màu + Bỏ Mũi Tên Ô Ngày Nhận Lương | UI |  **Đã xong** | [TASK-065](tasks/TASK-065-time-overlap-number-spinner.md) |
 | **TASK-066** | 2026-11-25 | Sửa Thanh Cuộn Dọc Lòi Ra Ở Tab Lọc (FilterTabs) | UI |  **Đã xong** | [TASK-066](tasks/TASK-066-filtertabs-vertical-scrollbar.md) |
+| **TASK-067** | 2026-11-25 | Tạm Ứng Lương Riêng (GĐ 5, Bước 1/4) | Lương / Schema |  **Đã xong** | [TASK-067](tasks/TASK-067-salary-advance.md) |
 
 ---
 

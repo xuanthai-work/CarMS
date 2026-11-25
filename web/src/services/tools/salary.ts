@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { monthKeyOf, monthLabel, todayStr } from "@/utils/format";
 import { buildSalaryRows, salariedPeople } from "@/utils/salary";
-import { getSalaryMonths, getPartnerPayouts } from "@/services/salary";
+import { getSalaryMonths, getPartnerPayouts, getSalaryAdvances } from "@/services/salary";
 import { getOfficeStaff } from "@/services/staff";
 import { getDrivers } from "@/services/drivers";
 import { NO_PERMISSION, type UserRoleContext, vnd } from "./shared";
@@ -34,11 +34,12 @@ export function getSalaryBreakdownTool(ctx: UserRoleContext) {
       }
 
       try {
-        const [office, drivers, months, payouts] = await Promise.all([
+        const [office, drivers, months, payouts, advances] = await Promise.all([
           getOfficeStaff(),
           getDrivers(),
           getSalaryMonths(key),
           getPartnerPayouts(key),
+          getSalaryAdvances(key),
         ]);
 
         const name = personName?.trim().toLowerCase();
@@ -50,7 +51,7 @@ export function getSalaryBreakdownTool(ctx: UserRoleContext) {
           return NO_PERMISSION;
         }
 
-        const rows = buildSalaryRows(salariedPeople(office, drivers, key), months);
+        const rows = buildSalaryRows(salariedPeople(office, drivers, key), months, advances);
         const officeIds = new Set(matchedOffice.map((o) => o.id));
         const driverIds = new Set(matchedDrivers.map((d) => d.id));
         const driverNameById = new Map(drivers.map((d) => [d.id, d.name]));
@@ -66,7 +67,7 @@ export function getSalaryBreakdownTool(ctx: UserRoleContext) {
           const lines = officeRows.map(
             (r) =>
               `• ${r.name} (${r.role}) — Lương CB: ${vnd(r.baseSalary)} đ | Cộng: ${vnd(r.additions)} đ | Trừ: ${vnd(
-                r.deductions
+                r.deductions + r.advances
               )} đ | Thực nhận: ${vnd(r.net)} đ | ${r.paid ? "Đã trả" : "Chưa trả"}`
           );
           sections.push(
@@ -80,7 +81,7 @@ export function getSalaryBreakdownTool(ctx: UserRoleContext) {
           const lines = driverRows.map(
             (r) =>
               `• ${r.name} (Lái xe) — Lương CB: ${vnd(r.baseSalary)} đ | Cộng: ${vnd(r.additions)} đ | Trừ: ${vnd(
-                r.deductions
+                r.deductions + r.advances
               )} đ | Thực nhận: ${vnd(r.net)} đ | ${r.paid ? "Đã trả" : "Chưa trả"}`
           );
           sections.push(

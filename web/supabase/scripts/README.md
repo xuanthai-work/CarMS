@@ -21,6 +21,7 @@ flowchart TD
     E -.->|Chỉ chạy khi BA yêu cầu| F["04-cleanup-duplicate-trips.sql (Dọn chuyến trùng)"]
     E --> G["05-drop-partnerpayout-paymentdate.sql (Bỏ cột paymentDate của PartnerPayout)"]
     G --> H["06-add-trip-cancelfee.sql (Thêm cột cancelFee cho Trip)"]
+    H --> I["07-add-salary-advance.sql (Thêm bảng SalaryAdvance & bật RLS)"]
 ```
 
 ### Bước 1: Khảo sát hiện trạng (`01-audit-readonly.sql`)
@@ -53,6 +54,10 @@ Bắt buộc thực hiện sao lưu trước khi chạy bất kỳ script chỉn
 ### Bước 7: Thêm cột `cancelFee` cho `Trip` (`06-add-trip-cancelfee.sql`)
 - **Chạy SAU khi code mới đã deploy** (hủy chuyến có phí hủy).
 - Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
+
+### Bước 8: Thêm bảng `SalaryAdvance` (`07-add-salary-advance.sql`)
+- **Chạy SAU khi code mới đã deploy** (tạm ứng lương riêng).
+- Tạo bảng `SalaryAdvance`, 2 index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại an toàn.
 
 ---
 

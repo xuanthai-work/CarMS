@@ -142,6 +142,17 @@ export type SalaryMonth = {
   paidDate: string | null;
 };
 
+export type SalaryAdvance = {
+  id: string;
+  personType: SalaryPersonType;
+  personId: string;
+  date: string;
+  amount: number;
+  note: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type PartnerPayout = {
   id: string;
   driverId: string;

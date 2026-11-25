@@ -34,3 +34,4 @@ Commit history uses short, imperative, lower-case summaries, often with a catego
 - Mọi lệnh cài đặt, typecheck, test và build chạy từ thư mục `web/`.
 - Dự án chưa cấu hình ESLint (`npm run lint` gọi `next lint` sẽ hỏi cài đặt), nên không có gate lint.
 - Phân quyền đang mở tạm (2026-11-25): `isManager()` trả true cho mọi chức vụ, chỉ CEO vẫn chỉ xem; khi làm phân quyền thật phải đổi lại `isManager` ở `web/src/utils/office.ts` (xem comment tại hàm).
+- Tạm ứng lương nằm ở bảng `SalaryAdvance`, trừ vào tháng của ngày ứng, không chuyển nợ; `SalaryMonth.deductions` là khấu trừ khác.

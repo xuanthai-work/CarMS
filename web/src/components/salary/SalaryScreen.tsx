@@ -7,7 +7,7 @@ import PartnerPayoutTable from "@/components/salary/PartnerPayoutTable";
 import { monthLabel, addMonth } from "@/utils/format";
 import { fmtMoneyUnit } from "@/utils/trips";
 import type { SalaryRow } from "@/utils/salary";
-import type { Driver, PartnerPayout } from "@/types";
+import type { Driver, PartnerPayout, SalaryAdvance } from "@/types";
 import Button from "@/components/common/Button";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
@@ -26,6 +26,7 @@ function Tile({ label, value, tone = "ink" }: { label: string; value: string; to
 export default function SalaryScreen({
   rows,
   payouts,
+  advances,
   drivers,
   monthKey,
   isManager,
@@ -33,6 +34,7 @@ export default function SalaryScreen({
 }: {
   rows: SalaryRow[];
   payouts: PartnerPayout[];
+  advances: SalaryAdvance[];
   drivers: Driver[];
   monthKey: string;
   isManager: boolean;
@@ -96,11 +98,11 @@ export default function SalaryScreen({
         <div className="space-y-5">
           {isManager && (
             <SalaryGroup title="Văn phòng" count={officeRows.length}>
-              <SalaryMonthTable rows={officeRows} monthKey={monthKey} query={query} />
+              <SalaryMonthTable rows={officeRows} advances={advances} monthKey={monthKey} query={query} />
             </SalaryGroup>
           )}
           <SalaryGroup title="Lái xe" count={driverRows.length}>
-            <SalaryMonthTable rows={driverRows} monthKey={monthKey} query={query} />
+            <SalaryMonthTable rows={driverRows} advances={advances} monthKey={monthKey} query={query} />
           </SalaryGroup>
         </div>
       ) : (

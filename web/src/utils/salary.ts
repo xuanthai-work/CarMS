@@ -12,6 +12,7 @@ export type SalariedPerson = {
 export type SalaryRow = SalariedPerson & {
   additions: number;
   deductions: number;
+  advances: number;
   note: string;
   paid: boolean;
   paidDate?: string | null;
@@ -44,6 +45,7 @@ type MonthLike = {
   paidDate?: string | null;
 };
 type PayoutLike = { workDate: string; amount: number };
+type AdvanceLike = { personType: string; personId: string; amount: number };
 
 export type SalaryCostBreakdown = {
   office: number;
@@ -52,9 +54,14 @@ export type SalaryCostBreakdown = {
   total: number;
 };
 
-/** Thực nhận = lương cơ bản + cộng (thưởng/phụ cấp) − trừ (tạm ứng/khấu trừ). */
-export function salaryNet(x: { baseSalary: number; additions: number; deductions: number }): number {
-  return x.baseSalary + x.additions - x.deductions;
+/** Thực nhận = lương cơ bản + cộng (thưởng/phụ cấp) − khấu trừ khác − tạm ứng. */
+export function salaryNet(x: {
+  baseSalary: number;
+  additions: number;
+  deductions: number;
+  advances?: number;
+}): number {
+  return x.baseSalary + x.additions - x.deductions - (x.advances ?? 0);
 }
 
 /**
@@ -92,23 +99,35 @@ export function salariedPeople(
   return [...fromOffice, ...fromDrivers];
 }
 
-/** Trộn người + bản ghi lương tháng (đã lọc đúng tháng) → dòng có thực nhận. */
-export function buildSalaryRows(people: SalariedPerson[], months: MonthLike[]): SalaryRow[] {
+/** Trộn người + bản ghi lương tháng (đã lọc đúng tháng) + tạm ứng trong tháng → dòng có thực nhận. */
+export function buildSalaryRows(
+  people: SalariedPerson[],
+  months: MonthLike[],
+  advances: AdvanceLike[] = []
+): SalaryRow[] {
   const byKey = new Map(months.map((m) => [`${m.personType}:${m.personId}`, m]));
+  const advByKey = new Map<string, number>();
+  for (const a of advances) {
+    const k = `${a.personType}:${a.personId}`;
+    advByKey.set(k, (advByKey.get(k) ?? 0) + a.amount);
+  }
   return people.map((p) => {
-    const m = byKey.get(`${p.personType}:${p.personId}`);
+    const k = `${p.personType}:${p.personId}`;
+    const m = byKey.get(k);
     const baseSalary = m?.baseSalary ?? p.baseSalary; // snapshot nếu đã có dòng tháng
     const additions = m?.additions ?? 0;
     const deductions = m?.deductions ?? 0;
+    const personAdvances = advByKey.get(k) ?? 0;
     return {
       ...p,
       baseSalary,
       additions,
       deductions,
+      advances: personAdvances,
       note: m?.note ?? "",
       paid: m?.paid ?? false,
       paidDate: m?.paidDate ?? null,
-      net: salaryNet({ baseSalary, additions, deductions }),
+      net: salaryNet({ baseSalary, additions, deductions, advances: personAdvances }),
     };
   });
 }
@@ -154,13 +173,15 @@ export function salaryCostByMonth(
   drivers: DriverLike[],
   months: (MonthLike & { monthKey: string })[],
   payouts: PayoutLike[],
-  monthKeys: string[]
+  monthKeys: string[],
+  advances: (AdvanceLike & { date: string })[] = []
 ): Record<string, SalaryCostBreakdown> {
   const result: Record<string, SalaryCostBreakdown> = {};
   for (const monthKey of monthKeys) {
     const people = salariedPeople(office, drivers, monthKey);
     const monthRows = months.filter((m) => m.monthKey === monthKey);
-    const rows = buildSalaryRows(people, monthRows);
+    const monthAdvances = advances.filter((a) => monthKeyOf(a.date) === monthKey);
+    const rows = buildSalaryRows(people, monthRows, monthAdvances);
     result[monthKey] = salaryCostBreakdownForMonth(rows, payouts, monthKey);
   }
   return result;
