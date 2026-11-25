@@ -28,7 +28,6 @@ function toPartnerPayout(r: PartnerPayoutRow): PartnerPayout {
     workDate: r.workDate,
     amount: r.amount,
     paymentStatus: r.paymentStatus as PartnerPayout["paymentStatus"],
-    paymentDate: r.paymentDate,
     payerName: r.payerName,
     note: r.note ?? "",
     createdAt: r.createdAt.toISOString(),

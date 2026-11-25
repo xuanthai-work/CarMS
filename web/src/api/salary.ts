@@ -79,7 +79,6 @@ export async function savePartnerPayout(fd: FormData): Promise<ActionResult> {
     workDate,
     amount: Number(amt),
     paymentStatus: s(fd, "paymentStatus") || "unpaid",
-    paymentDate: optStr(fd, "paymentDate"),
     payerName: s(fd, "payerName"),
     note: s(fd, "note"),
   };

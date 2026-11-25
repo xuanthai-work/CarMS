@@ -19,6 +19,7 @@ flowchart TD
     C --> D["02-sync-schema.sql (Thêm cột & Bật RLS)"]
     D --> E["03-backfill-partner-debt-workdate.sql (Chuẩn hoá workDate)"]
     E -.->|Chỉ chạy khi BA yêu cầu| F["04-cleanup-duplicate-trips.sql (Dọn chuyến trùng)"]
+    E --> G["05-drop-partnerpayout-paymentdate.sql (Bỏ cột paymentDate của PartnerPayout)"]
 ```
 
 ### Bước 1: Khảo sát hiện trạng (`01-audit-readonly.sql`)
@@ -43,6 +44,10 @@ Bắt buộc thực hiện sao lưu trước khi chạy bất kỳ script chỉn
 ### Bước 5: Dọn dẹp chuyến trùng (`04-cleanup-duplicate-trips.sql`)
 - **Chỉ thực hiện khi BA xác nhận** cần dọn dẹp các bản ghi bị double-submit.
 - Mặc định khối lệnh xoá ở `BƯỚC 2` đã được đóng comment `/* ... */`. Chỉ mở ra chạy sau khi đã xem xét kỹ kết quả ở `BƯỚC 1`.
+
+### Bước 6: Bỏ cột `paymentDate` của `PartnerPayout` (`05-drop-partnerpayout-paymentdate.sql`)
+- **Chạy SAU khi code mới đã deploy** (code mới không còn đọc/ghi cột này).
+- Chạy an toàn (`DROP COLUMN IF EXISTS`), có thể chạy lại nếu cần.
 
 ---
 

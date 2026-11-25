@@ -147,7 +147,6 @@ export type PartnerPayout = {
   workDate: string;
   amount: number;
   paymentStatus: "paid" | "unpaid";
-  paymentDate: string | null;
   payerName: string;
   note: string;
   createdAt?: string;

@@ -98,7 +98,7 @@ export function getSalaryBreakdownTool(ctx: UserRoleContext) {
             (p) =>
               `• ${driverNameById.get(p.driverId) ?? "Tài xế ?"} — ${p.workDate}: ${vnd(p.amount)} đ | ${
                 p.paymentStatus === "paid" ? "Đã thanh toán" : "Chưa thanh toán"
-              }${p.paymentDate ? ` (ngày trả: ${p.paymentDate})` : ""}${p.note?.trim() ? ` | ${p.note.trim()}` : ""}`
+              }${p.note?.trim() ? ` | ${p.note.trim()}` : ""}`
           );
           sections.push(
             `CÔNG NỢ TÀI XẾ ĐỐI TÁC (${matchedPayouts.length} lượt):\n` +

@@ -145,7 +145,6 @@ model PartnerPayout {
   workDate      String   // YYYY-MM-DD
   amount        Float
   paymentStatus String   @default("unpaid") // 'paid' | 'unpaid'
-  paymentDate   String?
   payerName     String   @default("")
   note          String?  @default("")
   createdAt     DateTime @default(now())
