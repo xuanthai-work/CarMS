@@ -24,7 +24,7 @@ export default function FilterTabs<T extends string>({
       <div
         role="tablist"
         aria-label={ariaLabel}
-        className="inline-flex h-9 items-center overflow-hidden rounded-xl border border-hairline bg-surface text-sm font-medium shadow-sm"
+        className="inline-flex h-9 max-w-full items-center overflow-x-auto rounded-xl border border-hairline bg-surface text-sm font-medium shadow-sm"
       >
         {options.map(([optionValue, label]) => {
           const active = value === optionValue;
@@ -35,7 +35,7 @@ export default function FilterTabs<T extends string>({
               role="tab"
               aria-selected={active}
               onClick={() => onChange(optionValue)}
-              className={`relative h-9 rounded-[10px] px-3 py-0 transition-colors duration-150 ${
+              className={`relative h-9 shrink-0 whitespace-nowrap rounded-[10px] px-3 py-0 transition-colors duration-150 ${
                 active ? "text-white" : "text-slate-600 hover:bg-slate-100"
               }`}
             >

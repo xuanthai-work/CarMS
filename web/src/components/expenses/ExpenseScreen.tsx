@@ -44,12 +44,12 @@ function Stat({
   } as const;
   return (
     <div
-      className={`rounded-2xl border border-hairline bg-surface p-5 shadow-card ${tones[tone]}`}
+      className={`min-w-0 rounded-2xl border border-hairline bg-surface p-4 shadow-card sm:p-5 ${tones[tone]}`}
     >
       <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
         {label}
       </div>
-      <div className="mt-3 text-2xl font-bold leading-none tracking-tight tabular-nums">
+      <div className="mt-3 whitespace-nowrap text-lg font-bold leading-none tracking-tight tabular-nums sm:text-2xl">
         {value}
       </div>
     </div>
@@ -232,7 +232,7 @@ export default function ExpenseScreen({
           </div>
         ) : (
           <div className="overflow-x-auto thin-scroll">
-            <table className="w-full table-fixed text-[14px]">
+            <table className="w-full min-w-[880px] table-fixed text-[14px]">
               <ExpenseColgroup />
               <thead className="bg-canvas/70">
                 <tr className="border-b border-hairline text-left text-[12px] font-bold uppercase tracking-[0.02em] text-muted">
