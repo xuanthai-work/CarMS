@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Modal from "@/components/common/Modal";
 import FilterTabs from "@/components/common/FilterTabs";
 import DebtPayModal from "@/components/debts/DebtPayModal";
 import { addMonth, fmtDate, monthLabel } from "@/utils/format";
@@ -243,20 +242,14 @@ export default function DebtScreen({
       </div>
 
       {modal && editing && (
-        <Modal
-          title="Cập nhật thanh toán công nợ"
-          onClose={() => setModal(null)}
-          maxWidthClass="max-w-xl"
-        >
-          <DebtPayModal
-            debt={editing}
-            onDone={() => {
-              setModal(null);
-              router.refresh();
-            }}
-            onCancel={() => setModal(null)}
-          />
-        </Modal>
+        <DebtPayModal
+          debt={editing}
+          onDone={() => {
+            setModal(null);
+            router.refresh();
+          }}
+          onCancel={() => setModal(null)}
+        />
       )}
     </div>
   );
