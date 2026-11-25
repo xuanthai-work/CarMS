@@ -4,7 +4,6 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { dropdownMotion } from "@/utils/motion";
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Modal from "@/components/common/Modal";
 import FilterTabs from "@/components/common/FilterTabs";
 import ExpenseModal from "@/components/expenses/ExpenseModal";
 import { useDismiss } from "@/hooks/common/useDismiss";
@@ -313,28 +312,19 @@ export default function ExpenseScreen({
           const editing = editingId ? entries.find((e) => e.id === editingId) : undefined;
           if (editingId && !editing) return null;
           return (
-            <Modal
-              title={editing ? "Sửa khoản chi" : "Thêm khoản chi"}
-              onClose={() => {
+            <ExpenseModal
+              expense={editing}
+              defaultDate={`${monthKey}-01`}
+              onDone={() => {
+                setAdding(false);
+                setEditingId(null);
+                router.refresh();
+              }}
+              onCancel={() => {
                 setAdding(false);
                 setEditingId(null);
               }}
-              maxWidthClass="max-w-2xl"
-            >
-              <ExpenseModal
-                expense={editing}
-                defaultDate={`${monthKey}-01`}
-                onDone={() => {
-                  setAdding(false);
-                  setEditingId(null);
-                  router.refresh();
-                }}
-                onCancel={() => {
-                  setAdding(false);
-                  setEditingId(null);
-                }}
-              />
-            </Modal>
+            />
           );
         })()}
     </div>

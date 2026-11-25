@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Button from "@/components/common/Button";
+import SideDrawer from "@/components/common/SideDrawer";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import DatePicker from "@/components/common/DatePicker";
 import MoneyInput from "@/components/common/MoneyInput";
@@ -9,7 +10,7 @@ import SelectMenu from "@/components/common/SelectMenu";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import { deleteOtherExpense, saveOtherExpense } from "@/api/expenses";
 import { fmtDate } from "@/utils/format";
-import { DetailCell, Field, inputCls } from "@/components/common/ui";
+import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
 import { OTHER_EXPENSE_CATEGORIES, otherExpenseCategoryMeta } from "@/utils/expenses";
 import type { OtherExpense } from "@/types";
 
@@ -26,6 +27,7 @@ export default function ExpenseModal({
   onDone: () => void;
   onCancel: () => void;
 }) {
+  const formId = "expense-form";
   const [isPending, startTransition] = useTransition();
   const [date, setDate] = useState(expense?.date ?? defaultDate);
   const [category, setCategory] = useState<string>(expense?.category ?? "other");
@@ -37,112 +39,128 @@ export default function ExpenseModal({
   );
   const [err, setErr] = useState<string | null>(null);
 
-  function submitForm(fd: FormData) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (isPending) return;
     if (!date) return setErr("Vui lòng chọn ngày chi.");
+    const fd = new FormData(e.currentTarget);
     const title = String(fd.get("title") || "").trim();
     if (!title) return setErr("Vui lòng nhập nội dung khoản chi.");
     const amt = String(fd.get("amount") || "").replace(/[^\d]/g, "");
     if (!amt) return setErr("Vui lòng nhập số tiền.");
     setErr(null);
     startTransition(async () => {
-      await saveOtherExpense(fd);
+      const r = await saveOtherExpense(fd);
+      if (!r.ok) {
+        setErr(r.error);
+        return;
+      }
       onDone();
     });
   }
 
   return (
-    <form action={submitForm} className="space-y-3">
-      {expense && <input type="hidden" name="id" value={expense.id} />}
-      <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
-        <DetailCell>
-          <Field label="Ngày chi">
-            <DatePicker name="date" value={date} onChange={setDate} />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Số tiền">
-            <MoneyInput name="amount" defaultValue={expense?.amount ?? null} required placeholder="Số tiền" />
-          </Field>
-        </DetailCell>
-        <DetailCell className="sm:col-span-2">
-          <Field label="Nội dung chi">
-            <input
-              name="title"
-              defaultValue={expense?.title ?? ""}
-              placeholder="VD: Thay dầu, rửa xe, vé cầu đường…"
-              className={inputCls}
+    <SideDrawer
+      title={expense ? "Sửa khoản chi" : "Thêm khoản chi"}
+      onClose={onCancel}
+      footer={
+        expense ? (
+          <div className="flex w-full items-center justify-between">
+            <ConfirmDeleteButton
+              action={deleteOtherExpense}
+              id={expense.id}
+              label={`khoản chi “${expense.title}” ngày ${fmtDate(expense.date)}`}
             />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Phân loại">
-            <SelectMenu
-              name="category"
-              value={category}
-              onChange={setCategory}
-              options={CATEGORY_OPTIONS}
-              leadingDotClassName={otherExpenseCategoryMeta(category).swatch}
-            />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Người chi">
-            <input name="payerName" defaultValue={expense?.payerName ?? ""} placeholder="Người chi tiền" className={inputCls} />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Trạng thái">
-            <FuelPaymentStatusSelect
-              name="paymentStatus"
-              value={paymentStatus}
-              onChange={setPaymentStatus}
-              paidLabel="Đã chi"
-              unpaidLabel="Chưa chi"
-            />
-          </Field>
-        </DetailCell>
-        <DetailCell>
-          <Field label="Ngày thanh toán">
-            <DatePicker
-              name="paymentDate"
-              value={paymentStatus === "paid" ? paymentDate : ""}
-              onChange={setPaymentDate}
-              disabled={paymentStatus !== "paid"}
-            />
-          </Field>
-        </DetailCell>
-        <DetailCell className="sm:col-span-2">
-          <Field label="Ghi chú">
-            <input name="note" defaultValue={expense?.note ?? ""} placeholder="Ghi chú" className={inputCls} />
-          </Field>
-        </DetailCell>
-      </div>
-      {err && <div className="text-sm font-medium text-rose-600">{err}</div>}
-      <div className="flex items-center justify-between gap-2 border-t border-hairline pt-3">
-        {expense ? (
-          <ConfirmDeleteButton
-            action={deleteOtherExpense}
-            id={expense.id}
-            label={`khoản chi “${expense.title}” ngày ${fmtDate(expense.date)}`}
-          />
+            <Button type="submit" form={formId} disabled={isPending}>
+              {isPending ? "Đang lưu…" : "Lưu"}
+            </Button>
+          </div>
         ) : (
-          <span />
-        )}
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={onCancel}>
-            Hủy
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending
-              ? expense
-                ? "Đang lưu…"
-                : "Đang thêm…"
-              : expense
-              ? "Lưu"
-              : "Thêm khoản chi"}
-          </Button>
+          <>
+            <Button variant="secondary" onClick={onCancel}>
+              Hủy
+            </Button>
+            <Button type="submit" form={formId} disabled={isPending}>
+              {isPending ? "Đang thêm…" : "Thêm khoản chi"}
+            </Button>
+          </>
+        )
+      }
+    >
+      <FormError message={err} />
+      <form
+        id={formId}
+        noValidate
+        onSubmit={handleSubmit}
+        onInput={() => err && setErr(null)}
+        className="space-y-3"
+      >
+        {expense && <input type="hidden" name="id" value={expense.id} />}
+        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
+          <DetailCell>
+            <Field label="Ngày chi">
+              <DatePicker name="date" value={date} onChange={setDate} />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Số tiền">
+              <MoneyInput name="amount" defaultValue={expense?.amount ?? null} required placeholder="Số tiền" />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Nội dung chi">
+              <input
+                name="title"
+                defaultValue={expense?.title ?? ""}
+                placeholder="VD: Thay dầu, rửa xe, vé cầu đường…"
+                className={inputCls}
+              />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Phân loại">
+              <SelectMenu
+                name="category"
+                value={category}
+                onChange={setCategory}
+                options={CATEGORY_OPTIONS}
+                leadingDotClassName={otherExpenseCategoryMeta(category).swatch}
+              />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Người chi">
+              <input name="payerName" defaultValue={expense?.payerName ?? ""} placeholder="Người chi tiền" className={inputCls} />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Trạng thái">
+              <FuelPaymentStatusSelect
+                name="paymentStatus"
+                value={paymentStatus}
+                onChange={setPaymentStatus}
+                paidLabel="Đã chi"
+                unpaidLabel="Chưa chi"
+              />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Ngày thanh toán">
+              <DatePicker
+                name="paymentDate"
+                value={paymentStatus === "paid" ? paymentDate : ""}
+                onChange={setPaymentDate}
+                disabled={paymentStatus !== "paid"}
+              />
+            </Field>
+          </DetailCell>
+          <DetailCell>
+            <Field label="Ghi chú">
+              <input name="note" defaultValue={expense?.note ?? ""} placeholder="Ghi chú" className={inputCls} />
+            </Field>
+          </DetailCell>
         </div>
-      </div>
-    </form>
+      </form>
+    </SideDrawer>
   );
 }
