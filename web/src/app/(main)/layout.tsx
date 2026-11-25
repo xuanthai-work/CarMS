@@ -31,7 +31,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const collapsedCookie: "1" | "0" | null = rawCollapsed === "1" ? "1" : rawCollapsed === "0" ? "0" : null;
 
   const shell = (
-    <div className="flex min-h-[100dvh] bg-canvas text-ink">
+    <div className="flex min-h-[100dvh] flex-col bg-canvas text-ink md:flex-row">
       <RealtimeRefresh />
       <Sidebar
         isManager={isManager(staff.position)}
@@ -39,7 +39,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         position={staff.position}
         collapsedCookie={collapsedCookie}
       />
-      <main className="min-w-0 flex-1 px-1 py-6">
+      <main className="min-w-0 flex-1 px-3 py-6 md:px-1">
         <div className="mx-auto w-full max-w-[1680px]">{children}</div>
       </main>
       {assistantEnabled && (

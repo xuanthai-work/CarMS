@@ -3,8 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ComponentType } from "react";
-import { LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useRef, useState, type ComponentType } from "react";
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { logout } from "@/api/auth";
 
 /* ---- Icon set (outline, kế thừa màu chữ qua currentColor) ---- */
@@ -90,6 +90,16 @@ const ChevronLeftIcon = ({ className }: IconProps) => (
     <path d="M14.5 6.5 9 12l5.5 5.5" />
   </svg>
 );
+const MenuIcon = ({ className }: IconProps) => (
+  <svg {...svg(className)}>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </svg>
+);
+const CloseIcon = ({ className }: IconProps) => (
+  <svg {...svg(className)}>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </svg>
+);
 
 type NavLink = { href: string; label: string; icon: ComponentType<IconProps>; managerOnly?: boolean };
 
@@ -124,11 +134,49 @@ export default function Sidebar({
   const reduceMotion = useReducedMotion();
   // SSR không biết viewport: render theo cookie nếu có, else mở rộng (desktop-default) rồi effect chỉnh.
   const [collapsed, setCollapsed] = useState(collapsedCookie === "1");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const menuBtnRef = useRef<HTMLButtonElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const wasOpenRef = useRef(false);
+
   // Chưa có cookie → mặc định theo thiết bị: < 1280px (iPad) thu gọn, >= 1280 mở rộng. Cookie có thì tôn trọng.
   useEffect(() => {
     if (collapsedCookie !== null) return;
     setCollapsed(window.matchMedia("(max-width: 1279.98px)").matches);
   }, [collapsedCookie]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = () => {
+      if (mq.matches) setMobileOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      wasOpenRef.current = true;
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setMobileOpen(false);
+      };
+      document.addEventListener("keydown", onKeyDown);
+      closeBtnRef.current?.focus();
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        document.removeEventListener("keydown", onKeyDown);
+      };
+    } else if (wasOpenRef.current) {
+      wasOpenRef.current = false;
+      menuBtnRef.current?.focus();
+    }
+  }, [mobileOpen]);
   // Bố cục 1 hàng dùng chung cho nav-link + nút đăng xuất (icon căn giữa khi thu gọn).
   const rowLayout = collapsed ? "justify-center px-0" : "gap-3 px-3";
 
@@ -142,11 +190,161 @@ export default function Sidebar({
   }
 
   return (
-    <aside
-      className={`sticky top-3 m-3 flex h-[calc(100dvh-1.5rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-sidebar text-slate-300 shadow-[0_8px_28px_-6px_rgba(15,23,42,0.35)] transition-[width] duration-200 ease-out ${
-        collapsed ? "w-16" : "w-60"
-      }`}
-    >
+    <>
+      {/* Thanh trên cùng chỉ dành cho điện thoại (< 768px) */}
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between rounded-b-2xl bg-sidebar px-3 text-white shadow-md md:hidden">
+        <div className="flex items-center gap-2">
+          <button
+            ref={menuBtnRef}
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Mở menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-200 hover:bg-white/[0.08] hover:text-white"
+          >
+            <MenuIcon className="h-6 w-6" />
+          </button>
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.08] p-1">
+              <Image
+                src="/logo.png"
+                alt="CarMS logo"
+                width={28}
+                height={28}
+                className="h-full w-full object-contain"
+                priority
+              />
+            </div>
+            <span className="text-base font-bold tracking-tight text-white">CarMS</span>
+          </Link>
+        </div>
+        <Link
+          href="/profile"
+          aria-label="Hồ sơ tài khoản"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl hover:bg-white/[0.08]"
+        >
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white">
+            {initial}
+          </span>
+        </Link>
+      </header>
+
+      {/* Ngăn menu trượt trên điện thoại (< 768px) */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              key="mobile-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.2 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 z-40 bg-slate-900/40 md:hidden"
+            />
+            <motion.div
+              key="mobile-nav"
+              id="mobile-nav"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu điều hướng"
+              initial={reduceMotion ? { opacity: 0 } : { x: "-100%" }}
+              animate={reduceMotion ? { opacity: 1 } : { x: 0 }}
+              exit={reduceMotion ? { opacity: 0 } : { x: "-100%" }}
+              transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
+              className="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col overflow-y-auto rounded-r-2xl bg-sidebar text-slate-300 shadow-2xl md:hidden"
+            >
+              <div className="flex h-16 items-center gap-2.5 px-4">
+                <Link
+                  href="/"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex min-w-0 items-center gap-2.5"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.08] p-1">
+                    <Image
+                      src="/logo.png"
+                      alt="CarMS logo"
+                      width={32}
+                      height={32}
+                      className="h-full w-full object-contain"
+                      priority
+                    />
+                  </div>
+                  <span className="truncate text-lg font-bold tracking-tight text-white">CarMS</span>
+                </Link>
+                <button
+                  ref={closeBtnRef}
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  aria-label="Đóng menu"
+                  className="ml-auto grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-300 hover:bg-white/[0.08] hover:text-white"
+                >
+                  <CloseIcon className="h-5 w-5" />
+                </button>
+              </div>
+
+              <nav className="flex-1 space-y-1 px-3 py-3">
+                {links.map((l) => {
+                  const active = isActive(l.href);
+                  const Icon = l.icon;
+                  return (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${
+                        active
+                          ? "bg-dispatch-600 text-white shadow-sm"
+                          : "text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="truncate">{l.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="space-y-1 border-t border-white/10 p-3">
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.06]"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-semibold text-white">
+                    {initial}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-white">
+                      {name || "Tài khoản"}
+                    </span>
+                    <span className="block truncate text-xs text-slate-400">
+                      {position || "—"}
+                    </span>
+                  </span>
+                </Link>
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-rose-300"
+                  >
+                    <LogoutIcon className="h-5 w-5 shrink-0" />
+                    Đăng xuất
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <aside
+        className={`sticky top-3 m-3 hidden h-[calc(100dvh-1.5rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-sidebar text-slate-300 shadow-[0_8px_28px_-6px_rgba(15,23,42,0.35)] transition-[width] duration-200 ease-out md:flex ${
+          collapsed ? "w-16" : "w-60"
+        }`}
+      >
       {/* Header: logo (khi mở rộng) + nút thu gọn/mở rộng */}
       <div className={`flex h-16 items-center ${collapsed ? "justify-center px-2" : "gap-2.5 px-4"}`}>
         {!collapsed && (
@@ -238,5 +436,6 @@ export default function Sidebar({
         </form>
       </div>
     </aside>
+    </>
   );
 }
