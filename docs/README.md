@@ -65,6 +65,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-055** | 2026-11-25 | Chặn Đổi Sang Đã Hủy Không Phí Hủy Ở Dropdown Trạng Thái | Revenue / Trips |  **Đã xong** | [TASK-055](tasks/TASK-055-block-quick-cancel.md) |
 | **TASK-056** | 2026-11-25 | Hàm Gom Sổ Chi Phí Theo Tháng (Giai Đoạn 4, Logic Thuần) | Finance / Chi phí |  **Đã xong** | [TASK-056](tasks/TASK-056-cost-ledger-util.md) |
 | **TASK-057** | 2026-11-25 | Màn Tổng Chi Phí (Giai Đoạn 4, Giao Diện) | Finance / Chi phí |  **Đã xong** | [TASK-057](tasks/TASK-057-cost-ledger-screen.md) |
+| **TASK-058** | 2026-11-25 | Sổ Chi Phí: Thêm Trường Nguồn/Xe Và Tổng Chưa Chi | Finance / Chi phí |  **Đã xong** | [TASK-058](tasks/TASK-058-cost-ledger-source-fields.md) |
 
 ---
 

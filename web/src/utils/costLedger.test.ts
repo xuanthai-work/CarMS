@@ -182,6 +182,7 @@ describe("buildCostLedger", () => {
 
     expect(ledger.lines).toEqual([]);
     expect(ledger.total).toBe(0);
+    expect(ledger.unpaid).toBe(0);
     expect(ledger.byGroup).toEqual({ fuel: 0, partner: 0, toll: 0, other: 0, salary: 0 });
   });
 
@@ -231,5 +232,54 @@ describe("buildCostLedger", () => {
     });
 
     expect(ledger.lines[0].title).toBe("Xe ? — Ghi chú");
+  });
+
+  it("điền đúng kind, refId, vehicleId cho từng nguồn", () => {
+    const ledger = buildCostLedger({
+      monthKey: "2026-09",
+      trips: [makeTrip({ id: "t9", outboundDate: "2026-09-10", partnerCost: 500_000, tollCost: 50_000, otherCost: 30_000 })],
+      fuel: [makeFuel({ id: "f9", vehicleId: "v2", refuelDate: "2026-09-11", amount: 400_000 })],
+      expenses: [makeExpense({ id: "e9", date: "2026-09-12", category: "other", amount: 100_000 })],
+      vehicles: [{ id: "v2", plate: "30B-99999" }],
+      salary: { office: 5_000_000, monthlyDrivers: 0, dailyDrivers: 0, total: 5_000_000 },
+    });
+
+    const byId = new Map(ledger.lines.map((l) => [l.id, l]));
+    expect(byId.get("fuel:f9")).toMatchObject({ kind: "fuel", refId: "f9", vehicleId: "v2" });
+    expect(byId.get("exp:e9")).toMatchObject({ kind: "expense", refId: "e9", vehicleId: null });
+    expect(byId.get("trip-partner:t9")).toMatchObject({ kind: "trip", refId: "t9", vehicleId: null });
+    expect(byId.get("trip-toll:t9")).toMatchObject({ kind: "trip", refId: "t9", vehicleId: null });
+    expect(byId.get("trip-other:t9")).toMatchObject({ kind: "trip", refId: "t9", vehicleId: null });
+    expect(byId.get("salary:office")).toMatchObject({ kind: "salary", refId: null, vehicleId: null });
+  });
+
+  it("tính unpaid chỉ gồm phiếu dầu và chi phí khác chưa chi trong tháng", () => {
+    const ledger = buildCostLedger({
+      monthKey: "2026-09",
+      trips: [
+        makeTrip({ id: "t1", outboundDate: "2026-09-10", partnerCost: 2_000_000, tollCost: 150_000 }),
+        makeTrip({ id: "t2", outboundDate: "2026-08-10", partnerCost: 900_000 }),
+      ],
+      fuel: [
+        makeFuel({ id: "f1", refuelDate: "2026-09-05", amount: 500_000, paymentStatus: "paid" }),
+        makeFuel({ id: "f2", refuelDate: "2026-09-20", amount: 700_000, paymentStatus: "unpaid" }),
+        makeFuel({ id: "f3", refuelDate: "2026-10-01", amount: 300_000, paymentStatus: "unpaid" }),
+      ],
+      expenses: [
+        makeExpense({ id: "e1", date: "2026-09-03", category: "toll", amount: 120_000 }),
+        makeExpense({ id: "e2", date: "2026-09-04", category: "maintenance", amount: 450_000 }),
+        makeExpense({ id: "e3", date: "2026-09-06", category: "washing", amount: 80_000 }),
+        makeExpense({ id: "e4", date: "2026-09-07", category: "parking", amount: 60_000 }),
+        makeExpense({ id: "e5", date: "2026-09-08", category: "fine_insurance", amount: 300_000 }),
+        makeExpense({ id: "e6", date: "2026-09-09", category: "other", amount: 90_000 }),
+        makeExpense({ id: "e-paid", date: "2026-09-10", category: "other", amount: 200_000, paymentStatus: "paid" }),
+        makeExpense({ id: "e-prev", date: "2026-08-15", category: "other", amount: 999_000 }),
+      ],
+      vehicles: [{ id: "v1", plate: "29A-12345" }],
+      salary: { office: 10_000_000, monthlyDrivers: 0, dailyDrivers: 0, total: 10_000_000 },
+    });
+
+    // f2 (700k) + e1..e6 (120k + 450k + 80k + 60k + 300k + 90k = 1.100k) = 1.800k
+    expect(ledger.unpaid).toBe(1_800_000);
   });
 });

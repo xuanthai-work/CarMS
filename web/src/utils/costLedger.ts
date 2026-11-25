@@ -14,8 +14,13 @@ export const COST_GROUPS: { value: CostGroup; label: string }[] = [
   { value: "salary", label: "Lương" },
 ];
 
+export type CostKind = "fuel" | "expense" | "trip" | "salary";
+
 export type CostLine = {
   id: string;
+  kind: CostKind;
+  refId: string | null;
+  vehicleId: string | null;
   date: string;
   group: CostGroup;
   category: string;
@@ -29,6 +34,7 @@ export type CostLedger = {
   lines: CostLine[];
   byGroup: Record<CostGroup, number>;
   total: number;
+  unpaid: number;
 };
 
 const GROUP_ORDER = new Map(COST_GROUPS.map((g, i) => [g.value, i]));
@@ -56,6 +62,9 @@ export function buildCostLedger(input: {
     const note = f.note.trim();
     push({
       id: `fuel:${f.id}`,
+      kind: "fuel",
+      refId: f.id,
+      vehicleId: f.vehicleId,
       date: f.refuelDate,
       group: "fuel",
       category: "Xăng dầu",
@@ -70,6 +79,9 @@ export function buildCostLedger(input: {
     if (monthKeyOf(e.date) !== monthKey) continue;
     push({
       id: `exp:${e.id}`,
+      kind: "expense",
+      refId: e.id,
+      vehicleId: null,
       date: e.date,
       group: e.category === "toll" ? "toll" : "other",
       category: otherExpenseCategoryMeta(e.category).label,
@@ -87,6 +99,9 @@ export function buildCostLedger(input: {
     if (t.partnerCost != null) {
       push({
         id: `trip-partner:${t.id}`,
+        kind: "trip",
+        refId: t.id,
+        vehicleId: null,
         date,
         group: "partner",
         category: "Thuê xe đối tác",
@@ -99,6 +114,9 @@ export function buildCostLedger(input: {
     if (t.tollCost != null) {
       push({
         id: `trip-toll:${t.id}`,
+        kind: "trip",
+        refId: t.id,
+        vehicleId: null,
         date,
         group: "toll",
         category: "Cầu đường (ghi trên chuyến)",
@@ -111,6 +129,9 @@ export function buildCostLedger(input: {
     if (t.otherCost != null) {
       push({
         id: `trip-other:${t.id}`,
+        kind: "trip",
+        refId: t.id,
+        vehicleId: null,
         date,
         group: "other",
         category: "Chi phí khác (ghi trên chuyến)",
@@ -131,6 +152,9 @@ export function buildCostLedger(input: {
   for (const [key, label, amount] of salaryItems) {
     push({
       id: `salary:${key}`,
+      kind: "salary",
+      refId: null,
+      vehicleId: null,
       date: salaryDate,
       group: "salary",
       category: label,
@@ -156,10 +180,12 @@ export function buildCostLedger(input: {
     salary: 0,
   };
   let total = 0;
+  let unpaid = 0;
   for (const line of lines) {
     byGroup[line.group] += line.amount;
     total += line.amount;
+    if (line.paid === false) unpaid += line.amount;
   }
 
-  return { lines, byGroup, total };
+  return { lines, byGroup, total, unpaid };
 }
