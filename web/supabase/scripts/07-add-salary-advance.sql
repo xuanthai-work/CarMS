@@ -1,5 +1,5 @@
 -- Thêm bảng SalaryAdvance (tạm ứng lương riêng theo tháng của ngày ứng).
--- Chạy SAU khi code mới đã deploy. Có thể chạy lại an toàn.
+-- Chạy TRƯỚC khi deploy code mới. Có thể chạy lại an toàn.
 
 CREATE TABLE IF NOT EXISTS "SalaryAdvance" (
   "id"         TEXT NOT NULL,

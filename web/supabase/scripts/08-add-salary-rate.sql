@@ -1,5 +1,5 @@
 -- Thêm bảng SalaryRate (mức lương cơ bản có ngày hiệu lực + lịch sử).
--- Chạy SAU khi code mới đã deploy. Có thể chạy lại an toàn.
+-- Chạy TRƯỚC khi deploy code mới. Có thể chạy lại an toàn.
 
 CREATE TABLE IF NOT EXISTS "SalaryRate" (
   "id"            TEXT NOT NULL,

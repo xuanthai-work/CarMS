@@ -64,10 +64,10 @@ Tại thời điểm soạn: theo em biết **chưa chạy gì trên production*
 
 ### A. Trước khi đụng database
 
-- [ ] Vercel → Deployments: ghi lại commit và bản deployment đang chạy (để rollback).
+- [x] Bản đang chạy (để rollback): commit `9f47edb`, deployment `car-kue3p4fdd-xuanthai-works-projects.vercel.app`, tạo 02/11, domain `car-ms.vercel.app`.
 - [ ] Vercel → Environment Variables: đủ các biến trong `web/.env.example` đang dùng (Supabase, `DATABASE_URL`, `NEXT_PUBLIC_SITE_URL`, key trợ lý AI nếu bật). Build Command không được chứa `db:push`/`db:setup`.
-- [ ] Quyết định phân quyền: code đang mở tạm, mọi chức vụ xem được doanh thu và lương văn phòng, chỉ CEO là chỉ xem. Chấp nhận thì đi tiếp.
-- [ ] Mở trang Lương và Doanh thu trên production, chụp lại số các tháng đã có (để so sau deploy).
+- [x] Phân quyền (User đồng ý 2026-11-26): lên production với quyền mở tạm, mọi chức vụ xem được doanh thu và lương văn phòng, chỉ CEO là chỉ xem.
+- [x] Số Doanh thu T11/2026 trên bản cũ (chụp 26/11): doanh thu 272.674.000; đã thanh toán 243.474.000; còn phải thu 29.200.000; tổng chi phí 74.205.131; lợi nhuận 198.468.869; 65 chuyến (23 chưa có giá). User: các tháng khác không cần.
 - [ ] Chạy `01-audit-readonly.sql` từng khối. Thiếu bảng, hoặc thiếu cột ngoài `endDate`: dừng, gửi BA.
 - [ ] Sao lưu DB (Dashboard → Backups, hoặc `pg_dump` bằng `DIRECT_URL` cổng 5432). Kiểm file sao lưu có dung lượng.
 - [ ] Kiểm policy realtime (kỳ vọng 4 bảng đều `so_policy` ≥ 1; bảng nào 0 thì dừng, gửi BA, vì `02` bật RLS sẽ làm mất tự làm mới màn hình):
@@ -113,7 +113,7 @@ WHERE sm."monthKey" IN (left(o."startDate",7), left(o."endDate",7))
 ORDER BY 1, 4;
 ```
 
-- [ ] (Tùy chọn, nên làm) Giữ nguyên số của mọi phiếu **đã trả** bằng cách chốt theo công thức cũ (cơ bản + cộng − trừ). Xem trước, rồi cập nhật:
+- [ ] (**Chạy**, User chốt 2026-11-26) Giữ nguyên số của mọi phiếu **đã trả** bằng cách chốt theo công thức cũ (cơ bản + cộng − trừ). Xem trước, rồi cập nhật:
 
 ```sql
 SELECT "monthKey", count(*) AS so_phieu, sum("baseSalary" + additions - deductions) AS tien_da_tra
@@ -130,7 +130,7 @@ WHERE paid AND NOT locked;
 
 - [ ] `git push origin main`, chờ Vercel báo Ready.
 - [ ] Đăng nhập; mở Tổng quan, Lịch (mở một chuyến), Xe, Nhân sự, Lương, Doanh thu, Tiền dầu, Chi phí khác, Công nợ, trợ lý AI (nếu bật).
-- [ ] So số Lương/Doanh thu với ảnh chụp ở mục A.
+- [ ] (Không bắt buộc, theo User) So Doanh thu T11 với số ở mục A.
 - [ ] Mở một chuyến ở hai máy, sửa một máy, máy kia tự cập nhật (realtime).
 - [ ] Xem Vercel Logs: không có lỗi `P2022` (thiếu cột) hay `P2021` (thiếu bảng).
 - [ ] Thử trên iPhone: Lương, Lịch, Nhân sự.
@@ -138,7 +138,7 @@ WHERE paid AND NOT locked;
 
 ### E. Sau deploy
 
-- [ ] `03-backfill-partner-debt-workdate.sql`: xem bước 1, rồi mới chạy bước 2.
+- [ ] `03-backfill-partner-debt-workdate.sql` (**chạy**, User chốt 2026-11-26): xem bước 1, rồi mới chạy bước 2.
 - [ ] `04-cleanup-duplicate-trips.sql`: chỉ chạy khi xem bước 1 thấy trùng và BA xác nhận.
 - [ ] Sau vài ngày ổn định: `05-drop-partnerpayout-paymentdate.sql`.
 

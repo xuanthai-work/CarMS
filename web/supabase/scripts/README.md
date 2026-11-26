@@ -12,19 +12,19 @@ Thư mục này chứa các script SQL an toàn dùng để kiểm tra, đồng 
 
 ## 1. Thứ Tự Thực Hiện
 
+> Xem checklist đầy đủ (gồm kiểm lương tháng cũ và hướng dẫn rollback) tại [`roadmap.md` mục 6](../../../roadmap.md#6-checklist-deploy-production-soạn-2026-11-26).
+
 ```mermaid
 flowchart TD
     A["01-audit-readonly.sql (Chỉ đọc)"] --> B["Gửi kết quả cho BA / Kỹ thuật đối soát"]
     B --> C["Sao lưu Database (Backup)"]
-    C --> D["02-sync-schema.sql (Thêm cột & Bật RLS)"]
-    D --> E["03-backfill-partner-debt-workdate.sql (Chuẩn hoá workDate)"]
-    E -.->|Chỉ chạy khi BA yêu cầu| F["04-cleanup-duplicate-trips.sql (Dọn chuyến trùng)"]
-    E --> G["05-drop-partnerpayout-paymentdate.sql (Bỏ cột paymentDate của PartnerPayout)"]
-    G --> H["06-add-trip-cancelfee.sql (Thêm cột cancelFee cho Trip)"]
-    H --> I["07-add-salary-advance.sql (Thêm bảng SalaryAdvance & bật RLS)"]
-    I --> J["08-add-salary-rate.sql (Thêm bảng SalaryRate & bật RLS)"]
-    J --> K["09-add-driver-startdate.sql (Thêm cột startDate cho Driver)"]
-    K --> L["10-add-salary-lock.sql (Thêm cột chốt phiếu lương cho SalaryMonth)"]
+    C --> D["Kiểm tra policy realtime 4 bảng"]
+    D --> E["TRƯỚC deploy: 02 → 06 → 07 → 08 → 09 → 10"]
+    E --> F["TRƯỚC deploy: Rà lương tháng cũ (roadmap.md mục 6C)"]
+    F --> G["Deploy code mới và kiểm tra"]
+    G --> H["SAU deploy: 03-backfill-partner-debt-workdate.sql"]
+    H -.->|Chỉ chạy khi BA yêu cầu| I["04-cleanup-duplicate-trips.sql"]
+    H --> J["SAU vài ngày ổn định: 05-drop-partnerpayout-paymentdate.sql"]
 ```
 
 ### Bước 1: Khảo sát hiện trạng (`01-audit-readonly.sql`)
@@ -36,49 +36,69 @@ flowchart TD
   3. Sao chép kết quả từng khối gửi cho BA để đối chiếu hiện trạng schema và dữ liệu.
 
 ### Bước 2: Sao lưu Database (Backup)
-Bắt buộc thực hiện sao lưu trước khi chạy bất kỳ script chỉnh sửa nào (xem mục 2 bên dưới).
+Bắt buộc thực hiện sao lưu trước khi chạy bất kỳ script chỉnh sửa nào (02–10, xem mục 2 bên dưới).
 
-### Bước 3: Đồng bộ Schema & Bật RLS (`02-sync-schema.sql`)
+### Bước 3: Kiểm tra policy realtime trước khi bật RLS
+Kiểm tra 4 bảng realtime (`Vehicle`, `Driver`, `Trip`, `FuelEntry`) đã có policy chưa (kỳ vọng cả 4 bảng đều `so_policy >= 1`; bảng nào `0` policy thì **dừng lại, báo BA** vì `02` bật RLS sẽ làm mất tự làm mới màn hình):
+```sql
+SELECT c.relname AS bang, c.relrowsecurity AS rls, count(p.policyname) AS so_policy
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+LEFT JOIN pg_policies p ON p.schemaname = n.nspname AND p.tablename = c.relname
+WHERE n.nspname = 'public' AND c.relname IN ('Vehicle','Driver','Trip','FuelEntry')
+GROUP BY 1,2 ORDER BY 1;
+```
+
+### Bước 4: Đồng bộ Schema & Bật RLS (`02-sync-schema.sql`)
+- **Chạy TRƯỚC khi deploy code mới.**
 - Chạy `-- >>> KHỐI 01` (chứa transaction `BEGIN; ... COMMIT;`) để bổ sung cột `endDate` cho `Driver` và `OfficeStaff` (nếu thiếu) và kích hoạt Row Level Security (RLS) cho cả 9 bảng.
 - Bôi đen chạy lần lượt `-- >>> KHỐI 02` và `-- >>> KHỐI 03` để kiểm tra lại kết quả.
 
-### Bước 4: Chuẩn hoá workDate cho PartnerDebt (`03-backfill-partner-debt-workdate.sql`)
+### Bước 5: Thêm cột `cancelFee` cho `Trip` (`06-add-trip-cancelfee.sql`)
+- **Chạy TRƯỚC khi deploy code mới** (hủy chuyến có phí hủy).
+- Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
+
+### Bước 6: Thêm bảng `SalaryAdvance` (`07-add-salary-advance.sql`)
+- **Chạy TRƯỚC khi deploy code mới** (tạm ứng lương riêng).
+- Tạo bảng `SalaryAdvance`, 2 index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại an toàn.
+
+### Bước 7: Thêm bảng `SalaryRate` (`08-add-salary-rate.sql`)
+- **Chạy TRƯỚC khi deploy code mới** (mức lương cơ bản có ngày hiệu lực).
+- Tạo bảng `SalaryRate`, index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại an toàn.
+
+### Bước 8: Thêm cột `startDate` cho `Driver` (`09-add-driver-startdate.sql`)
+- **Chạy TRƯỚC khi deploy code mới** (tính lương theo ngày công).
+- Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
+
+### Bước 9: Thêm cột chốt phiếu lương cho `SalaryMonth` (`10-add-salary-lock.sql`)
+- **Chạy TRƯỚC khi deploy code mới** (chốt phiếu lương / mở chốt).
+- Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
+
+### Bước 10: Rà lương tháng cũ (TRƯỚC deploy, sau `10`)
+- Thực hiện kiểm tra các phiếu lương tháng cũ chịu ảnh hưởng theo hướng dẫn tại `roadmap.md` mục 6C trước khi deploy code mới.
+
+### Bước 11: Deploy code mới và kiểm tra
+- Deploy code mới lên Production và kiểm tra các màn hình hoạt động bình thường (không có lỗi `P2022` / `P2021`).
+
+### Bước 12: Chuẩn hoá `workDate` cho `PartnerDebt` (`03-backfill-partner-debt-workdate.sql`)
+- **Chạy SAU khi code mới đã deploy** (chạy lúc này để bắt cả bản ghi do code cũ tạo trước deploy).
 - Bôi đen chạy câu lệnh ở `BƯỚC 1` (chỉ SELECT) để xem trước các dòng lệch ngày.
 - Khi đã kiểm tra và backup xong: xoá cặp ký tự `/*` và `*/` bao quanh `BƯỚC 2 & 3`, bôi đen khối này và bấm **Run selected** để thực hiện cập nhật trong transaction an toàn.
 
-### Bước 5: Dọn dẹp chuyến trùng (`04-cleanup-duplicate-trips.sql`)
-- **Chỉ thực hiện khi BA xác nhận** cần dọn dẹp các bản ghi bị double-submit.
+### Bước 13: Dọn dẹp chuyến trùng (`04-cleanup-duplicate-trips.sql`)
+- **Chạy SAU deploy, chỉ thực hiện khi BA yêu cầu** cần dọn dẹp các bản ghi bị double-submit.
 - Mặc định khối lệnh xoá ở `BƯỚC 2` đã được đóng comment `/* ... */`. Chỉ mở ra chạy sau khi đã xem xét kỹ kết quả ở `BƯỚC 1`.
 
-### Bước 6: Bỏ cột `paymentDate` của `PartnerPayout` (`05-drop-partnerpayout-paymentdate.sql`)
-- **Chạy SAU khi code mới đã deploy** (code mới không còn đọc/ghi cột này).
+### Bước 14: Bỏ cột `paymentDate` của `PartnerPayout` (`05-drop-partnerpayout-paymentdate.sql`)
+- **Chạy SAU khi code mới đã deploy và ổn định** (vài ngày; code mới không còn đọc/ghi cột này).
+- Lưu ý: sau bước này không rollback được về bản cũ nếu không thêm lại cột `paymentDate`.
 - Chạy an toàn (`DROP COLUMN IF EXISTS`), có thể chạy lại nếu cần.
-
-### Bước 7: Thêm cột `cancelFee` cho `Trip` (`06-add-trip-cancelfee.sql`)
-- **Chạy SAU khi code mới đã deploy** (hủy chuyến có phí hủy).
-- Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
-
-### Bước 8: Thêm bảng `SalaryAdvance` (`07-add-salary-advance.sql`)
-- **Chạy SAU khi code mới đã deploy** (tạm ứng lương riêng).
-- Tạo bảng `SalaryAdvance`, 2 index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại lại an toàn.
-
-### Bước 9: Thêm bảng `SalaryRate` (`08-add-salary-rate.sql`)
-- **Chạy SAU khi code mới đã deploy** (mức lương cơ bản có ngày hiệu lực).
-- Tạo bảng `SalaryRate`, index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại an toàn.
-
-### Bước 10: Thêm cột `startDate` cho `Driver` (`09-add-driver-startdate.sql`)
-- **Chạy SAU khi code mới đã deploy** (tính lương theo ngày công).
-- Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
-
-### Bước 11: Thêm cột chốt phiếu lương cho `SalaryMonth` (`10-add-salary-lock.sql`)
-- **Chạy SAU khi code mới đã deploy** (chốt phiếu lương / mở chốt).
-- Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
 
 ---
 
 ## 2. Hướng Dẫn Sao Lưu Database (Backup)
 
-Trước khi chạy script 02 hoặc 03, hãy thực hiện một trong hai cách sau:
+Trước khi chạy bất kỳ script nào có ghi (02–10), hãy thực hiện một trong hai cách sau:
 - **Cách 1 (Khuyên dùng - Trên Dashboard Supabase):**
   Vào Dashboard dự án Supabase → chọn mục **Database** ở thanh bên trái → chọn tab **Backups** → bấm **Take Backup** (nếu gói dịch vụ hỗ trợ sao lưu tức thời).
 - **Cách 2 (Qua dòng lệnh pg_dump):**

@@ -1,5 +1,5 @@
 -- Thêm các cột chốt phiếu lương cho SalaryMonth.
--- Chạy SAU khi code mới đã deploy. Có thể chạy lại an toàn.
+-- Chạy TRƯỚC khi deploy code mới. Có thể chạy lại an toàn.
 
 ALTER TABLE "SalaryMonth" ADD COLUMN IF NOT EXISTS "locked" BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "SalaryMonth" ADD COLUMN IF NOT EXISTS "lockedAt" TIMESTAMP(3);
