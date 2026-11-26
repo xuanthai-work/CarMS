@@ -10,7 +10,7 @@ import SelectMenu from "@/components/common/SelectMenu";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import { deleteOtherExpense, saveOtherExpense } from "@/api/expenses";
 import { fmtDate } from "@/utils/format";
-import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
+import { Field, FormError, inputCls } from "@/components/common/ui";
 import { OTHER_EXPENSE_CATEGORIES, otherExpenseCategoryMeta } from "@/utils/expenses";
 import type { OtherExpense } from "@/types";
 
@@ -96,69 +96,53 @@ export default function ExpenseModal({
         className="space-y-3"
       >
         {expense && <input type="hidden" name="id" value={expense.id} />}
-        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-          <DetailCell>
-            <Field label="Ngày chi">
-              <DatePicker name="date" value={date} onChange={setDate} />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Số tiền">
-              <MoneyInput name="amount" defaultValue={expense?.amount ?? null} required placeholder="Số tiền" />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Nội dung chi">
-              <input
-                name="title"
-                defaultValue={expense?.title ?? ""}
-                placeholder="VD: Thay dầu, rửa xe, vé cầu đường…"
-                className={inputCls}
-              />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Phân loại">
-              <SelectMenu
-                name="category"
-                value={category}
-                onChange={setCategory}
-                options={CATEGORY_OPTIONS}
-                leadingDotClassName={otherExpenseCategoryMeta(category).swatch}
-              />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Người chi">
-              <input name="payerName" defaultValue={expense?.payerName ?? ""} placeholder="Người chi tiền" className={inputCls} />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Trạng thái">
-              <FuelPaymentStatusSelect
-                name="paymentStatus"
-                value={paymentStatus}
-                onChange={setPaymentStatus}
-                paidLabel="Đã chi"
-                unpaidLabel="Chưa chi"
-              />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Ngày thanh toán">
-              <DatePicker
-                name="paymentDate"
-                value={paymentStatus === "paid" ? paymentDate : ""}
-                onChange={setPaymentDate}
-                disabled={paymentStatus !== "paid"}
-              />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Ghi chú">
-              <input name="note" defaultValue={expense?.note ?? ""} placeholder="Ghi chú" className={inputCls} />
-            </Field>
-          </DetailCell>
+        <div className="grid gap-3">
+          <Field label="Ngày chi">
+            <DatePicker name="date" value={date} onChange={setDate} />
+          </Field>
+          <Field label="Số tiền">
+            <MoneyInput name="amount" defaultValue={expense?.amount ?? null} required placeholder="Số tiền" />
+          </Field>
+          <Field label="Nội dung chi">
+            <input
+              name="title"
+              defaultValue={expense?.title ?? ""}
+              placeholder="VD: Thay dầu, rửa xe, vé cầu đường…"
+              className={inputCls}
+            />
+          </Field>
+          <Field label="Phân loại">
+            <SelectMenu
+              name="category"
+              value={category}
+              onChange={setCategory}
+              options={CATEGORY_OPTIONS}
+              leadingDotClassName={otherExpenseCategoryMeta(category).swatch}
+            />
+          </Field>
+          <Field label="Người chi">
+            <input name="payerName" defaultValue={expense?.payerName ?? ""} placeholder="Người chi tiền" className={inputCls} />
+          </Field>
+          <Field label="Trạng thái">
+            <FuelPaymentStatusSelect
+              name="paymentStatus"
+              value={paymentStatus}
+              onChange={setPaymentStatus}
+              paidLabel="Đã chi"
+              unpaidLabel="Chưa chi"
+            />
+          </Field>
+          <Field label="Ngày thanh toán">
+            <DatePicker
+              name="paymentDate"
+              value={paymentStatus === "paid" ? paymentDate : ""}
+              onChange={setPaymentDate}
+              disabled={paymentStatus !== "paid"}
+            />
+          </Field>
+          <Field label="Ghi chú">
+            <input name="note" defaultValue={expense?.note ?? ""} placeholder="Ghi chú" className={inputCls} />
+          </Field>
         </div>
       </form>
     </SideDrawer>

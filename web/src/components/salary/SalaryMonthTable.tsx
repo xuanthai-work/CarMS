@@ -11,7 +11,7 @@ import {
 } from "@/api/salary";
 import Button from "@/components/common/Button";
 import SideDrawer from "@/components/common/SideDrawer";
-import { DetailCell, PaymentStatusBadge, Field, FormError, inputCls } from "@/components/common/ui";
+import { PaymentStatusBadge, Field, FormError, inputCls } from "@/components/common/ui";
 import MoneyInput from "@/components/common/MoneyInput";
 import DatePicker from "@/components/common/DatePicker";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
@@ -151,37 +151,27 @@ function SalaryEditForm({
         <input type="hidden" name="personId" value={row.personId} />
         <input type="hidden" name="monthKey" value={monthKey} />
         {(row.workDays < 25 || row.earned !== row.baseSalary) && (
-          <div className="rounded-xl border border-hairline bg-canvas/60 px-3 py-2 text-xs text-muted tabular-nums">
+          <div className="text-xs text-muted tabular-nums">
             Công tháng: <strong className="text-ink">{Math.min(25, row.workDays)}/25</strong> · Lương theo công:{" "}
             <strong className="text-ink">{fmtMoney(row.earned)}</strong>
           </div>
         )}
-        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
+        <div className="grid gap-3">
           <fieldset disabled={row.locked} className={`contents ${row.locked ? "opacity-60" : ""}`}>
-            <DetailCell>
-              <Field label="Thưởng / phụ cấp (cộng)">
-                <MoneyInput name="additions" defaultValue={row.additions || null} placeholder="0" />
-              </Field>
-            </DetailCell>
-            <DetailCell>
-              <Field label="Khấu trừ khác (trừ)">
-                <MoneyInput name="deductions" defaultValue={row.deductions || null} placeholder="0" />
-              </Field>
-            </DetailCell>
+            <Field label="Thưởng / phụ cấp (cộng)">
+              <MoneyInput name="additions" defaultValue={row.additions || null} placeholder="0" />
+            </Field>
+            <Field label="Khấu trừ khác (trừ)">
+              <MoneyInput name="deductions" defaultValue={row.deductions || null} placeholder="0" />
+            </Field>
           </fieldset>
-          <DetailCell>
-            <Field label="Ngày trả lương">
-              <DatePicker name="paidDate" value={paidDate} onChange={setPaidDate} />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Trạng thái">
-              <FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Ghi chú"><input name="note" defaultValue={row.note} className={inputCls} /></Field>
-          </DetailCell>
+          <Field label="Ngày trả lương">
+            <DatePicker name="paidDate" value={paidDate} onChange={setPaidDate} />
+          </Field>
+          <Field label="Trạng thái">
+            <FuelPaymentStatusSelect name="paymentStatus" value={paymentStatus} onChange={setPaymentStatus} />
+          </Field>
+          <Field label="Ghi chú"><input name="note" defaultValue={row.note} className={inputCls} /></Field>
         </div>
       </form>
 
@@ -194,9 +184,9 @@ function SalaryEditForm({
         </div>
 
         {advances.length > 0 ? (
-          <ul className="divide-y divide-hairline rounded-xl border border-hairline bg-canvas/40">
+          <ul className="divide-y divide-hairline">
             {advances.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+              <li key={a.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-muted tabular-nums">
@@ -235,25 +225,19 @@ function SalaryEditForm({
               noValidate
               onSubmit={handleAddAdvance}
               onInput={() => advErr && setAdvErr(null)}
-              className="space-y-2 rounded-2xl border border-hairline bg-canvas/60 p-2.5"
+              className="grid gap-3"
             >
               <input type="hidden" name="personType" value={row.personType} />
               <input type="hidden" name="personId" value={row.personId} />
-              <DetailCell>
-                <Field label="Ngày ứng">
-                  <DatePicker name="date" value={advDate} onChange={setAdvDate} />
-                </Field>
-              </DetailCell>
-              <DetailCell>
-                <Field label="Số tiền">
-                  <MoneyInput key={advFormKey} name="amount" placeholder="0" />
-                </Field>
-              </DetailCell>
-              <DetailCell>
-                <Field label="Ghi chú">
-                  <input key={`note-${advFormKey}`} name="note" placeholder="Ghi chú (tùy chọn)" className={inputCls} />
-                </Field>
-              </DetailCell>
+              <Field label="Ngày ứng">
+                <DatePicker name="date" value={advDate} onChange={setAdvDate} />
+              </Field>
+              <Field label="Số tiền">
+                <MoneyInput key={advFormKey} name="amount" placeholder="0" />
+              </Field>
+              <Field label="Ghi chú">
+                <input key={`note-${advFormKey}`} name="note" placeholder="Ghi chú (tùy chọn)" className={inputCls} />
+              </Field>
               <div className="flex justify-end pt-1">
                 <Button type="submit" variant="secondary" disabled={isAdvPending}>
                   {isAdvPending ? "Đang thêm…" : "Thêm tạm ứng"}

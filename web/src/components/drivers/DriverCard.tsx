@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { saveDriver, deleteDriver } from "@/api/drivers";
 import { LICENSE_OPTIONS, DRIVER_TYPES, driverTypeLabel } from "@/utils/drivers";
-import { DetailCell, Field, FormError, Info, inputCls } from "@/components/common/ui";
+import { Field, FormError, Info, inputCls } from "@/components/common/ui";
 import Button from "@/components/common/Button";
 import SideDrawer from "@/components/common/SideDrawer";
 import SelectMenu from "@/components/common/SelectMenu";
@@ -139,25 +139,21 @@ export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; 
           >
             <input type="hidden" name="id" value={d.id} />
             <fieldset disabled={!canEdit} className="space-y-3">
-              <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-                <DetailCell><Field label="Họ tên *"><input name="name" required defaultValue={d.name} className={inputCls} /></Field></DetailCell>
-                <DetailCell><Field label="Loại"><SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} /></Field></DetailCell>
-                <DetailCell><Field label="SĐT / Zalo"><input name="phone" defaultValue={d.phone ?? ""} className={inputCls} /></Field></DetailCell>
-                <DetailCell><Field label="Hạng bằng"><SelectMenu name="licenseClass" value={form.licenseClass} onChange={set("licenseClass")} options={LICENSE_OPTIONS} /></Field></DetailCell>
-                {form.type === "own" && <DetailCell><Field label="Lương tháng"><MoneyInput name="baseSalary" defaultValue={d.baseSalary} placeholder="VD: 12.000.000" /></Field></DetailCell>}
+              <div className="grid gap-3">
+                <Field label="Họ tên *"><input name="name" required defaultValue={d.name} className={inputCls} /></Field>
+                <Field label="Loại"><SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} /></Field>
+                <Field label="SĐT / Zalo"><input name="phone" defaultValue={d.phone ?? ""} className={inputCls} /></Field>
+                <Field label="Hạng bằng"><SelectMenu name="licenseClass" value={form.licenseClass} onChange={set("licenseClass")} options={LICENSE_OPTIONS} /></Field>
+                {form.type === "own" && <Field label="Lương tháng"><MoneyInput name="baseSalary" defaultValue={d.baseSalary} placeholder="VD: 12.000.000" /></Field>}
                 {form.type === "own" && salaryChanged && (
-                  <DetailCell>
-                    <Field label="Có hiệu lực từ">
-                      <DatePicker name="salaryEffectiveFrom" value={effectiveFrom} onChange={setEffectiveFrom} />
-                    </Field>
-                  </DetailCell>
-                )}
-                <DetailCell>
-                  <Field label="Ngày vào làm">
-                    <DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} />
+                  <Field label="Có hiệu lực từ">
+                    <DatePicker name="salaryEffectiveFrom" value={effectiveFrom} onChange={setEffectiveFrom} />
                   </Field>
-                </DetailCell>
-                <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={d.note} className={inputCls} /></Field></DetailCell>
+                )}
+                <Field label="Ngày vào làm">
+                  <DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} />
+                </Field>
+                <Field label="Ghi chú"><input name="note" defaultValue={d.note} className={inputCls} /></Field>
               </div>
             </fieldset>
           </form>

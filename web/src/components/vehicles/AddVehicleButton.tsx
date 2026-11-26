@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { saveVehicle } from "@/api/vehicles";
 import SideDrawer from "@/components/common/SideDrawer";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS } from "@/utils/vehicles";
-import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
+import { Field, FormError, inputCls } from "@/components/common/ui";
 import Button from "@/components/common/Button";
 import SelectMenu from "@/components/common/SelectMenu";
 import DatePicker from "@/components/common/DatePicker";
@@ -74,20 +74,20 @@ export default function AddVehicleButton() {
             onInput={() => error && setError(null)}
             className="space-y-3"
           >
-            <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2 sm:grid-cols-2">
-              <DetailCell><Field label="Biển số *"><input name="plate" required placeholder="VD: 29B-301.48" className={inputCls} /></Field></DetailCell>
-              <DetailCell><Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field></DetailCell>
-              <DetailCell><Field label="Trạng thái"><SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} /></Field></DetailCell>
-              <DetailCell><Field label="Sở hữu"><SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} /></Field></DetailCell>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Biển số *"><input name="plate" required placeholder="VD: 29B-301.48" className={inputCls} /></Field>
+              <Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field>
+              <Field label="Trạng thái"><SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} /></Field>
+              <Field label="Sở hữu"><SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} /></Field>
               {form.type === "partner" ? (
-                <DetailCell><Field label="SĐT / Zalo"><input name="phone" placeholder="Số điện thoại / Zalo" className={inputCls} /></Field></DetailCell>
+                <Field label="SĐT / Zalo"><input name="phone" placeholder="Số điện thoại / Zalo" className={inputCls} /></Field>
               ) : (
                 <>
-                  <DetailCell><Field label="Hạn đăng kiểm"><DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} /></Field></DetailCell>
-                  <DetailCell><Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field></DetailCell>
+                  <Field label="Hạn đăng kiểm"><DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} /></Field>
+                  <Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field>
                 </>
               )}
-              <DetailCell className="sm:col-span-2"><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
+              <div className="sm:col-span-2"><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></div>
             </div>
           </form>
         </SideDrawer>

@@ -47,11 +47,6 @@ export function Info({
   );
 }
 
-/** Ô chứa một trường trong lưới form thêm/sửa (nền trắng, bo góc). */
-export function DetailCell({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-xl bg-surface px-3 py-3 shadow-sm ${className}`}>{children}</div>;
-}
-
 /** Huy hiệu trạng thái trả tiền (xanh = đã trả / hổ phách = chưa). Nhãn đổi theo ngữ cảnh. */
 export function PaymentStatusBadge({
   paid,

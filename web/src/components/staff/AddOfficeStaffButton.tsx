@@ -7,7 +7,7 @@ import SideDrawer from "@/components/common/SideDrawer";
 import MoneyInput from "@/components/common/MoneyInput";
 import DatePicker from "@/components/common/DatePicker";
 import SelectMenu from "@/components/common/SelectMenu";
-import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
+import { Field, FormError, inputCls } from "@/components/common/ui";
 import { OFFICE_POSITIONS, GENDERS } from "@/utils/office";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
@@ -77,19 +77,19 @@ export default function AddOfficeStaffButton() {
             onInput={() => error && setError(null)}
             className="space-y-3"
           >
-            <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-              <DetailCell><Field label="Họ tên *"><input name="name" required placeholder="VD: Trần Thị B" className={inputCls} /></Field></DetailCell>
-              <DetailCell><Field label="SĐT"><input name="phone" placeholder="VD: 0912xxxxxx" className={inputCls} /></Field></DetailCell>
-              <DetailCell><Field label="Email"><input name="email" type="email" placeholder="VD: a@congty.vn" className={inputCls} /></Field></DetailCell>
-              <DetailCell><Field label="Giới tính"><SelectMenu name="gender" value={form.gender} onChange={set("gender")} options={GENDERS} placeholder="Chọn giới tính" /></Field></DetailCell>
-              <DetailCell><Field label="Ngày sinh"><DatePicker name="dob" value={form.dob} onChange={set("dob")} /></Field></DetailCell>
-              <DetailCell><Field label="CCCD"><input name="idNumber" placeholder="Số CCCD" className={inputCls} /></Field></DetailCell>
-              <DetailCell><Field label="Số BHXH"><input name="socialInsurance" placeholder="Số bảo hiểm xã hội" className={inputCls} /></Field></DetailCell>
-              <DetailCell><Field label="Chức vụ"><SelectMenu name="position" value={form.position} onChange={set("position")} options={OFFICE_POSITIONS} /></Field></DetailCell>
-              <DetailCell><Field label="Lương cơ bản"><MoneyInput name="baseSalary" placeholder="0" /></Field></DetailCell>
-              <DetailCell><Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} placeholder="VD: 5" className={`${inputCls} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`} /></Field></DetailCell>
-              <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
-              <DetailCell><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
+            <div className="grid gap-3">
+              <Field label="Họ tên *"><input name="name" required placeholder="VD: Trần Thị B" className={inputCls} /></Field>
+              <Field label="SĐT"><input name="phone" placeholder="VD: 0912xxxxxx" className={inputCls} /></Field>
+              <Field label="Email"><input name="email" type="email" placeholder="VD: a@congty.vn" className={inputCls} /></Field>
+              <Field label="Giới tính"><SelectMenu name="gender" value={form.gender} onChange={set("gender")} options={GENDERS} placeholder="Chọn giới tính" /></Field>
+              <Field label="Ngày sinh"><DatePicker name="dob" value={form.dob} onChange={set("dob")} /></Field>
+              <Field label="CCCD"><input name="idNumber" placeholder="Số CCCD" className={inputCls} /></Field>
+              <Field label="Số BHXH"><input name="socialInsurance" placeholder="Số bảo hiểm xã hội" className={inputCls} /></Field>
+              <Field label="Chức vụ"><SelectMenu name="position" value={form.position} onChange={set("position")} options={OFFICE_POSITIONS} /></Field>
+              <Field label="Lương cơ bản"><MoneyInput name="baseSalary" placeholder="0" /></Field>
+              <Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} placeholder="VD: 5" className={`${inputCls} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`} /></Field>
+              <Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field>
+              <Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field>
             </div>
           </form>
         </SideDrawer>

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { saveOfficeStaff, deleteOfficeStaff } from "@/api/staff";
-import { DetailCell, Field, FormError, Info, inputCls } from "@/components/common/ui";
+import { Field, FormError, Info, inputCls } from "@/components/common/ui";
 import Button from "@/components/common/Button";
 import SideDrawer from "@/components/common/SideDrawer";
 import MoneyInput from "@/components/common/MoneyInput";
@@ -140,26 +140,24 @@ export default function OfficeStaffCard({ staff: p, rates = [] }: { staff: Offic
           >
             <input type="hidden" name="id" value={p.id} />
             <fieldset disabled={!canEdit} className="space-y-3">
-              <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-                <DetailCell><Field label="Họ tên *"><input name="name" required defaultValue={p.name} className={inputCls} /></Field></DetailCell>
-                <DetailCell><Field label="Chức vụ"><SelectMenu name="position" value={form.position} onChange={set("position")} options={officePositionOptions(p.position)} /></Field></DetailCell>
-                <DetailCell><Field label="SĐT"><input name="phone" defaultValue={p.phone ?? ""} className={inputCls} /></Field></DetailCell>
-                <DetailCell><Field label="Email"><input name="email" type="email" defaultValue={p.email ?? ""} className={inputCls} /></Field></DetailCell>
-                <DetailCell><Field label="Giới tính"><SelectMenu name="gender" value={form.gender} onChange={set("gender")} options={GENDERS} placeholder="Chọn giới tính" /></Field></DetailCell>
-                <DetailCell><Field label="Ngày sinh"><DatePicker name="dob" value={form.dob} onChange={set("dob")} /></Field></DetailCell>
-                <DetailCell><Field label="CCCD"><input name="idNumber" defaultValue={p.idNumber ?? ""} className={inputCls} /></Field></DetailCell>
-                <DetailCell><Field label="Số BHXH"><input name="socialInsurance" defaultValue={p.socialInsurance ?? ""} className={inputCls} /></Field></DetailCell>
-                <DetailCell><Field label="Lương cơ bản"><MoneyInput name="baseSalary" defaultValue={p.baseSalary} placeholder="0" /></Field></DetailCell>
+              <div className="grid gap-3">
+                <Field label="Họ tên *"><input name="name" required defaultValue={p.name} className={inputCls} /></Field>
+                <Field label="Chức vụ"><SelectMenu name="position" value={form.position} onChange={set("position")} options={officePositionOptions(p.position)} /></Field>
+                <Field label="SĐT"><input name="phone" defaultValue={p.phone ?? ""} className={inputCls} /></Field>
+                <Field label="Email"><input name="email" type="email" defaultValue={p.email ?? ""} className={inputCls} /></Field>
+                <Field label="Giới tính"><SelectMenu name="gender" value={form.gender} onChange={set("gender")} options={GENDERS} placeholder="Chọn giới tính" /></Field>
+                <Field label="Ngày sinh"><DatePicker name="dob" value={form.dob} onChange={set("dob")} /></Field>
+                <Field label="CCCD"><input name="idNumber" defaultValue={p.idNumber ?? ""} className={inputCls} /></Field>
+                <Field label="Số BHXH"><input name="socialInsurance" defaultValue={p.socialInsurance ?? ""} className={inputCls} /></Field>
+                <Field label="Lương cơ bản"><MoneyInput name="baseSalary" defaultValue={p.baseSalary} placeholder="0" /></Field>
                 {salaryChanged && (
-                  <DetailCell>
-                    <Field label="Có hiệu lực từ">
-                      <DatePicker name="salaryEffectiveFrom" value={effectiveFrom} onChange={setEffectiveFrom} />
-                    </Field>
-                  </DetailCell>
+                  <Field label="Có hiệu lực từ">
+                    <DatePicker name="salaryEffectiveFrom" value={effectiveFrom} onChange={setEffectiveFrom} />
+                  </Field>
                 )}
-                <DetailCell><Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} defaultValue={p.payday ?? ""} placeholder="VD: 5" className={`${inputCls} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`} /></Field></DetailCell>
-                <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
-                <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={p.note} className={inputCls} /></Field></DetailCell>
+                <Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} defaultValue={p.payday ?? ""} placeholder="VD: 5" className={`${inputCls} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`} /></Field>
+                <Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field>
+                <Field label="Ghi chú"><input name="note" defaultValue={p.note} className={inputCls} /></Field>
               </div>
             </fieldset>
           </form>

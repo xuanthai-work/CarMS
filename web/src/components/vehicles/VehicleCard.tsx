@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { saveVehicle, deleteVehicle } from "@/api/vehicles";
 import { VEHICLE_STATUS, OWNER_TYPES, SEAT_OPTIONS, seatLabel, statusLabel, ownerLabel } from "@/utils/vehicles";
-import { DetailCell, Field, FormError, Info, inputCls } from "@/components/common/ui";
+import { Field, FormError, Info, inputCls } from "@/components/common/ui";
 import Button from "@/components/common/Button";
 import SideDrawer from "@/components/common/SideDrawer";
 import SelectMenu from "@/components/common/SelectMenu";
@@ -107,20 +107,20 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
           <form id={`veh-${v.id}`} ref={formRef} onSubmit={handleSubmit} onInput={() => error && setError(null)}>
             <input type="hidden" name="id" value={v.id} />
             <fieldset disabled={!canEdit} className="space-y-3">
-              <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-                <DetailCell><Field label="Biển số"><input name="plate" defaultValue={v.plate} className={inputCls} /></Field></DetailCell>
-                <DetailCell><Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field></DetailCell>
-                <DetailCell><Field label="Trạng thái"><SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} /></Field></DetailCell>
-                <DetailCell><Field label="Sở hữu"><SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} /></Field></DetailCell>
+              <div className="grid gap-3">
+                <Field label="Biển số"><input name="plate" defaultValue={v.plate} className={inputCls} /></Field>
+                <Field label="Loại xe"><SelectMenu name="seats" value={form.seats} onChange={set("seats")} options={SEAT_OPTIONS} /></Field>
+                <Field label="Trạng thái"><SelectMenu name="status" value={form.status} onChange={set("status")} options={VEHICLE_STATUS} /></Field>
+                <Field label="Sở hữu"><SelectMenu name="type" value={form.type} onChange={set("type")} options={OWNER_TYPES} /></Field>
                 {form.type === "partner" ? (
-                  <DetailCell><Field label="SĐT / Zalo"><input name="phone" defaultValue={v.phone ?? ""} placeholder="Số điện thoại / Zalo" className={inputCls} /></Field></DetailCell>
+                  <Field label="SĐT / Zalo"><input name="phone" defaultValue={v.phone ?? ""} placeholder="Số điện thoại / Zalo" className={inputCls} /></Field>
                 ) : (
                   <>
-                    <DetailCell><Field label="Hạn đăng kiểm"><DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} /></Field></DetailCell>
-                    <DetailCell><Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field></DetailCell>
+                    <Field label="Hạn đăng kiểm"><DatePicker name="inspectionDue" value={form.inspectionDue} onChange={set("inspectionDue")} /></Field>
+                    <Field label="Hạn bảo hiểm"><DatePicker name="insuranceDue" value={form.insuranceDue} onChange={set("insuranceDue")} /></Field>
                   </>
                 )}
-                <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={v.note} className={inputCls} /></Field></DetailCell>
+                <Field label="Ghi chú"><input name="note" defaultValue={v.note} className={inputCls} /></Field>
               </div>
             </fieldset>
           </form>

@@ -6,7 +6,7 @@ import SideDrawer from "@/components/common/SideDrawer";
 import DatePicker from "@/components/common/DatePicker";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import { updatePartnerDebt } from "@/api/debts";
-import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
+import { Field, FormError, inputCls } from "@/components/common/ui";
 import { fmtDate, todayStr } from "@/utils/format";
 import { fmtMoney } from "@/utils/trips";
 import type { PartnerDebt } from "@/types";
@@ -70,7 +70,7 @@ export default function DebtPayModal({
         className="space-y-3"
       >
         <input type="hidden" name="id" value={debt.id} />
-        <div className="rounded-2xl border border-hairline bg-canvas/60 p-3 text-sm">
+        <div className="border-b border-hairline pb-3 text-sm">
           <div className="flex items-center justify-between gap-3">
             <span className="font-semibold text-ink">{debt.partnerName || "—"}</span>
             <span className="font-bold tabular-nums text-ink">{fmtMoney(debt.amount)}</span>
@@ -79,38 +79,30 @@ export default function DebtPayModal({
             {debt.trip?.customerName ?? "—"} · {fmtDate(debt.workDate)}
           </div>
         </div>
-        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-          <DetailCell>
-            <Field label="Trạng thái">
-              <FuelPaymentStatusSelect
-                name="paymentStatus"
-                value={paymentStatus}
-                onChange={setPaymentStatus}
-                paidLabel="Đã trả"
-                unpaidLabel="Chưa trả"
-              />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Ngày trả">
-              <DatePicker
-                name="paymentDate"
-                value={paymentStatus === "paid" ? paymentDate : ""}
-                onChange={setPaymentDate}
-                disabled={paymentStatus !== "paid"}
-              />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Người trả">
-              <input name="payerName" defaultValue={debt.payerName ?? ""} placeholder="Người thanh toán" className={inputCls} />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Ghi chú">
-              <input name="note" defaultValue={debt.note ?? ""} placeholder="Ghi chú" className={inputCls} />
-            </Field>
-          </DetailCell>
+        <div className="grid gap-3">
+          <Field label="Trạng thái">
+            <FuelPaymentStatusSelect
+              name="paymentStatus"
+              value={paymentStatus}
+              onChange={setPaymentStatus}
+              paidLabel="Đã trả"
+              unpaidLabel="Chưa trả"
+            />
+          </Field>
+          <Field label="Ngày trả">
+            <DatePicker
+              name="paymentDate"
+              value={paymentStatus === "paid" ? paymentDate : ""}
+              onChange={setPaymentDate}
+              disabled={paymentStatus !== "paid"}
+            />
+          </Field>
+          <Field label="Người trả">
+            <input name="payerName" defaultValue={debt.payerName ?? ""} placeholder="Người thanh toán" className={inputCls} />
+          </Field>
+          <Field label="Ghi chú">
+            <input name="note" defaultValue={debt.note ?? ""} placeholder="Ghi chú" className={inputCls} />
+          </Field>
         </div>
       </form>
     </SideDrawer>

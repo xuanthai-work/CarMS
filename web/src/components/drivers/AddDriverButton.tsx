@@ -5,7 +5,7 @@ import { saveDriver } from "@/api/drivers";
 import Button from "@/components/common/Button";
 import SideDrawer from "@/components/common/SideDrawer";
 import { LICENSE_OPTIONS, DRIVER_TYPES } from "@/utils/drivers";
-import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
+import { Field, FormError, inputCls } from "@/components/common/ui";
 import SelectMenu from "@/components/common/SelectMenu";
 import MoneyInput from "@/components/common/MoneyInput";
 import DatePicker from "@/components/common/DatePicker";
@@ -75,16 +75,16 @@ export default function AddDriverButton() {
             onInput={() => error && setError(null)}
             className="space-y-3"
           >
-            <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-              <DetailCell><Field label="Họ tên *"><input name="name" required placeholder="VD: Nguyễn Văn A" className={inputCls} /></Field></DetailCell>
-              <DetailCell><Field label="SĐT / Zalo"><input name="phone" placeholder="VD: 0912xxxxxx" className={inputCls} /></Field></DetailCell>
-              <DetailCell><Field label="Hạng bằng"><SelectMenu name="licenseClass" value={form.licenseClass} onChange={set("licenseClass")} options={LICENSE_OPTIONS} /></Field></DetailCell>
-              <DetailCell><Field label="Loại"><SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} /></Field></DetailCell>
+            <div className="grid gap-3">
+              <Field label="Họ tên *"><input name="name" required placeholder="VD: Nguyễn Văn A" className={inputCls} /></Field>
+              <Field label="SĐT / Zalo"><input name="phone" placeholder="VD: 0912xxxxxx" className={inputCls} /></Field>
+              <Field label="Hạng bằng"><SelectMenu name="licenseClass" value={form.licenseClass} onChange={set("licenseClass")} options={LICENSE_OPTIONS} /></Field>
+              <Field label="Loại"><SelectMenu name="type" value={form.type} onChange={set("type")} options={DRIVER_TYPES} /></Field>
               {form.type === "own" && (
-                <DetailCell><Field label="Lương tháng"><MoneyInput name="baseSalary" placeholder="VD: 12.000.000" /></Field></DetailCell>
+                <Field label="Lương tháng"><MoneyInput name="baseSalary" placeholder="VD: 12.000.000" /></Field>
               )}
-              <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
-              <DetailCell><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
+              <Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field>
+              <Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field>
             </div>
           </form>
         </SideDrawer>

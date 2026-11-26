@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { savePartnerPayout, deletePartnerPayout } from "@/api/salary";
 import Button from "@/components/common/Button";
 import SideDrawer from "@/components/common/SideDrawer";
-import { DetailCell, PaymentStatusBadge, Field, FormError, inputCls } from "@/components/common/ui";
+import { PaymentStatusBadge, Field, FormError, inputCls } from "@/components/common/ui";
 import SelectMenu from "@/components/common/SelectMenu";
 import DatePicker from "@/components/common/DatePicker";
 import MoneyInput from "@/components/common/MoneyInput";
@@ -96,13 +96,13 @@ function PartnerPayoutForm({
         className="space-y-3"
       >
         {payout && <input type="hidden" name="id" value={payout.id} />}
-        <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-          <DetailCell><Field label="Lái xe đối tác"><SelectMenu name="driverId" value={form.driverId} onChange={set("driverId")} options={options} placeholder="Chọn lái xe" /></Field></DetailCell>
-          <DetailCell><Field label="Ngày làm"><DatePicker name="workDate" value={form.workDate} onChange={set("workDate")} /></Field></DetailCell>
-          <DetailCell><Field label="Số tiền"><MoneyInput name="amount" defaultValue={payout?.amount ?? null} placeholder="VD: 800.000" /></Field></DetailCell>
-          <DetailCell><Field label="Trạng thái"><FuelPaymentStatusSelect name="paymentStatus" value={form.paymentStatus} onChange={set("paymentStatus")} /></Field></DetailCell>
-          <DetailCell><Field label="Người trả"><input name="payerName" defaultValue={payout?.payerName ?? ""} className={inputCls} /></Field></DetailCell>
-          <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={payout?.note ?? ""} className={inputCls} /></Field></DetailCell>
+        <div className="grid gap-3">
+          <Field label="Lái xe đối tác"><SelectMenu name="driverId" value={form.driverId} onChange={set("driverId")} options={options} placeholder="Chọn lái xe" /></Field>
+          <Field label="Ngày làm"><DatePicker name="workDate" value={form.workDate} onChange={set("workDate")} /></Field>
+          <Field label="Số tiền"><MoneyInput name="amount" defaultValue={payout?.amount ?? null} placeholder="VD: 800.000" /></Field>
+          <Field label="Trạng thái"><FuelPaymentStatusSelect name="paymentStatus" value={form.paymentStatus} onChange={set("paymentStatus")} /></Field>
+          <Field label="Người trả"><input name="payerName" defaultValue={payout?.payerName ?? ""} className={inputCls} /></Field>
+          <Field label="Ghi chú"><input name="note" defaultValue={payout?.note ?? ""} className={inputCls} /></Field>
         </div>
       </form>
     </SideDrawer>

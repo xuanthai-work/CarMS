@@ -160,8 +160,9 @@ Deploy 26/11 14:00: push `15f4bd6`, Vercel success. User kiểm đăng nhập/c�
 
 ## 7. Lần deploy tiếp theo (TASK-073, TASK-074)
 
-- [ ] SQL Editor: `web/supabase/scripts/11-add-soft-delete.sql` (chạy TRƯỚC khi push).
-- [ ] `git push origin main`, chờ Vercel Ready.
-- [ ] Kiểm: Xe, Nhân sự, Lịch (mở một chuyến xe đối tác), Lương. Không thử xóa bằng dữ liệu thật.
+- [x] SQL Editor: `web/supabase/scripts/11-add-soft-delete.sql` (chạy TRƯỚC khi push).
+- [x] `git push origin main`, chờ Vercel Ready.
+- [x] Kiểm: Xe, Nhân sự, Lịch (mở một chuyến xe đối tác), Lương. Không thử xóa bằng dữ liệu thật.
 - Trước khi bản mới lên: không xóa xe hay người trên production (bản đang chạy xóa thật).
 
+Đã deploy `ab15f64` ngày 26/11 (script `11` User chạy trước khi push). User kiểm: ổn. BA kiểm qua MCP: 30 xe, 309 chuyến, chưa bản ghi nào bị đánh dấu xóa.
