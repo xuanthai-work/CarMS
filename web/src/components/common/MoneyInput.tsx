@@ -20,12 +20,14 @@ export default function MoneyInput({
   placeholder,
   required,
   className,
+  onValueChange,
 }: {
   name: string;
   defaultValue?: number | string | null;
   placeholder?: string;
   required?: boolean;
   className?: string;
+  onValueChange?: (value: string) => void;
 }) {
   const [val, setVal] = useState(() => format(String(defaultValue ?? "")));
   const ref = useRef<HTMLInputElement | null>(null);
@@ -50,7 +52,9 @@ export default function MoneyInput({
     const input = e.target;
     const selStart = input.selectionStart ?? input.value.length;
     caretDigits.current = input.value.slice(0, selStart).replace(/\D/g, "").length;
-    setVal(format(input.value));
+    const next = format(input.value);
+    setVal(next);
+    onValueChange?.(next);
   }
 
   return (

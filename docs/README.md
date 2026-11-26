@@ -77,6 +77,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-070** | 2026-11-26 | Chốt Phiếu Lương + Mở Chốt (GĐ 5, Bước 4/4) | Lương / Schema |  **Đã xong** | [TASK-070](tasks/TASK-070-salary-lock.md) |
 | **TASK-071** | 2026-11-26 | Control Tự Thiết Kế Hiển Thị Xám Khi Bị Khóa | UI / Phân quyền |  **Đã xong** | [TASK-071](tasks/TASK-071-disabled-control-style.md) |
 | **TASK-072** | 2026-11-26 | Sửa Thứ Tự Chạy SQL Production Trong README Và Ghi Chú Script | Deploy / Tài liệu |  **Đã xong** | [TASK-072](tasks/TASK-072-sql-order-docs.md) |
+| **TASK-073** | 2026-11-26 | Ô Thuê Đối Tác Nằm Cạnh Ô Xe Trong Form Chuyến | Lịch / Form chuyến |  **Đã xong** | [TASK-073](tasks/TASK-073-partner-cost-beside-vehicle.md) |
 
 ---
 

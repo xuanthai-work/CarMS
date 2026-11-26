@@ -15,7 +15,7 @@ import Combobox from "@/components/common/Combobox";
 import MoneyInput from "@/components/common/MoneyInput";
 import SelectMenu from "@/components/common/SelectMenu";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
-import { hasPartnerVehicle, TRIP_STATUSES, fmtMoney } from "@/utils/trips";
+import { TRIP_STATUSES, fmtMoney } from "@/utils/trips";
 import { seatLabel, VEHICLE_TYPES } from "@/utils/vehicles";
 import { todayStr } from "@/utils/format";
 import { hasLeft } from "@/utils/office";
@@ -105,14 +105,11 @@ export default function TripForm({
   );
   const [rDrvId, setRDrvId] = useState(trip?.return?.driverId ?? "");
   const [status, setStatus] = useState<string>(trip?.status ?? "pending");
+  const [partnerCost, setPartnerCost] = useState<string>(() =>
+    trip?.partnerCost != null ? String(trip.partnerCost) : ""
+  );
   // Lỗi từ Server Action (hết phiên, không có quyền ghi, lỗi DB/mạng) — hiện thành banner.
   const [error, setError] = useState<string | null>(null);
-
-  // Tiền thuê đối tác là chi phí thuê xe ngoài, không phụ thuộc tài xế là công ty hay cộng tác.
-  const usesPartnerVehicle = hasPartnerVehicle(
-    [oVehId, hasReturn ? rVehId : null],
-    vehicles
-  );
 
   // useTransition: cung cấp isPending để disable nút trong lúc Server Action (1-3s trên production).
   // isSubmittingRef: chốt chặn đồng bộ, loại bỏ các click liên tiếp trong cùng 1 tick trước khi action chạy.
@@ -299,13 +296,6 @@ export default function TripForm({
             </div>
           )}
 
-          {/* Thuê đối tác (chỉ khi có xe đối tác) */}
-          {usesPartnerVehicle && (
-            <Row label="Thuê đối tác">
-              <MoneyInput name="partnerCost" defaultValue={trip?.partnerCost ?? null} />
-            </Row>
-          )}
-
           {/* Ngày đi & Ngày về (cùng 1 dòng) */}
           <Row2
             label1="Ngày đi"
@@ -386,9 +376,10 @@ export default function TripForm({
           />
 
 
-          {/* Xe · Lái xe (đi) */}
-          {isOutboundPartnerVeh ? (
-            <Row label="Xe">
+          {/* Xe · Lái xe (đi) / Thuê đối tác */}
+          <Row2
+            label1="Xe"
+            children1={
               <Combobox
                 name="o_vehicleId"
                 value={oVehId}
@@ -399,24 +390,12 @@ export default function TripForm({
                 onCreate={(t) => quickCreateVehicle(t)}
                 createLabel={(t) => `+ Thêm xe “${t}”`}
               />
-            </Row>
-          ) : (
-            <Row2
-              label1="Xe"
-              children1={
-                <Combobox
-                  name="o_vehicleId"
-                  value={oVehId}
-                  onChange={setOVehId}
-                  options={vehicleOptions}
-                  placeholder="Xe"
-                  emptyText="Không thấy xe"
-                  onCreate={(t) => quickCreateVehicle(t)}
-                  createLabel={(t) => `+ Thêm xe “${t}”`}
-                />
-              }
-              label2="Lái xe"
-              children2={
+            }
+            label2={isOutboundPartnerVeh ? "Thuê đối tác" : "Lái xe"}
+            children2={
+              isOutboundPartnerVeh ? (
+                <MoneyInput name="partnerCost" defaultValue={partnerCost} onValueChange={setPartnerCost} />
+              ) : (
                 <Combobox
                   name="o_driverId"
                   value={oDrvId}
@@ -427,16 +406,16 @@ export default function TripForm({
                   onCreate={(t) => quickCreateDriver(t)}
                   createLabel={(t) => `+ Thêm lái xe “${t}”`}
                 />
-              }
-            />
-          )}
+              )
+            }
+          />
 
           {/* Các dòng xe/lái xe lượt về & giữ xe */}
           <Collapse open={hasReturn} className="!mt-0">
             <div className="pt-2.5 space-y-2.5">
-              {/* Xe · Lái xe (về) */}
-              {isReturnPartnerVeh ? (
-                <Row label="Xe về">
+              {/* Xe · Lái xe (về) / Thuê đối tác */}
+              {(() => {
+                const rVehicleCombo = (
                   <Combobox
                     name="r_vehicleId"
                     value={rVehId}
@@ -447,37 +426,34 @@ export default function TripForm({
                     onCreate={(t) => quickCreateVehicle(t)}
                     createLabel={(t) => `+ Thêm xe “${t}”`}
                   />
-                </Row>
-              ) : (
-                <Row2
-                  label1="Xe về"
-                  children1={
-                    <Combobox
-                      name="r_vehicleId"
-                      value={rVehId}
-                      onChange={setRVehId}
-                      options={vehicleOptions}
-                      placeholder="Xe"
-                      emptyText="Không thấy xe"
-                      onCreate={(t) => quickCreateVehicle(t)}
-                      createLabel={(t) => `+ Thêm xe “${t}”`}
-                    />
-                  }
-                  label2="Lái xe"
-                  children2={
-                    <Combobox
-                      name="r_driverId"
-                      value={rDrvId}
-                      onChange={setRDrvId}
-                      options={rPickableDrivers.map((d) => ({ id: d.id, label: d.name }))}
-                      placeholder="Lái xe"
-                      emptyText="Không thấy lái xe"
-                      onCreate={(t) => quickCreateDriver(t)}
-                      createLabel={(t) => `+ Thêm lái xe “${t}”`}
-                    />
-                  }
-                />
-              )}
+                );
+                const showPartnerCost = hasReturn && isReturnPartnerVeh && !isOutboundPartnerVeh;
+                return isReturnPartnerVeh && !showPartnerCost ? (
+                  <Row label="Xe về">{rVehicleCombo}</Row>
+                ) : (
+                  <Row2
+                    label1="Xe về"
+                    children1={rVehicleCombo}
+                    label2={showPartnerCost ? "Thuê đối tác" : "Lái xe"}
+                    children2={
+                      showPartnerCost ? (
+                        <MoneyInput name="partnerCost" defaultValue={partnerCost} onValueChange={setPartnerCost} />
+                      ) : (
+                        <Combobox
+                          name="r_driverId"
+                          value={rDrvId}
+                          onChange={setRDrvId}
+                          options={rPickableDrivers.map((d) => ({ id: d.id, label: d.name }))}
+                          placeholder="Lái xe"
+                          emptyText="Không thấy lái xe"
+                          onCreate={(t) => quickCreateDriver(t)}
+                          createLabel={(t) => `+ Thêm lái xe “${t}”`}
+                        />
+                      )
+                    }
+                  />
+                );
+              })()}
 
               {/* Giữ xe cả tour */}
               <Row label="Giữ xe cả tour">
