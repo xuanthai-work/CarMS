@@ -8,6 +8,7 @@ import { LICENSE_OPTIONS, DRIVER_TYPES } from "@/utils/drivers";
 import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
 import SelectMenu from "@/components/common/SelectMenu";
 import MoneyInput from "@/components/common/MoneyInput";
+import DatePicker from "@/components/common/DatePicker";
 import { useFormState } from "@/hooks/common/useFormState";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
@@ -16,7 +17,7 @@ export default function AddDriverButton() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const { form, set, reset } = useFormState(() => ({ licenseClass: "", type: "own" }));
+  const { form, set, reset } = useFormState(() => ({ licenseClass: "", type: "own", startDate: "" }));
 
   function handleClose() {
     setError(null);
@@ -82,6 +83,7 @@ export default function AddDriverButton() {
               {form.type === "own" && (
                 <DetailCell><Field label="Lương tháng"><MoneyInput name="baseSalary" placeholder="VD: 12.000.000" /></Field></DetailCell>
               )}
+              <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
               <DetailCell><Field label="Ghi chú"><input name="note" placeholder="Ghi chú" className={inputCls} /></Field></DetailCell>
             </div>
           </form>

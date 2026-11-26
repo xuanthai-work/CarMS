@@ -29,6 +29,7 @@ model Driver {
   licenseClass String?
   type         String  @default("own")
   baseSalary   Float?  // lương tháng (VND) — chỉ dùng cho lái xe type="own"
+  startDate    String? // ngày vào làm (YYYY-MM-DD)
   endDate      String? // ngày nghỉ việc (YYYY-MM-DD); null = đang làm
   note         String?
 

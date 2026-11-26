@@ -116,6 +116,12 @@ function SalaryEditForm({
         <input type="hidden" name="personType" value={row.personType} />
         <input type="hidden" name="personId" value={row.personId} />
         <input type="hidden" name="monthKey" value={monthKey} />
+        {(row.workDays < 25 || row.earned !== row.baseSalary) && (
+          <div className="rounded-xl border border-hairline bg-canvas/60 px-3 py-2 text-xs text-muted tabular-nums">
+            Công tháng: <strong className="text-ink">{Math.min(25, row.workDays)}/25</strong> · Lương theo công:{" "}
+            <strong className="text-ink">{fmtMoney(row.earned)}</strong>
+          </div>
+        )}
         <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
           <DetailCell>
             <Field label="Thưởng / phụ cấp (cộng)">
@@ -292,7 +298,12 @@ export default function SalaryMonthTable({
                     <div className="text-xs text-muted">{r.role}</div>
                   </td>
                   <td className="px-3 py-2.5 text-right text-muted tabular-nums">
-                    {fmtMoney(r.baseSalary)}
+                    <div>{fmtMoney(r.baseSalary)}</div>
+                    {(r.workDays < 25 || r.earned !== r.baseSalary) && (
+                      <div className="text-[11px] text-muted">
+                        {Math.min(25, r.workDays)}/25 công · {fmtMoney(r.earned)}
+                      </div>
+                    )}
                   </td>
                   <td
                     className="px-3 py-2.5 text-right tabular-nums"

@@ -17,6 +17,7 @@ export type Driver = {
   licenseClass: string; // hạng bằng: B2, C, D, E, F
   type: string; // own | partner
   baseSalary: number | null; // lương tháng (VND) — chỉ dùng cho lái xe của công ty
+  startDate: string | null; // ngày vào làm YYYY-MM-DD
   endDate: string | null; // ngày nghỉ việc YYYY-MM-DD
   note: string;
 };

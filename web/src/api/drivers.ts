@@ -20,6 +20,7 @@ export async function saveDriver(fd: FormData): Promise<ActionResult> {
     licenseClass: s(fd, "licenseClass"),
     type: s(fd, "type") || "own",
     baseSalary: optNum(fd, "baseSalary"),
+    startDate: optStr(fd, "startDate"),
     note: s(fd, "note"),
     ...(fd.has("endDate") ? { endDate: optStr(fd, "endDate") } : {}),
   };

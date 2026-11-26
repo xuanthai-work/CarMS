@@ -7,12 +7,18 @@ export type SalariedPerson = {
   role: string; // chức vụ (office) hoặc "Lái xe"
   baseSalary: number;
   payday?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  monthKey?: string;
+  rates?: { effectiveFrom: string; amount: number }[];
 };
 
 export type SalaryRow = SalariedPerson & {
   additions: number;
   deductions: number;
   advances: number;
+  workDays: number;
+  earned: number;
   note: string;
   paid: boolean;
   paidDate?: string | null;
@@ -25,6 +31,7 @@ type OfficeLike = {
   position: string | null;
   baseSalary: number | null;
   payday?: number | null;
+  startDate?: string | null;
   endDate?: string | null;
 };
 type DriverLike = {
@@ -32,6 +39,7 @@ type DriverLike = {
   name: string;
   type: string;
   baseSalary: number | null;
+  startDate?: string | null;
   endDate?: string | null;
 };
 type MonthLike = {
@@ -77,19 +85,101 @@ export type SalaryCostBreakdown = {
   total: number;
 };
 
-/** Thực nhận = lương cơ bản + cộng (thưởng/phụ cấp) − khấu trừ khác − tạm ứng. */
+function workBounds(
+  monthKey: string,
+  startDate?: string | null,
+  endDate?: string | null
+): { from: string; to: string; workDays: number } {
+  const [y, m] = monthKey.split("-").map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  const monthStart = `${monthKey}-01`;
+  const monthEnd = `${monthKey}-${String(lastDay).padStart(2, "0")}`;
+  const from = startDate && startDate > monthStart ? startDate : monthStart;
+  const to = endDate && endDate < monthEnd ? endDate : monthEnd;
+  if (from > to) return { from, to, workDays: 0 };
+  const workDays = Number(to.slice(8, 10)) - Number(from.slice(8, 10)) + 1;
+  return { from, to, workDays };
+}
+
+/** Số ngày lịch làm việc trong tháng M (tính cả ngày vào và ngày nghỉ). */
+export function workedDays(
+  monthKey: string,
+  startDate?: string | null,
+  endDate?: string | null
+): number {
+  return workBounds(monthKey, startDate, endDate).workDays;
+}
+
+function rateAtDate(
+  sortedRates: { effectiveFrom: string; amount: number }[],
+  date: string,
+  fallback: number
+): number {
+  let best = fallback;
+  for (const r of sortedRates) {
+    if (r.effectiveFrom <= date) best = r.amount;
+    else break;
+  }
+  return best;
+}
+
+/**
+ * Tính lương theo công (25 ngày công/tháng, tối đa 25):
+ * nếu trong khoảng làm có đổi mức `SalaryRate`, chia đoạn theo `effectiveFrom`
+ * và tính `round(Σ(r_i × d_i) × min(25, D) / (25 × D))`.
+ */
+export function computeEarned(input: {
+  monthKey: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  rates: { effectiveFrom: string; amount: number }[];
+  fallbackBase: number;
+}): { workDays: number; credit: number; earned: number } {
+  const { from, to, workDays } = workBounds(input.monthKey, input.startDate, input.endDate);
+  if (workDays === 0) return { workDays: 0, credit: 0, earned: 0 };
+  const credit = Math.min(25, workDays);
+  if (input.rates.length === 0) {
+    return { workDays, credit, earned: Math.round((input.fallbackBase * credit) / 25) };
+  }
+
+  const byDate = new Map<string, number>();
+  for (const r of [...input.rates].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom))) {
+    byDate.set(r.effectiveFrom, r.amount);
+  }
+  const sorted = Array.from(byDate, ([effectiveFrom, amount]) => ({ effectiveFrom, amount }));
+  const splits = [from, ...sorted.map((r) => r.effectiveFrom).filter((d) => d > from && d <= to)];
+  const toDay = Number(to.slice(8, 10));
+
+  let weightedSum = 0;
+  for (let i = 0; i < splits.length; i++) {
+    const segStart = splits[i];
+    const startDay = Number(segStart.slice(8, 10));
+    const endDay = i + 1 < splits.length ? Number(splits[i + 1].slice(8, 10)) - 1 : toDay;
+    const d_i = endDay - startDay + 1;
+    weightedSum += rateAtDate(sorted, segStart, input.fallbackBase) * d_i;
+  }
+
+  return {
+    workDays,
+    credit,
+    earned: Math.round((weightedSum * credit) / (25 * workDays)),
+  };
+}
+
+/** Thực nhận = lương theo công + cộng (thưởng/phụ cấp) − khấu trừ khác − tạm ứng. */
 export function salaryNet(x: {
   baseSalary: number;
+  earned?: number;
   additions: number;
   deductions: number;
   advances?: number;
 }): number {
-  return x.baseSalary + x.additions - x.deductions - (x.advances ?? 0);
+  return (x.earned ?? x.baseSalary) + x.additions - x.deductions - (x.advances ?? 0);
 }
 
 /**
  * Người ăn lương tháng: toàn bộ office + lái xe type="own".
- * Nếu có monthKey: bỏ người có endDate thuộc tháng TRƯỚC monthKey (nghỉ từ tháng sau ngày nghỉ).
+ * Nếu có monthKey: bỏ người có endDate thuộc tháng TRƯỚC monthKey hoặc startDate thuộc tháng SAU monthKey.
  */
 export function salariedPeople(
   office: OfficeLike[],
@@ -97,35 +187,66 @@ export function salariedPeople(
   monthKey?: string,
   rates: RateLike[] = []
 ): SalariedPerson[] {
-  const isEmployedInMonth = (p: { endDate?: string | null }) =>
-    !monthKey || !p.endDate || monthKeyOf(p.endDate) >= monthKey;
+  const isEmployedInMonth = (p: { startDate?: string | null; endDate?: string | null }) =>
+    !monthKey ||
+    ((!p.endDate || monthKeyOf(p.endDate) >= monthKey) &&
+      (!p.startDate || monthKeyOf(p.startDate) <= monthKey));
+
+  const personRatesFor = (personType: "office" | "driver", personId: string) =>
+    rates
+      .filter((r) => r.personType === personType && r.personId === personId)
+      .map((r) => ({ effectiveFrom: r.effectiveFrom, amount: r.amount }));
+
+  const endRef = (p: { startDate?: string | null; endDate?: string | null }) => {
+    if (!monthKey) return "";
+    const { to, workDays } = workBounds(monthKey, p.startDate, p.endDate);
+    return workDays > 0 ? to : `${monthKey}-01`;
+  };
+
+  const fullBase = (
+    pRates: { effectiveFrom: string; amount: number }[],
+    refDate: string,
+    fallback: number
+  ) => {
+    if (!monthKey || pRates.length === 0) return fallback;
+    const sorted = [...pRates].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
+    return rateAtDate(sorted, refDate, fallback);
+  };
 
   const fromOffice: SalariedPerson[] = office
     .filter(isEmployedInMonth)
-    .map((p) => ({
-      personType: "office",
-      personId: p.id,
-      name: p.name,
-      role: p.position || "Nhân viên",
-      baseSalary:
-        monthKey && rates.length > 0
-          ? resolveBaseSalary(rates, "office", p.id, monthKey, p.baseSalary ?? 0)
-          : p.baseSalary ?? 0,
-      payday: p.payday ?? null,
-    }));
+    .map((p) => {
+      const pRates = personRatesFor("office", p.id);
+      return {
+        personType: "office",
+        personId: p.id,
+        name: p.name,
+        role: p.position || "Nhân viên",
+        baseSalary: fullBase(pRates, endRef(p), p.baseSalary ?? 0),
+        payday: p.payday ?? null,
+        startDate: p.startDate ?? null,
+        endDate: p.endDate ?? null,
+        monthKey,
+        rates: pRates,
+      };
+    });
   const fromDrivers: SalariedPerson[] = drivers
     .filter((d) => d.type === "own" && isEmployedInMonth(d))
-    .map((d) => ({
-      personType: "driver",
-      personId: d.id,
-      name: d.name,
-      role: "Lái xe",
-      baseSalary:
-        monthKey && rates.length > 0
-          ? resolveBaseSalary(rates, "driver", d.id, monthKey, d.baseSalary ?? 0)
-          : d.baseSalary ?? 0,
-      payday: null,
-    }));
+    .map((d) => {
+      const dRates = personRatesFor("driver", d.id);
+      return {
+        personType: "driver",
+        personId: d.id,
+        name: d.name,
+        role: "Lái xe",
+        baseSalary: fullBase(dRates, endRef(d), d.baseSalary ?? 0),
+        payday: null,
+        startDate: d.startDate ?? null,
+        endDate: d.endDate ?? null,
+        monthKey,
+        rates: dRates,
+      };
+    });
   return [...fromOffice, ...fromDrivers];
 }
 
@@ -144,20 +265,39 @@ export function buildSalaryRows(
   return people.map((p) => {
     const k = `${p.personType}:${p.personId}`;
     const m = byKey.get(k);
-    const baseSalary = m?.baseSalary ?? p.baseSalary; // snapshot nếu đã có dòng tháng
+    const pRates = p.rates ?? [];
+    // Người không có rate: giữ snapshot `m?.baseSalary` của dòng tháng để không đổi số tháng cũ.
+    const baseSalary = pRates.length > 0 ? p.baseSalary : (m?.baseSalary ?? p.baseSalary);
     const additions = m?.additions ?? 0;
     const deductions = m?.deductions ?? 0;
     const personAdvances = advByKey.get(k) ?? 0;
+
+    let workDays = 25;
+    let earned = baseSalary;
+    if (p.monthKey) {
+      const calc = computeEarned({
+        monthKey: p.monthKey,
+        startDate: p.startDate,
+        endDate: p.endDate,
+        rates: pRates,
+        fallbackBase: baseSalary,
+      });
+      workDays = calc.workDays;
+      earned = calc.earned;
+    }
+
     return {
       ...p,
       baseSalary,
       additions,
       deductions,
       advances: personAdvances,
+      workDays,
+      earned,
       note: m?.note ?? "",
       paid: m?.paid ?? false,
       paidDate: m?.paidDate ?? null,
-      net: salaryNet({ baseSalary, additions, deductions, advances: personAdvances }),
+      net: salaryNet({ baseSalary, earned, additions, deductions, advances: personAdvances }),
     };
   });
 }

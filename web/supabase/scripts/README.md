@@ -23,6 +23,7 @@ flowchart TD
     G --> H["06-add-trip-cancelfee.sql (Thêm cột cancelFee cho Trip)"]
     H --> I["07-add-salary-advance.sql (Thêm bảng SalaryAdvance & bật RLS)"]
     I --> J["08-add-salary-rate.sql (Thêm bảng SalaryRate & bật RLS)"]
+    J --> K["09-add-driver-startdate.sql (Thêm cột startDate cho Driver)"]
 ```
 
 ### Bước 1: Khảo sát hiện trạng (`01-audit-readonly.sql`)
@@ -63,6 +64,10 @@ Bắt buộc thực hiện sao lưu trước khi chạy bất kỳ script chỉn
 ### Bước 9: Thêm bảng `SalaryRate` (`08-add-salary-rate.sql`)
 - **Chạy SAU khi code mới đã deploy** (mức lương cơ bản có ngày hiệu lực).
 - Tạo bảng `SalaryRate`, index và bật RLS (`ENABLE ROW LEVEL SECURITY`). Có thể chạy lại an toàn.
+
+### Bước 10: Thêm cột `startDate` cho `Driver` (`09-add-driver-startdate.sql`)
+- **Chạy SAU khi code mới đã deploy** (tính lương theo ngày công).
+- Chạy an toàn (`ADD COLUMN IF NOT EXISTS`), có thể chạy lại nếu cần.
 
 ---
 

@@ -18,7 +18,7 @@ import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Driver, SalaryRate } from "@/types";
 
 export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; rates?: SalaryRate[] }) {
-  const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own", endDate: d.endDate ?? "" });
+  const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own", startDate: d.startDate ?? "", endDate: d.endDate ?? "" });
   const { canEdit } = usePermissions();
   const [detailOpen, setDetailOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,11 +84,13 @@ export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; 
           {d.type === "own" ? (
             <>
               <Info label="Lương tháng" value={fmtMoney(d.baseSalary)} />
+              {d.startDate && <Info label="Ngày vào làm" value={fmtDate(d.startDate)} />}
               <Info label="Ngày nghỉ việc" value={fmtDate(d.endDate)} />
               <Info label="Ghi chú" value={d.note || "—"} />
             </>
           ) : (
             <>
+              {d.startDate && <Info label="Ngày vào làm" value={fmtDate(d.startDate)} />}
               <Info label="Ngày nghỉ việc" value={fmtDate(d.endDate)} />
               <Info label="Ghi chú" value={d.note || "—"} className="col-span-2" />
             </>
@@ -142,6 +144,11 @@ export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; 
                     </Field>
                   </DetailCell>
                 )}
+                <DetailCell>
+                  <Field label="Ngày vào làm">
+                    <DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} />
+                  </Field>
+                </DetailCell>
                 <DetailCell>
                   <Field label="Ngày nghỉ việc">
                     <DatePicker name="endDate" value={form.endDate} onChange={set("endDate")} />

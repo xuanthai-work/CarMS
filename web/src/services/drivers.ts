@@ -10,6 +10,7 @@ function toDriver(r: DriverRow): Driver {
     licenseClass: r.licenseClass ?? "",
     type: r.type,
     baseSalary: r.baseSalary,
+    startDate: r.startDate ?? null,
     endDate: r.endDate ?? null,
     note: r.note ?? "",
   };

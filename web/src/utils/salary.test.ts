@@ -9,6 +9,8 @@ import {
   visibleSalaryRows,
   salaryCostByMonth,
   resolveBaseSalary,
+  workedDays,
+  computeEarned,
   type SalaryRow,
 } from "./salary";
 
@@ -98,8 +100,8 @@ describe("partnerPayoutMonthTotal", () => {
 describe("salaryCostForMonth", () => {
   it("tổng = Σ thực nhận + Σ phiếu đối tác trong tháng", () => {
     const rows: SalaryRow[] = [
-      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, advances: 0, note: "", paid: false, net: 20_000_000 },
-      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, advances: 0, note: "", paid: false, net: 12_000_000 },
+      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 20_000_000, note: "", paid: false, net: 20_000_000 },
+      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 12_000_000, note: "", paid: false, net: 12_000_000 },
     ];
     const payouts = [{ workDate: "2026-07-10", amount: 1_500_000 }];
     expect(salaryCostForMonth(rows, payouts, "2026-07")).toBe(33_500_000);
@@ -107,8 +109,8 @@ describe("salaryCostForMonth", () => {
 
   it("tách đúng lương nhân viên, lái xe tháng và lái xe ngày", () => {
     const rows: SalaryRow[] = [
-      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, advances: 0, note: "", paid: false, net: 20_000_000 },
-      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, advances: 0, note: "", paid: false, net: 12_000_000 },
+      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 20_000_000, note: "", paid: false, net: 20_000_000 },
+      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 12_000_000, note: "", paid: false, net: 12_000_000 },
     ];
     const payouts = [
       { workDate: "2026-07-10", amount: 1_500_000 },
@@ -126,8 +128,8 @@ describe("salaryCostForMonth", () => {
 
 describe("visibleSalaryRows", () => {
   const rows: SalaryRow[] = [
-    { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 0, additions: 0, deductions: 0, advances: 0, note: "", paid: false, net: 0 },
-    { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 0, additions: 0, deductions: 0, advances: 0, note: "", paid: false, net: 0 },
+    { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 0, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 0, note: "", paid: false, net: 0 },
+    { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 0, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 0, note: "", paid: false, net: 0 },
   ];
   it("quản lý thấy tất cả", () => {
     expect(visibleSalaryRows(rows, true)).toHaveLength(2);
@@ -172,12 +174,12 @@ describe("salaryCostByMonth", () => {
     expect(breakdown["2026-07"].total).toBe(10_500_000);
   });
 
-  it("người có endDate giữa tháng 8: có mặt ở tháng 8, vắng ở tháng 9", () => {
+  it("người có endDate giữa tháng 8: tính theo ngày công tháng 8 (15/25), vắng ở tháng 9", () => {
     const office = [
       { id: "o1", name: "An", position: "Nhân viên", baseSalary: 10_000_000, endDate: "2026-08-15" },
     ];
     const breakdown = salaryCostByMonth(office, [], [], [], ["2026-08", "2026-09"]);
-    expect(breakdown["2026-08"].total).toBe(10_000_000);
+    expect(breakdown["2026-08"].total).toBe(6_000_000);
     expect(breakdown["2026-09"].total).toBe(0);
   });
 
@@ -288,5 +290,74 @@ describe("salaryCostByMonth", () => {
     const breakdown = salaryCostByMonth(office, drivers, [], [], ["2026-11", "2026-12"], [], rates);
     expect(breakdown["2026-11"].office).toBe(15_000_000);
     expect(breakdown["2026-12"].office).toBe(18_000_000);
+  });
+
+  it("tính lương theo ngày vào/nghỉ làm (25 ngày công/tháng) và chia đoạn SalaryRate", () => {
+    // (a) đủ tháng → earned = base
+    expect(computeEarned({ monthKey: "2026-09", rates: [], fallbackBase: 10_000_000 })).toEqual({
+      workDays: 30,
+      credit: 25,
+      earned: 10_000_000,
+    });
+
+    // (b) vào làm 10/09 (30 ngày) → 21 ngày → 84%
+    expect(
+      computeEarned({ monthKey: "2026-09", startDate: "2026-09-10", rates: [], fallbackBase: 10_000_000 })
+    ).toEqual({ workDays: 21, credit: 21, earned: 8_400_000 });
+
+    // (c) vào làm ngày 6 tháng 30 ngày → 25 ngày → 100%
+    expect(
+      computeEarned({ monthKey: "2026-09", startDate: "2026-09-06", rates: [], fallbackBase: 10_000_000 })
+    ).toEqual({ workDays: 25, credit: 25, earned: 10_000_000 });
+
+    // (d) nghỉ 15/08 → 15 ngày → 60%
+    expect(
+      computeEarned({ monthKey: "2026-08", endDate: "2026-08-15", rates: [], fallbackBase: 10_000_000 })
+    ).toEqual({ workDays: 15, credit: 15, earned: 6_000_000 });
+
+    // (e) vào VÀ nghỉ cùng tháng (10/09..19/09 = 10 ngày → 40%)
+    expect(
+      computeEarned({
+        monthKey: "2026-09",
+        startDate: "2026-09-10",
+        endDate: "2026-09-19",
+        rates: [],
+        fallbackBase: 10_000_000,
+      })
+    ).toEqual({ workDays: 10, credit: 10, earned: 4_000_000 });
+
+    // (f) tháng 2 (28 ngày) và tháng 2 nhuận (29 ngày) làm đủ → 100%
+    expect(workedDays("2026-02")).toBe(28);
+    expect(workedDays("2024-02")).toBe(29);
+    expect(computeEarned({ monthKey: "2026-02", rates: [], fallbackBase: 10_000_000 }).earned).toBe(10_000_000);
+
+    // (g) đổi mức giữa tháng: 10M đến 14/11, 12M từ 15/11, làm đủ tháng 11 (30 ngày)
+    expect(
+      computeEarned({
+        monthKey: "2026-11",
+        rates: [
+          { effectiveFrom: "1970-01-01", amount: 10_000_000 },
+          { effectiveFrom: "2026-11-15", amount: 12_000_000 },
+        ],
+        fallbackBase: 12_000_000,
+      })
+    ).toEqual({ workDays: 30, credit: 25, earned: 11_066_667 });
+
+    // (h) người vào làm SAU tháng → không có dòng
+    const office = [{ id: "o1", name: "An", position: "COO", baseSalary: 10_000_000, startDate: "2026-10-01" }];
+    expect(salariedPeople(office, [], "2026-09")).toEqual([]);
+
+    // (i) không có monthKey → như cũ (workDays = 25, earned = baseSalary)
+    const [noMonthRow] = buildSalaryRows(salariedPeople(office, []), []);
+    expect(noMonthRow.workDays).toBe(25);
+    expect(noMonthRow.earned).toBe(10_000_000);
+
+    // (j) tạm ứng / thưởng không tỷ lệ; (k) salaryCostByMonth cộng đúng
+    const drivers = [{ id: "d1", name: "Ba", type: "own", baseSalary: 10_000_000, startDate: "2026-09-10" }];
+    const months = [{ personType: "driver", personId: "d1", monthKey: "2026-09", baseSalary: 10_000_000, additions: 1_000_000, deductions: 200_000, note: "", paid: false }];
+    const advances = [{ personType: "driver", personId: "d1", date: "2026-09-15", amount: 500_000 }];
+    const breakdown = salaryCostByMonth([], drivers, months, [], ["2026-09"], advances);
+    // earned = 8.400.000 + 1.000.000 - 200.000 - 500.000 = 8.700.000
+    expect(breakdown["2026-09"].monthlyDrivers).toBe(8_700_000);
   });
 });
