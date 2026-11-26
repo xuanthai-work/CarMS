@@ -56,9 +56,93 @@ Cập nhật: 2026-11-25. Người quyết định: User (Product owner). Tài l
 
 TASK-019 đến TASK-031 (tài chính AI, công nợ theo ngày về, ngày nghỉ việc, chặn đăng nhập, clean code, tắt AI, bộ script SQL production, màn Doanh thu tính lương mọi tháng). Giai đoạn 1, 2, 6 xong (TASK-032..052); TASK-053 bỏ ngày trả của phiếu công ngày (đã có script production `05`). Chi tiết ở `docs/README.md` và `docs/tasks/`.
 
-## 6. Việc production chưa làm
+## 6. Checklist deploy production (soạn 2026-11-26)
 
-- Chạy `web/supabase/scripts/01-audit-readonly.sql` trên production, gửi kết quả cho BA.
-- Sao lưu production, rồi chạy `02-sync-schema.sql` (thêm cột `endDate`, bật RLS cho 9 bảng) và `03-backfill-partner-debt-workdate.sql`.
-- Sau khi deploy code mới của TASK-053, chạy tay `05-drop-partnerpayout-paymentdate.sql` (bỏ cột `PartnerPayout.paymentDate`).
-- Tại thời điểm viết, **chưa chạy gì trên production** và các commit chưa push.
+Tại thời điểm soạn: theo em biết **chưa chạy gì trên production**, 58 commit chưa push (`origin/main` = `9f47edb`). Các script SQL do User tự chạy trên Supabase SQL Editor.
+
+> **Thứ tự dưới đây thay cho `web/supabase/scripts/README.md` và ghi chú đầu các file 06–10.** Chỗ đó ghi "chạy sau khi deploy" là SAI: code mới đọc các cột/bảng này, thiếu thì trang lỗi. Code cũ bỏ qua cột và bảng thừa, nên chạy trước là an toàn. Chỉ `05` phải chạy sau.
+
+### A. Trước khi đụng database
+
+- [ ] Vercel → Deployments: ghi lại commit và bản deployment đang chạy (để rollback).
+- [ ] Vercel → Environment Variables: đủ các biến trong `web/.env.example` đang dùng (Supabase, `DATABASE_URL`, `NEXT_PUBLIC_SITE_URL`, key trợ lý AI nếu bật). Build Command không được chứa `db:push`/`db:setup`.
+- [ ] Quyết định phân quyền: code đang mở tạm, mọi chức vụ xem được doanh thu và lương văn phòng, chỉ CEO là chỉ xem. Chấp nhận thì đi tiếp.
+- [ ] Mở trang Lương và Doanh thu trên production, chụp lại số các tháng đã có (để so sau deploy).
+- [ ] Chạy `01-audit-readonly.sql` từng khối. Thiếu bảng, hoặc thiếu cột ngoài `endDate`: dừng, gửi BA.
+- [ ] Sao lưu DB (Dashboard → Backups, hoặc `pg_dump` bằng `DIRECT_URL` cổng 5432). Kiểm file sao lưu có dung lượng.
+- [ ] Kiểm policy realtime (kỳ vọng 4 bảng đều `so_policy` ≥ 1; bảng nào 0 thì dừng, gửi BA, vì `02` bật RLS sẽ làm mất tự làm mới màn hình):
+
+```sql
+SELECT c.relname AS bang, c.relrowsecurity AS rls, count(p.policyname) AS so_policy
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+LEFT JOIN pg_policies p ON p.schemaname = n.nspname AND p.tablename = c.relname
+WHERE n.nspname = 'public' AND c.relname IN ('Vehicle','Driver','Trip','FuelEntry')
+GROUP BY 1,2 ORDER BY 1;
+```
+
+### B. SQL thêm cột/bảng (chạy TRƯỚC khi push, nên làm liền một buổi, lúc ít người dùng)
+
+- [ ] `02-sync-schema.sql` khối 01, rồi khối 02 (2 dòng) và khối 03 (0 dòng).
+- [ ] `06-add-trip-cancelfee.sql`
+- [ ] `07-add-salary-advance.sql`
+- [ ] `08-add-salary-rate.sql`
+- [ ] `09-add-driver-startdate.sql`
+- [ ] `10-add-salary-lock.sql`
+- [ ] Mở app (bản cũ) kiểm vẫn chạy bình thường.
+
+### C. Lương tháng cũ (chạy sau `10`, trước khi push)
+
+Code mới tính theo 25 công, nên tháng chứa ngày vào làm của nhân viên văn phòng sẽ ra số khác; tháng trước ngày vào làm thì dòng của người đó biến mất.
+
+- [ ] Xem ai có ngày vào/nghỉ làm, sửa ngay trong app nếu ngày nhập sai:
+
+```sql
+SELECT name, "startDate", "endDate" FROM "OfficeStaff"
+WHERE "startDate" <> '' OR "endDate" <> '' ORDER BY "startDate";
+```
+
+- [ ] Xem phiếu lương bị ảnh hưởng (rỗng là ổn):
+
+```sql
+SELECT o.name, o."startDate", o."endDate", sm."monthKey", sm."baseSalary", sm.paid
+FROM "SalaryMonth" sm
+JOIN "OfficeStaff" o ON o.id = sm."personId" AND sm."personType" = 'office'
+WHERE sm."monthKey" IN (left(o."startDate",7), left(o."endDate",7))
+   OR sm."monthKey" < left(o."startDate",7)
+ORDER BY 1, 4;
+```
+
+- [ ] (Tùy chọn, nên làm) Giữ nguyên số của mọi phiếu **đã trả** bằng cách chốt theo công thức cũ (cơ bản + cộng − trừ). Xem trước, rồi cập nhật:
+
+```sql
+SELECT "monthKey", count(*) AS so_phieu, sum("baseSalary" + additions - deductions) AS tien_da_tra
+FROM "SalaryMonth" WHERE paid AND NOT locked GROUP BY 1 ORDER BY 1;
+
+UPDATE "SalaryMonth"
+SET locked = true, "lockedAt" = now(), "workDays" = 25, earned = "baseSalary", advances = 0
+WHERE paid AND NOT locked;
+```
+
+  Không dùng nút "Chốt phiếu" trong app cho các tháng đã trả: nút đó tính lại theo công thức mới. "Mở chốt" các phiếu này cũng làm số tính lại. Chốt không giữ được dòng của người bị ẩn vì ngày vào làm nằm sau tháng đó.
+
+### D. Deploy
+
+- [ ] `git push origin main`, chờ Vercel báo Ready.
+- [ ] Đăng nhập; mở Tổng quan, Lịch (mở một chuyến), Xe, Nhân sự, Lương, Doanh thu, Tiền dầu, Chi phí khác, Công nợ, trợ lý AI (nếu bật).
+- [ ] So số Lương/Doanh thu với ảnh chụp ở mục A.
+- [ ] Mở một chuyến ở hai máy, sửa một máy, máy kia tự cập nhật (realtime).
+- [ ] Xem Vercel Logs: không có lỗi `P2022` (thiếu cột) hay `P2021` (thiếu bảng).
+- [ ] Thử trên iPhone: Lương, Lịch, Nhân sự.
+- [ ] Cẩn thận: "Chốt tất cả" tạo phiếu cho mọi người của tháng, kể cả lái xe chưa có lương.
+
+### E. Sau deploy
+
+- [ ] `03-backfill-partner-debt-workdate.sql`: xem bước 1, rồi mới chạy bước 2.
+- [ ] `04-cleanup-duplicate-trips.sql`: chỉ chạy khi xem bước 1 thấy trùng và BA xác nhận.
+- [ ] Sau vài ngày ổn định: `05-drop-partnerpayout-paymentdate.sql`.
+
+### Nếu hỏng
+
+- Trước khi chạy `05`: Vercel → Instant Rollback về bản cũ; không cần đụng DB. Bản cũ không biết tạm ứng, phí hủy, mức lương hiệu lực, chốt phiếu nhập ở bản mới (số hiển thị sẽ khác trong lúc rollback, dữ liệu vẫn còn).
+- Sau khi chạy `05`: bản cũ lỗi ở lương ngày; chỉ rollback nếu thêm lại cột `paymentDate`.
