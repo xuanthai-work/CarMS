@@ -48,7 +48,10 @@ Cập nhật: 2026-11-25. Người quyết định: User (Product owner). Tài l
 ## 4. Lỗi đang theo dõi
 
 - **Phiếu công ngày (Lương → Lương ngày):** User báo thêm một phiếu rồi bấm "Thêm" tiếp thì modal không hiện, phải chuyển sang tab trình duyệt khác rồi quay lại mới hiện. **BA chưa tái hiện được** trên local (dev và bản build production, có giả lập mạng chậm 1,2 giây, thêm hai phiếu liên tiếp đều bình thường). Cần User cho biết: chỉ xảy ra trên production hay cả local, trình duyệt nào, có bấm "Thêm" ngay lúc bảng đang làm mới không, và có xảy ra ở các modal khác (Tiền dầu, Chi phí khác, Công nợ) không.
-- Lỗi lương F9 đã sửa (TASK-031). Còn tồn: lương chưa xét ngày vào làm; tháng chưa có dòng lương dùng lương cơ bản hiện tại (xử lý ở giai đoạn 5).
+- Lỗi lương F9 đã sửa (TASK-031); ngày vào làm và mức lương có hiệu lực đã xử lý (TASK-067..070, lên production 26/11).
+- **Dữ liệu production (phát hiện 26/11, có từ trước):** 14 chuyến trống cả ngày đi lẫn ngày về, không vào tháng nào (2 đã thanh toán 3.600.000; 3 chờ xử lý có giá 11.800.000).
+- **Mất tiền đối tác khi sửa chuyến:** 14 chuyến T7/2026 có `partnerCost` (tổng 10.700.000) nhưng không gắn xe đối tác; form ẩn ô tiền nên lưu lại sẽ xóa số này. Cần task sửa; trước đó không lưu các chuyến này.
+- 22 chuyến "đã thanh toán" chưa có giá (nhập liệu).
 - Dữ liệu: chuyến cọc lớn hơn giá bị ẩn phần dư (xử lý ở giai đoạn 3).
 - Đường dẫn `/cai-dat` trả 404 (thư mục rỗng `web/src/app/(main)/cai-dat/`).
 
@@ -56,21 +59,21 @@ Cập nhật: 2026-11-25. Người quyết định: User (Product owner). Tài l
 
 TASK-019 đến TASK-031 (tài chính AI, công nợ theo ngày về, ngày nghỉ việc, chặn đăng nhập, clean code, tắt AI, bộ script SQL production, màn Doanh thu tính lương mọi tháng). Giai đoạn 1, 2, 6 xong (TASK-032..052); TASK-053 bỏ ngày trả của phiếu công ngày (đã có script production `05`). Chi tiết ở `docs/README.md` và `docs/tasks/`.
 
-## 6. Checklist deploy production (soạn 2026-11-26)
+## 6. Checklist deploy production (soạn và thực hiện xong 2026-11-26)
 
-Tại thời điểm soạn: theo em biết **chưa chạy gì trên production**, 58 commit chưa push (`origin/main` = `9f47edb`). Các script SQL do User tự chạy trên Supabase SQL Editor.
+Trạng thái: **đã deploy `15f4bd6` ngày 26/11**; còn lại hai mục chưa kiểm ở phần D (Vercel Logs, iPhone). Trước deploy `origin/main` = `9f47edb`. Các script SQL do User tự chạy trên Supabase SQL Editor.
 
 > **Thứ tự dưới đây thay cho `web/supabase/scripts/README.md` và ghi chú đầu các file 06–10.** Chỗ đó ghi "chạy sau khi deploy" là SAI: code mới đọc các cột/bảng này, thiếu thì trang lỗi. Code cũ bỏ qua cột và bảng thừa, nên chạy trước là an toàn. Chỉ `05` phải chạy sau.
 
 ### A. Trước khi đụng database
 
 - [x] Bản đang chạy (để rollback): commit `9f47edb`, deployment `car-kue3p4fdd-xuanthai-works-projects.vercel.app`, tạo 02/11, domain `car-ms.vercel.app`.
-- [ ] Vercel → Environment Variables: đủ các biến trong `web/.env.example` đang dùng (Supabase, `DATABASE_URL`, `NEXT_PUBLIC_SITE_URL`, key trợ lý AI nếu bật). Build Command không được chứa `db:push`/`db:setup`.
+- [x] Biến môi trường và Build Command: `web/.env.example` và `package.json` build không đổi so với bản đang chạy, không cần thêm biến.
 - [x] Phân quyền (User đồng ý 2026-11-26): lên production với quyền mở tạm, mọi chức vụ xem được doanh thu và lương văn phòng, chỉ CEO là chỉ xem.
 - [x] Số Doanh thu T11/2026 trên bản cũ (chụp 26/11): doanh thu 272.674.000; đã thanh toán 243.474.000; còn phải thu 29.200.000; tổng chi phí 74.205.131; lợi nhuận 198.468.869; 65 chuyến (23 chưa có giá). User: các tháng khác không cần.
-- [ ] Chạy `01-audit-readonly.sql` từng khối. Thiếu bảng, hoặc thiếu cột ngoài `endDate`: dừng, gửi BA.
-- [ ] Sao lưu DB (Dashboard → Backups, hoặc `pg_dump` bằng `DIRECT_URL` cổng 5432). Kiểm file sao lưu có dung lượng.
-- [ ] Kiểm policy realtime (kỳ vọng 4 bảng đều `so_policy` ≥ 1; bảng nào 0 thì dừng, gửi BA, vì `02` bật RLS sẽ làm mất tự làm mới màn hình):
+- [x] `01-audit-readonly.sql` (BA chạy 26/11 qua MCP chỉ đọc): đủ 9 bảng; chỉ thiếu đúng các cột/bảng mà `02`, `06`–`10` thêm; cả 9 bảng đã bật RLS; anon không có quyền. Dữ liệu: 309 chuyến, trong đó 14 chuyến trống cả ngày đi lẫn ngày về (không tính vào tháng nào; 2 đã thanh toán 3.600.000, 3 chờ xử lý có giá 11.800.000); 14 chuyến T7 có tiền đối tác 10.700.000 nhưng không gắn xe đối tác; 22 chuyến đã thanh toán chưa có giá; 1 công nợ lệch ngày (cùng tháng); trùng nội dung chỉ là 3 chuyến rỗng.
+- [x] Sao lưu DB: **bỏ qua** (User quyết 26/11; gói Free không có backup tự động). Hệ quả: không khôi phục được dữ liệu nếu hỏng. Không chạy `04`. Công nợ sẽ bị `03` đổi: `pd-mwock6mq4k6` ngày cũ 2026-11-21. Có export CSV 26/11 13:50 (`Trip` 309, `SalaryMonth` 9, `PartnerDebt` 15 dòng) trong thư mục Downloads của User.
+- [x] Policy realtime (26/11): `Vehicle`, `Driver`, `Trip`, `FuelEntry` đều có `authenticated_read` và nằm trong publication.
 
 ```sql
 SELECT c.relname AS bang, c.relrowsecurity AS rls, count(p.policyname) AS so_policy
@@ -81,28 +84,32 @@ WHERE n.nspname = 'public' AND c.relname IN ('Vehicle','Driver','Trip','FuelEntr
 GROUP BY 1,2 ORDER BY 1;
 ```
 
+Đối chiếu trước deploy (26/11): tính Doanh thu T11 theo công thức bản mới bằng SQL trên dữ liệu thật ra đúng 272.674.000 / chi phí 74.205.131 / lợi nhuận 198.468.869, khớp bản cũ. Tháng khác đổi do bản mới tính lương mọi tháng và theo ngày vào làm: T2–T5 chi phí lương giảm 11.000.000, T6 giảm 9.080.000, T12 tăng 23.000.000. Rà lương (mục C): không phiếu nào đổi số; sẽ chốt 8 phiếu lái xe đã trả (96.000.000).
+
 ### B. SQL thêm cột/bảng (chạy TRƯỚC khi push, nên làm liền một buổi, lúc ít người dùng)
 
-- [ ] `02-sync-schema.sql` khối 01, rồi khối 02 (2 dòng) và khối 03 (0 dòng).
-- [ ] `06-add-trip-cancelfee.sql`
-- [ ] `07-add-salary-advance.sql`
-- [ ] `08-add-salary-rate.sql`
-- [ ] `09-add-driver-startdate.sql`
-- [ ] `10-add-salary-lock.sql`
-- [ ] Mở app (bản cũ) kiểm vẫn chạy bình thường.
+- [x] `02-sync-schema.sql` khối 01, rồi khối 02 (2 dòng) và khối 03 (0 dòng).
+- [x] `06-add-trip-cancelfee.sql`
+- [x] `07-add-salary-advance.sql`
+- [x] `08-add-salary-rate.sql`
+- [x] `09-add-driver-startdate.sql`
+- [x] `10-add-salary-lock.sql`
+- [x] Mở app (bản cũ) kiểm vẫn chạy bình thường.
+
+BA kiểm qua MCP 26/11 sau khi User chạy: đủ cột và bảng mới, RLS bật, anon không có quyền, số dòng không đổi (309 chuyến, 9 phiếu lương, 15 công nợ, 43 phiếu công ngày).
 
 ### C. Lương tháng cũ (chạy sau `10`, trước khi push)
 
 Code mới tính theo 25 công, nên tháng chứa ngày vào làm của nhân viên văn phòng sẽ ra số khác; tháng trước ngày vào làm thì dòng của người đó biến mất.
 
-- [ ] Xem ai có ngày vào/nghỉ làm, sửa ngay trong app nếu ngày nhập sai:
+- [x] Xem ai có ngày vào/nghỉ làm, sửa ngay trong app nếu ngày nhập sai:
 
 ```sql
 SELECT name, "startDate", "endDate" FROM "OfficeStaff"
 WHERE "startDate" <> '' OR "endDate" <> '' ORDER BY "startDate";
 ```
 
-- [ ] Xem phiếu lương bị ảnh hưởng (rỗng là ổn):
+- [x] Xem phiếu lương bị ảnh hưởng (rỗng là ổn):
 
 ```sql
 SELECT o.name, o."startDate", o."endDate", sm."monthKey", sm."baseSalary", sm.paid
@@ -113,7 +120,7 @@ WHERE sm."monthKey" IN (left(o."startDate",7), left(o."endDate",7))
 ORDER BY 1, 4;
 ```
 
-- [ ] (**Chạy**, User chốt 2026-11-26) Giữ nguyên số của mọi phiếu **đã trả** bằng cách chốt theo công thức cũ (cơ bản + cộng − trừ). Xem trước, rồi cập nhật:
+- [x] (**Chạy**, User chốt 2026-11-26) Giữ nguyên số của mọi phiếu **đã trả** bằng cách chốt theo công thức cũ (cơ bản + cộng − trừ). Xem trước, rồi cập nhật:
 
 ```sql
 SELECT "monthKey", count(*) AS so_phieu, sum("baseSalary" + additions - deductions) AS tien_da_tra
@@ -126,21 +133,25 @@ WHERE paid AND NOT locked;
 
   Không dùng nút "Chốt phiếu" trong app cho các tháng đã trả: nút đó tính lại theo công thức mới. "Mở chốt" các phiếu này cũng làm số tính lại. Chốt không giữ được dòng của người bị ẩn vì ngày vào làm nằm sau tháng đó.
 
+User chạy `UPDATE` 26/11; BA kiểm qua MCP: 8 phiếu lái xe đã trả đã chốt (25 công, 96.000.000, số không đổi); 1 phiếu văn phòng chưa trả giữ tính động. Không chạy câu hoàn tác.
+
 ### D. Deploy
 
-- [ ] `git push origin main`, chờ Vercel báo Ready.
-- [ ] Đăng nhập; mở Tổng quan, Lịch (mở một chuyến), Xe, Nhân sự, Lương, Doanh thu, Tiền dầu, Chi phí khác, Công nợ, trợ lý AI (nếu bật).
-- [ ] (Không bắt buộc, theo User) So Doanh thu T11 với số ở mục A.
-- [ ] Mở một chuyến ở hai máy, sửa một máy, máy kia tự cập nhật (realtime).
+- [x] `git push origin main`, chờ Vercel báo Ready.
+- [x] Đăng nhập; mở Tổng quan, Lịch (mở một chuyến), Xe, Nhân sự, Lương, Doanh thu, Tiền dầu, Chi phí khác, Công nợ, trợ lý AI (nếu bật).
+- [x] (Không bắt buộc, theo User) So Doanh thu T11 với số ở mục A.
+- [x] Mở một chuyến ở hai máy, sửa một máy, máy kia tự cập nhật (realtime).
 - [ ] Xem Vercel Logs: không có lỗi `P2022` (thiếu cột) hay `P2021` (thiếu bảng).
 - [ ] Thử trên iPhone: Lương, Lịch, Nhân sự.
-- [ ] Cẩn thận: "Chốt tất cả" tạo phiếu cho mọi người của tháng, kể cả lái xe chưa có lương.
+- Cẩn thận: "Chốt tất cả" tạo phiếu cho mọi người của tháng, kể cả lái xe chưa có lương.
+
+Deploy 26/11 14:00: push `15f4bd6`, Vercel success. User kiểm đăng nhập/các trang, Doanh thu T11, Lương T9 đã chốt, realtime: ổn. BA kiểm qua MCP: 309 chuyến, doanh thu T11 272.674.000, 8 phiếu chốt, 14 chuyến T7 có tiền đối tác còn nguyên. Chưa kiểm: Vercel Logs, iPhone (không được báo lại).
 
 ### E. Sau deploy
 
-- [ ] `03-backfill-partner-debt-workdate.sql` (**chạy**, User chốt 2026-11-26): xem bước 1, rồi mới chạy bước 2.
-- [ ] `04-cleanup-duplicate-trips.sql`: chỉ chạy khi xem bước 1 thấy trùng và BA xác nhận.
-- [ ] Sau vài ngày ổn định: `05-drop-partnerpayout-paymentdate.sql`.
+- [x] `03` (26/11): User chạy câu `UPDATE` cho đúng 1 dòng lệch (`pd-mwock6mq4k6`, 21/11 → 22/11). BA kiểm: không còn dòng lệch.
+- [x] `04`: **không chạy** (bản trùng chỉ là 3 chuyến rỗng).
+- [x] `05` (User chạy ngay 26/11). BA kiểm: cột đã bỏ, 43 phiếu công ngày còn nguyên (27.050.000). Trước khi Instant Rollback về `9f47edb` phải chạy `ALTER TABLE "PartnerPayout" ADD COLUMN IF NOT EXISTS "paymentDate" TEXT;`
 
 ### Nếu hỏng
 
