@@ -9,7 +9,7 @@ import Button from "./Button";
 
 // Class dùng chung cho input/select trong các form.
 export const inputCls =
-  "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
+  "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-500";
 export const labelCls = "block text-xs font-medium text-slate-600 mb-1";
 
 // Hiệu ứng hover thẻ lịch dùng chung cho hai chế độ xem.

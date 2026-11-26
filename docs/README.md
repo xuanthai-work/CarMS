@@ -75,6 +75,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-068** | 2026-11-25 | Mức Lương Cơ Bản Có Ngày Hiệu Lực + Lịch Sử (GĐ 5, Bước 2/4) | Lương / Nhân sự / Schema |  **Đã xong** | [TASK-068](tasks/TASK-068-salary-effective-date.md) |
 | **TASK-069** | 2026-11-26 | Tính Lương Theo Ngày Vào/Nghỉ Làm, 25 Ngày Công (GĐ 5, Bước 3/4) | Lương / Nhân sự / Schema |  **Đã xong** | [TASK-069](tasks/TASK-069-salary-prorate-25-cong.md) |
 | **TASK-070** | 2026-11-26 | Chốt Phiếu Lương + Mở Chốt (GĐ 5, Bước 4/4) | Lương / Schema |  **Đã xong** | [TASK-070](tasks/TASK-070-salary-lock.md) |
+| **TASK-071** | 2026-11-26 | Control Tự Thiết Kế Hiển Thị Xám Khi Bị Khóa | UI / Phân quyền |  **Đã xong** | [TASK-071](tasks/TASK-071-disabled-control-style.md) |
 
 ---
 

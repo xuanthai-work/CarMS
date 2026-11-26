@@ -99,7 +99,7 @@ export default function TimePicker({
 
       {/* Ô input gõ được + nút mở bảng */}
       <div
-        className={`flex w-full items-center rounded-md border pr-2 text-sm transition ${
+        className={`flex w-full items-center rounded-md border pr-2 text-sm transition has-[:disabled]:cursor-not-allowed has-[:disabled]:border-slate-200 has-[:disabled]:bg-slate-50 has-[:disabled]:hover:border-slate-200 ${
           open ? "border-brand-500 ring-1 ring-brand-500" : "border-slate-300 hover:border-slate-400"
         }`}
       >
@@ -110,12 +110,12 @@ export default function TimePicker({
           onFocus={() => setOpen(true)}
           onBlur={() => commit(text)}
           placeholder="Chọn / gõ giờ"
-          className="w-full rounded-md bg-transparent px-3 py-2 text-slate-800 placeholder:text-slate-400 focus:outline-none"
+          className="w-full rounded-md bg-transparent px-3 py-2 text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:text-slate-500"
         />
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="shrink-0 text-slate-400 hover:text-slate-600"
+          className="shrink-0 text-slate-400 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:grayscale"
           aria-label="Mở bảng chọn giờ"
         >
           🕐

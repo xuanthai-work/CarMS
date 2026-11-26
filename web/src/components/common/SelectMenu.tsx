@@ -55,7 +55,12 @@ export default function SelectMenu({
   return (
     <div className="relative" ref={ref}>
       <input type="hidden" name={name} value={value} />
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className={triggerClass}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className={`${triggerClass} group disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-500 disabled:hover:border-slate-200`}
+      >
         <span className="flex min-w-0 items-center gap-2">
           {leadingDotClassName && (
             <span className={`h-2 w-2 shrink-0 rounded-full ${leadingDotClassName}`} aria-hidden="true" />
@@ -63,7 +68,7 @@ export default function SelectMenu({
           <span className="truncate">{selectedLabel || placeholder}</span>
         </span>
         <span
-          className={`text-xs transition ${isPill ? "text-slate-400" : "text-slate-500"} ${
+          className={`text-xs transition group-disabled:opacity-40 ${isPill ? "text-slate-400" : "text-slate-500"} ${
             open ? "rotate-180" : ""
           }`}
         >
