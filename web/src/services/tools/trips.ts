@@ -112,6 +112,7 @@ export function getDriverScheduleTool(ctx: UserRoleContext) {
       try {
         const drivers = await prisma.driver.findMany({
           where: {
+            deletedAt: null,
             ...(driverName ? { name: { contains: driverName, mode: "insensitive" } } : {}),
             ...(type ? { type } : {}),
           },

@@ -26,6 +26,7 @@ export function getAvailableVehiclesTool() {
         const allVehicles = await prisma.vehicle.findMany({
           where: {
             status: "active",
+            deletedAt: null,
             ...(seats ? { seats } : {}),
             ...(type ? { type } : {}),
           },
@@ -109,7 +110,7 @@ export function getVehicleInspectionsTool() {
     execute: async ({ daysAhead = 30 }) => {
       try {
         const vehicles = await prisma.vehicle.findMany({
-          where: { status: "active" },
+          where: { status: "active", deletedAt: null },
           select: { plate: true, seats: true, inspectionDue: true, insuranceDue: true, note: true },
         });
 

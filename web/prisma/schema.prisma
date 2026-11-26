@@ -16,6 +16,7 @@ model Vehicle {
   inspectionDue String?
   insuranceDue  String?
   note          String?
+  deletedAt     DateTime?
 
   outboundTrips Trip[]  @relation("OutboundVehicle")
   returnTrips   Trip[]  @relation("ReturnVehicle")
@@ -32,6 +33,7 @@ model Driver {
   startDate    String? // ngày vào làm (YYYY-MM-DD)
   endDate      String? // ngày nghỉ việc (YYYY-MM-DD); null = đang làm
   note         String?
+  deletedAt    DateTime?
 
   outboundTrips Trip[]  @relation("OutboundDriver")
   returnTrips   Trip[]  @relation("ReturnDriver")
@@ -121,6 +123,7 @@ model OfficeStaff {
   idNumber        String? // CCCD
   socialInsurance String? // số bảo hiểm xã hội
   payday          Int?    // ngày nhận lương (trong tháng, 1–31)
+  deletedAt       DateTime?
 }
 
 model SalaryMonth {

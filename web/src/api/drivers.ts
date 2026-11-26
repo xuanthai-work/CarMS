@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireEditor } from "@/services/auth";
-import { recordSalaryRate } from "@/services/salary";
+import { recordSalaryRate, validateSoftDeleteEndDate } from "@/services/salary";
 import { s, optStr, optNum } from "@/utils/formData";
 import { newId } from "@/utils/id";
 import { revalidateAll } from "./revalidate";
@@ -22,11 +22,14 @@ export async function saveDriver(fd: FormData): Promise<ActionResult> {
     baseSalary: optNum(fd, "baseSalary"),
     startDate: optStr(fd, "startDate"),
     note: s(fd, "note"),
-    ...(fd.has("endDate") ? { endDate: optStr(fd, "endDate") } : {}),
   };
   if (id) {
-    const prev = await prisma.driver.findUnique({ where: { id }, select: { baseSalary: true } });
-    const oldSalary = prev?.baseSalary ?? 0;
+    const prev = await prisma.driver.findUnique({
+      where: { id },
+      select: { baseSalary: true, deletedAt: true },
+    });
+    if (!prev || prev.deletedAt) return fail("Lái xe này đã bị xóa, không thể chỉnh sửa.");
+    const oldSalary = prev.baseSalary ?? 0;
     const newSalary = data.baseSalary ?? 0;
     const salaryChanged = newSalary > 0 && newSalary !== oldSalary;
     const effectiveFrom = salaryChanged ? s(fd, "salaryEffectiveFrom") : "";
@@ -52,11 +55,24 @@ export async function saveDriver(fd: FormData): Promise<ActionResult> {
   return OK;
 }
 
-export async function deleteDriver(fd: FormData): Promise<void> {
+export async function deleteDriver(fd: FormData): Promise<ActionResult> {
   await requireEditor();
   const id = s(fd, "id");
-  await prisma.driver.delete({ where: { id } });
+  const driver = await prisma.driver.findUnique({
+    where: { id },
+    select: { id: true, type: true, startDate: true, deletedAt: true },
+  });
+  if (!driver || driver.deletedAt) return fail("Lái xe không tồn tại hoặc đã bị xóa.");
+
+  if (driver.type === "own") {
+    const check = await validateSoftDeleteEndDate("driver", id, optStr(fd, "endDate"), driver.startDate);
+    if ("error" in check) return fail(check.error);
+    await prisma.driver.update({ where: { id }, data: { deletedAt: new Date(), endDate: check.endDate } });
+  } else {
+    await prisma.driver.update({ where: { id }, data: { deletedAt: new Date() } });
+  }
   revalidateAll();
+  return OK;
 }
 
 /** Tạo nhanh 1 lái xe (chỉ tên) từ combobox trong form chuyến — mặc định "cộng tác ngoài". */

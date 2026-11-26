@@ -18,6 +18,7 @@ function toOfficeStaff(r: OfficeStaffRow): OfficeStaff {
     idNumber: r.idNumber,
     socialInsurance: r.socialInsurance,
     payday: r.payday,
+    deletedAt: r.deletedAt ? r.deletedAt.toISOString() : null,
   };
 }
 
@@ -26,10 +27,10 @@ export async function getOfficeStaff(): Promise<OfficeStaff[]> {
   return rows.map(toOfficeStaff);
 }
 
-/** Tìm nhân sự văn phòng theo email (không phân biệt hoa/thường) — nối tài khoản đăng nhập. */
+/** Tìm nhân sự văn phòng theo email (không phân biệt hoa/thường, bỏ qua người đã xóa mềm) — nối tài khoản đăng nhập. */
 export async function getOfficeStaffByEmail(email: string): Promise<OfficeStaff | null> {
   const row = await prisma.officeStaff.findFirst({
-    where: { email: { equals: email, mode: "insensitive" } },
+    where: { email: { equals: email, mode: "insensitive" }, deletedAt: null },
     orderBy: { id: "asc" }, // ổn định nếu (lỡ) có trùng email; saveOfficeStaff chặn trùng từ đầu
   });
   return row ? toOfficeStaff(row) : null;

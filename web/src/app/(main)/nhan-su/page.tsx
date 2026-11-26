@@ -4,6 +4,7 @@ import { getSalaryRates } from "@/services/salary";
 import StaffTabs from "@/components/staff/StaffTabs";
 import { requireStaff } from "@/services/auth";
 import { isManager } from "@/utils/office";
+import { activeOnly } from "@/utils/softDelete";
 import type { OfficeStaff } from "@/types";
 
 export default async function NhanSuPage() {
@@ -11,8 +12,8 @@ export default async function NhanSuPage() {
   const manager = isManager(me.position);
   // Nhân viên chỉ xem tab Lái xe → KHÔNG tải dữ liệu nhân sự văn phòng (lương/CCCD/BHXH).
   const [drivers, office, allRates] = await Promise.all([
-    getDrivers(),
-    manager ? getOfficeStaff() : Promise.resolve([] as OfficeStaff[]),
+    getDrivers().then(activeOnly),
+    manager ? getOfficeStaff().then(activeOnly) : Promise.resolve([] as OfficeStaff[]),
     getSalaryRates(),
   ]);
   const rates = manager ? allRates : allRates.filter((r) => r.personType === "driver");

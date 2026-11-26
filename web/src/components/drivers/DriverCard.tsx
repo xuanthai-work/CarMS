@@ -3,7 +3,6 @@
 import { useRef, useState, useTransition } from "react";
 import { saveDriver, deleteDriver } from "@/api/drivers";
 import { LICENSE_OPTIONS, DRIVER_TYPES, driverTypeLabel } from "@/utils/drivers";
-import { hasLeft } from "@/utils/office";
 import { DetailCell, Field, FormError, Info, inputCls } from "@/components/common/ui";
 import Button from "@/components/common/Button";
 import SideDrawer from "@/components/common/SideDrawer";
@@ -18,12 +17,13 @@ import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Driver, SalaryRate } from "@/types";
 
 export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; rates?: SalaryRate[] }) {
-  const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own", startDate: d.startDate ?? "", endDate: d.endDate ?? "" });
+  const initialForm = () => ({ licenseClass: d.licenseClass ?? "", type: d.type || "own", startDate: d.startDate ?? "" });
   const { canEdit } = usePermissions();
   const [detailOpen, setDetailOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [salaryChanged, setSalaryChanged] = useState(false);
   const [effectiveFrom, setEffectiveFrom] = useState(() => todayStr());
+  const [deleteEndDate, setDeleteEndDate] = useState(() => todayStr());
   const [isPending, startTransition] = useTransition();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
@@ -75,9 +75,6 @@ export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; 
           <span className="truncate text-lg font-bold tracking-tight text-ink" title={d.name}>{d.name}</span>
           {d.licenseClass && <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">Hạng {d.licenseClass}</span>}
           <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-muted">{driverTypeLabel(d.type)}</span>
-          {hasLeft(d.endDate, todayStr()) && (
-            <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">Đã nghỉ việc</span>
-          )}
         </div>
         <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
           <Info label="SĐT / Zalo" value={d.phone || "—"} />
@@ -85,13 +82,11 @@ export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; 
             <>
               <Info label="Lương tháng" value={fmtMoney(d.baseSalary)} />
               {d.startDate && <Info label="Ngày vào làm" value={fmtDate(d.startDate)} />}
-              <Info label="Ngày nghỉ việc" value={fmtDate(d.endDate)} />
               <Info label="Ghi chú" value={d.note || "—"} />
             </>
           ) : (
             <>
               {d.startDate && <Info label="Ngày vào làm" value={fmtDate(d.startDate)} />}
-              <Info label="Ngày nghỉ việc" value={fmtDate(d.endDate)} />
               <Info label="Ghi chú" value={d.note || "—"} className="col-span-2" />
             </>
           )}
@@ -104,7 +99,20 @@ export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; 
           onClose={closeModal}
           footer={
             <div className="flex w-full items-center justify-between">
-              {canEdit ? <ConfirmDeleteButton action={deleteDriver} id={d.id} label={`lái xe ${d.name}`} /> : <span />}
+              {canEdit ? (
+                <ConfirmDeleteButton
+                  action={deleteDriver}
+                  id={d.id}
+                  label={`lái xe ${d.name}`}
+                  hint="Dữ liệu cũ được giữ nguyên."
+                >
+                  {d.type === "own" && (
+                    <Field label="Ngày làm cuối *">
+                      <DatePicker name="endDate" value={deleteEndDate} onChange={setDeleteEndDate} />
+                    </Field>
+                  )}
+                </ConfirmDeleteButton>
+              ) : <span />}
               {canEdit && (
                 <Button type="submit" form={`drv-${d.id}`} disabled={isPending}>
                   {isPending ? "Đang lưu..." : "Lưu"}
@@ -147,20 +155,6 @@ export default function DriverCard({ driver: d, rates = [] }: { driver: Driver; 
                 <DetailCell>
                   <Field label="Ngày vào làm">
                     <DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} />
-                  </Field>
-                </DetailCell>
-                <DetailCell>
-                  <Field label="Ngày nghỉ việc">
-                    <DatePicker name="endDate" value={form.endDate} onChange={set("endDate")} />
-                    {form.endDate && (
-                      <button
-                        type="button"
-                        onClick={() => set("endDate")("")}
-                        className="mt-1 block text-xs text-rose-600 hover:underline"
-                      >
-                        Xóa ngày nghỉ
-                      </button>
-                    )}
                   </Field>
                 </DetailCell>
                 <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={d.note} className={inputCls} /></Field></DetailCell>

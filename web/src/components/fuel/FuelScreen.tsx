@@ -14,6 +14,7 @@ import { normalizeVn } from "@/utils/search";
 import { fmtMoney, fmtMoneyUnit } from "@/utils/trips";
 import type { FuelEntry, Vehicle } from "@/types";
 import { companyVehicles } from "@/utils/vehicles";
+import { activeOnly } from "@/utils/softDelete";
 import Button from "@/components/common/Button";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import MonthNav from "@/components/common/MonthNav";
@@ -60,7 +61,7 @@ function VehicleFilterSelect({
   const ref = useRef<HTMLDivElement | null>(null);
   useDismiss(open, ref, () => setOpen(false));
   const reduceMotion = useReducedMotion();
-  const companyList = useMemo(() => companyVehicles(vehicles), [vehicles]);
+  const companyList = useMemo(() => companyVehicles(activeOnly(vehicles)), [vehicles]);
   const selectedLabel =
     value === "all"
       ? "Tất cả xe"

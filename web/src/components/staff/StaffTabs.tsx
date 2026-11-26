@@ -8,6 +8,7 @@ import FilterTabs from "@/components/common/FilterTabs";
 import AddDriverButton from "@/components/drivers/AddDriverButton";
 import AddOfficeStaffButton from "@/components/staff/AddOfficeStaffButton";
 import { Toolbar, SearchInput } from "@/components/common/ui";
+import { activeOnly } from "@/utils/softDelete";
 
 /** Bộ chuyển tab Lái xe / Văn phòng (kiểu toggle view ở lịch). Nhân viên (canSeeOffice=false) chỉ thấy Lái xe. */
 export default function StaffTabs({
@@ -23,6 +24,8 @@ export default function StaffTabs({
 }) {
   const [tab, setTab] = useState<"driver" | "office">("driver");
   const [query, setQuery] = useState("");
+  const activeDrivers = activeOnly(drivers);
+  const activeStaff = activeOnly(staff);
 
   const toolbar = (
     <Toolbar>
@@ -32,8 +35,8 @@ export default function StaffTabs({
           onChange={setTab}
           ariaLabel="Chuyển nhóm nhân sự"
           options={[
-            ["driver", `Lái xe (${drivers.length})`],
-            ["office", `Văn phòng (${staff.length})`],
+            ["driver", `Lái xe (${activeDrivers.length})`],
+            ["office", `Văn phòng (${activeStaff.length})`],
           ] as const}
         />
       )}
@@ -50,9 +53,9 @@ export default function StaffTabs({
     <div className="space-y-5">
       {toolbar}
       {tab === "driver" || !canSeeOffice ? (
-        <DriverList drivers={drivers} rates={rates} query={query} />
+        <DriverList drivers={activeDrivers} rates={rates} query={query} />
       ) : (
-        <OfficeStaffList staff={staff} rates={rates} query={query} />
+        <OfficeStaffList staff={activeStaff} rates={rates} query={query} />
       )}
     </div>
   );

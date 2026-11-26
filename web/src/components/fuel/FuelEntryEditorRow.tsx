@@ -10,6 +10,7 @@ import MoneyInput from "@/components/common/MoneyInput";
 import FuelPaymentStatusSelect from "@/components/fuel/FuelPaymentStatusSelect";
 import { deleteFuelEntry, saveFuelEntry } from "@/api/fuel";
 import { companyVehicles } from "@/utils/vehicles";
+import { deletedLabel, pickableOptions } from "@/utils/softDelete";
 import { fmtDate } from "@/utils/format";
 import { DetailCell, Field, FormError, inputCls } from "@/components/common/ui";
 import type { FuelEntry, Vehicle } from "@/types";
@@ -50,8 +51,12 @@ export default function FuelEntryForm({
   const [paymentDate, setPaymentDate] = useState(entry?.paymentDate ?? entry?.refuelDate ?? defaultDate);
   const [err, setErr] = useState<string | null>(null);
   const vehicleOptions = useMemo(
-    () => companyVehicles(vehicles).map((v) => ({ id: v.id, label: v.plate })),
-    [vehicles],
+    () =>
+      pickableOptions(companyVehicles(vehicles), vehicleId).map((v) => ({
+        id: v.id,
+        label: deletedLabel(v.plate, v.deletedAt),
+      })),
+    [vehicles, vehicleId],
   );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

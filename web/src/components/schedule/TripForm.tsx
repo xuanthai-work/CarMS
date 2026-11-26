@@ -19,6 +19,7 @@ import { TRIP_STATUSES, fmtMoney } from "@/utils/trips";
 import { seatLabel, VEHICLE_TYPES } from "@/utils/vehicles";
 import { todayStr } from "@/utils/format";
 import { hasLeft } from "@/utils/office";
+import { deletedLabel, pickableOptions } from "@/utils/softDelete";
 import type { Trip, Vehicle, Driver } from "@/types";
 
 type Prefill = { vehicleId?: string; date?: string };
@@ -133,19 +134,23 @@ export default function TripForm({
 
   const vehicleOptions = useMemo(
     () => [
-      ...vehicles.map((v) => ({ id: v.id, label: v.plate, sub: seatLabel(v.seats) })),
+      ...pickableOptions(vehicles, [oVehId, rVehId]).map((v) => ({
+        id: v.id,
+        label: deletedLabel(v.plate, v.deletedAt),
+        sub: seatLabel(v.seats),
+      })),
       ...VEHICLE_TYPES.map((n) => ({ id: `seat:${n}`, label: `${n} chỗ`, sub: "chưa xếp xe (mẫu)" })),
     ],
-    [vehicles]
+    [vehicles, oVehId, rVehId]
   );
 
   const isOutboundPartnerVeh = !!oVehId && vehicles.find((v) => v.id === oVehId)?.type === "partner";
-  const oPickableDrivers = drivers.filter(
+  const oPickableDrivers = pickableOptions(drivers, oDrvId).filter(
     (d) => !hasLeft(d.endDate, oDate || todayStr()) || d.id === oDrvId
   );
 
   const isReturnPartnerVeh = !!rVehId && vehicles.find((v) => v.id === rVehId)?.type === "partner";
-  const rPickableDrivers = drivers.filter(
+  const rPickableDrivers = pickableOptions(drivers, rDrvId).filter(
     (d) => !hasLeft(d.endDate, rDate || todayStr()) || d.id === rDrvId
   );
 
@@ -400,7 +405,7 @@ export default function TripForm({
                   name="o_driverId"
                   value={oDrvId}
                   onChange={setODrvId}
-                  options={oPickableDrivers.map((d) => ({ id: d.id, label: d.name }))}
+                  options={oPickableDrivers.map((d) => ({ id: d.id, label: deletedLabel(d.name, d.deletedAt) }))}
                   placeholder="Lái xe"
                   emptyText="Không thấy lái xe"
                   onCreate={(t) => quickCreateDriver(t)}
@@ -443,7 +448,7 @@ export default function TripForm({
                           name="r_driverId"
                           value={rDrvId}
                           onChange={setRDrvId}
-                          options={rPickableDrivers.map((d) => ({ id: d.id, label: d.name }))}
+                          options={rPickableDrivers.map((d) => ({ id: d.id, label: deletedLabel(d.name, d.deletedAt) }))}
                           placeholder="Lái xe"
                           emptyText="Không thấy lái xe"
                           onCreate={(t) => quickCreateDriver(t)}

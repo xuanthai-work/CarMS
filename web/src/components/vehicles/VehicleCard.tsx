@@ -94,7 +94,7 @@ export default function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
           onClose={closeModal}
           footer={
             <div className="flex w-full items-center justify-between">
-              {canEdit ? <ConfirmDeleteButton action={deleteVehicle} id={v.id} label={`xe ${v.plate}`} /> : <span />}
+              {canEdit ? <ConfirmDeleteButton action={deleteVehicle} id={v.id} label={`xe ${v.plate}`} hint="Dữ liệu cũ được giữ nguyên." /> : <span />}
               {canEdit && (
                 <Button type="submit" form={`veh-${v.id}`} disabled={isPending}>
                   {isPending ? "Đang lưu..." : "Lưu"}

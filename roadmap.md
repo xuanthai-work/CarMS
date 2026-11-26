@@ -157,3 +157,11 @@ Deploy 26/11 14:00: push `15f4bd6`, Vercel success. User kiểm đăng nhập/c�
 
 - Trước khi chạy `05`: Vercel → Instant Rollback về bản cũ; không cần đụng DB. Bản cũ không biết tạm ứng, phí hủy, mức lương hiệu lực, chốt phiếu nhập ở bản mới (số hiển thị sẽ khác trong lúc rollback, dữ liệu vẫn còn).
 - Sau khi chạy `05`: bản cũ lỗi ở lương ngày; chỉ rollback nếu thêm lại cột `paymentDate`.
+
+## 7. Lần deploy tiếp theo (TASK-073, TASK-074)
+
+- [ ] SQL Editor: `web/supabase/scripts/11-add-soft-delete.sql` (chạy TRƯỚC khi push).
+- [ ] `git push origin main`, chờ Vercel Ready.
+- [ ] Kiểm: Xe, Nhân sự, Lịch (mở một chuyến xe đối tác), Lương. Không thử xóa bằng dữ liệu thật.
+- Trước khi bản mới lên: không xóa xe hay người trên production (bản đang chạy xóa thật).
+

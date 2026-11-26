@@ -6,14 +6,16 @@ import VehicleCard from "@/components/vehicles/VehicleCard";
 import AddVehicleButton from "@/components/vehicles/AddVehicleButton";
 import GroupColumn from "@/components/schedule/GroupColumn";
 import { normalizeVn } from "@/utils/search";
+import { activeOnly } from "@/utils/softDelete";
 import { Toolbar, SearchInput } from "@/components/common/ui";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 
 export default function VehicleList({ vehicles }: { vehicles: Vehicle[] }) {
   const { canEdit } = usePermissions();
   const [q, setQ] = useState("");
+  const active = activeOnly(vehicles);
   const nq = normalizeVn(q);
-  const filtered = nq ? vehicles.filter((v) => normalizeVn(v.plate).includes(nq)) : vehicles;
+  const filtered = nq ? active.filter((v) => normalizeVn(v.plate).includes(nq)) : active;
   const own = filtered.filter((v) => v.type !== "partner");
   const partner = filtered.filter((v) => v.type === "partner");
 
@@ -24,7 +26,7 @@ export default function VehicleList({ vehicles }: { vehicles: Vehicle[] }) {
         <AddVehicleButton />
       </Toolbar>
 
-      {vehicles.length === 0 ? (
+      {active.length === 0 ? (
         <div className="rounded-2xl border border-hairline bg-surface p-10 text-center text-muted">
           {canEdit ? "Chưa có xe nào — bấm “+ Thêm xe”." : "Chưa có xe nào."}
         </div>

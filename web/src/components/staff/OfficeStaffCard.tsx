@@ -11,7 +11,7 @@ import SelectMenu from "@/components/common/SelectMenu";
 import ConfirmDeleteButton from "@/components/common/ConfirmDeleteButton";
 import { fmtMoney } from "@/utils/trips";
 import { fmtDate, todayStr } from "@/utils/format";
-import { GENDERS, officePositionOptions, hasLeft } from "@/utils/office";
+import { GENDERS, officePositionOptions } from "@/utils/office";
 import { useFormState } from "@/hooks/common/useFormState";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { OfficeStaff, SalaryRate } from "@/types";
@@ -19,7 +19,6 @@ import type { OfficeStaff, SalaryRate } from "@/types";
 export default function OfficeStaffCard({ staff: p, rates = [] }: { staff: OfficeStaff; rates?: SalaryRate[] }) {
   const initialForm = () => ({
     startDate: p.startDate ?? "",
-    endDate: p.endDate ?? "",
     position: p.position || "Nhân viên",
     dob: p.dob ?? "",
     gender: p.gender ?? "",
@@ -29,6 +28,7 @@ export default function OfficeStaffCard({ staff: p, rates = [] }: { staff: Offic
   const [error, setError] = useState<string | null>(null);
   const [salaryChanged, setSalaryChanged] = useState(false);
   const [effectiveFrom, setEffectiveFrom] = useState(() => todayStr());
+  const [deleteEndDate, setDeleteEndDate] = useState(() => todayStr());
   const [isPending, startTransition] = useTransition();
   const { form, set, reset } = useFormState(initialForm);
   const formRef = useRef<HTMLFormElement>(null);
@@ -80,9 +80,6 @@ export default function OfficeStaffCard({ staff: p, rates = [] }: { staff: Offic
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="truncate text-lg font-bold tracking-tight text-ink" title={p.name}>{p.name}</span>
             {p.position && <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">{p.position}</span>}
-            {hasLeft(p.endDate, todayStr()) && (
-              <span className="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">Đã nghỉ việc</span>
-            )}
           </div>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
@@ -95,7 +92,6 @@ export default function OfficeStaffCard({ staff: p, rates = [] }: { staff: Offic
           <Info label="Lương cơ bản" value={fmtMoney(p.baseSalary)} />
           <Info label="Ngày nhận lương" value={p.payday ? `Ngày ${p.payday}` : "—"} />
           <Info label="Ngày vào làm" value={fmtDate(p.startDate)} />
-          <Info label="Ngày nghỉ việc" value={fmtDate(p.endDate)} />
           <Info label="Ghi chú" value={p.note || "—"} className="col-span-2" />
         </div>
       </div>
@@ -106,7 +102,18 @@ export default function OfficeStaffCard({ staff: p, rates = [] }: { staff: Offic
           onClose={closeModal}
           footer={
             <div className="flex w-full items-center justify-between">
-              {canEdit ? <ConfirmDeleteButton action={deleteOfficeStaff} id={p.id} label={`nhân sự ${p.name}`} /> : <span />}
+              {canEdit ? (
+                <ConfirmDeleteButton
+                  action={deleteOfficeStaff}
+                  id={p.id}
+                  label={`nhân sự ${p.name}`}
+                  hint="Dữ liệu cũ được giữ nguyên."
+                >
+                  <Field label="Ngày làm cuối *">
+                    <DatePicker name="endDate" value={deleteEndDate} onChange={setDeleteEndDate} />
+                  </Field>
+                </ConfirmDeleteButton>
+              ) : <span />}
               {canEdit && (
                 <Button type="submit" form={`os-${p.id}`} disabled={isPending}>
                   {isPending ? "Đang lưu..." : "Lưu"}
@@ -152,20 +159,6 @@ export default function OfficeStaffCard({ staff: p, rates = [] }: { staff: Offic
                 )}
                 <DetailCell><Field label="Ngày nhận lương (trong tháng)"><input name="payday" type="number" min={1} max={31} defaultValue={p.payday ?? ""} placeholder="VD: 5" className={`${inputCls} [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`} /></Field></DetailCell>
                 <DetailCell><Field label="Ngày vào làm"><DatePicker name="startDate" value={form.startDate} onChange={set("startDate")} /></Field></DetailCell>
-                <DetailCell>
-                  <Field label="Ngày nghỉ việc">
-                    <DatePicker name="endDate" value={form.endDate} onChange={set("endDate")} />
-                    {form.endDate && (
-                      <button
-                        type="button"
-                        onClick={() => set("endDate")("")}
-                        className="mt-1 block text-xs text-rose-600 hover:underline"
-                      >
-                        Xóa ngày nghỉ
-                      </button>
-                    )}
-                  </Field>
-                </DetailCell>
                 <DetailCell><Field label="Ghi chú"><input name="note" defaultValue={p.note} className={inputCls} /></Field></DetailCell>
               </div>
             </fieldset>

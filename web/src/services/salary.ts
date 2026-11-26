@@ -6,7 +6,7 @@ import type {
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { SalaryMonth, PartnerPayout, SalaryAdvance, SalaryPersonType, SalaryRate } from "@/types";
-import { monthRange } from "@/utils/format";
+import { addMonth, fmtDate, monthKeyOf, monthRange, todayStr } from "@/utils/format";
 import { newId } from "@/utils/id";
 
 function toSalaryMonth(r: SalaryMonthRow): SalaryMonth {
@@ -133,4 +133,49 @@ export async function recordSalaryRate(
       data: { id: newId("sr"), personType, personId, effectiveFrom, amount: newSalary },
     });
   }
+}
+
+/** Kiểm tra ngày làm cuối khi xóa mềm người ăn lương tháng. Trả về `{ error }` hoặc `{ endDate }` hợp lệ. */
+export async function validateSoftDeleteEndDate(
+  personType: SalaryPersonType,
+  personId: string,
+  endDate: string | null,
+  startDate: string | null | undefined
+): Promise<{ error: string } | { endDate: string }> {
+  const today = todayStr();
+  const notStarted = !!startDate && startDate > today;
+  const effectiveEndDate = notStarted ? today : endDate;
+  if (!effectiveEndDate) return { error: "Vui lòng chọn ngày làm cuối." };
+  if (!notStarted) {
+    if (effectiveEndDate > today) return { error: "Ngày làm cuối không được sau hôm nay." };
+    if (startDate && effectiveEndDate < startDate) {
+      return { error: `Ngày làm cuối không được trước ngày vào làm (${fmtDate(startDate)}).` };
+    }
+  }
+  const endMonth = monthKeyOf(effectiveEndDate);
+  const nextMonthStart = `${addMonth(endMonth, 1)}-01`;
+  const [paidMonth, adv] = await Promise.all([
+    prisma.salaryMonth.findFirst({
+      where: { personType, personId, paid: true, monthKey: { gt: endMonth } },
+      orderBy: { monthKey: "desc" },
+      select: { monthKey: true },
+    }),
+    prisma.salaryAdvance.findFirst({
+      where: { personType, personId, date: { gte: nextMonthStart } },
+      orderBy: { date: "desc" },
+      select: { date: true },
+    }),
+  ]);
+  const conflictMonths = [
+    paidMonth?.monthKey,
+    adv ? monthKeyOf(adv.date) : undefined,
+  ].filter((m): m is string => !!m);
+  if (conflictMonths.length > 0) {
+    conflictMonths.sort();
+    const latest = conflictMonths[conflictMonths.length - 1];
+    return {
+      error: `Đã có phiếu lương đã trả hoặc tạm ứng ở tháng ${latest}. Vui lòng chọn ngày làm cuối từ tháng ${latest} trở đi.`,
+    };
+  }
+  return { endDate: effectiveEndDate };
 }

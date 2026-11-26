@@ -4,6 +4,7 @@ import type { Trip, Vehicle, Driver } from "@/types";
 import { revenueMonthKey } from "@/utils/revenue";
 import { tourTypeLabel, legRoute } from "@/utils/trips";
 import { fmtDate, monthLabel } from "@/utils/format";
+import { activeOnly } from "@/utils/softDelete";
 
 /**
  * Màn "Tổng quan" (control-room) — thuần VẬN HÀNH, giống nhau cho mọi role.
@@ -30,14 +31,15 @@ export default function Overview({
   const monthTrips = trips.filter((t) => revenueMonthKey(t) === monthKey);
   const noPrice = monthTrips.filter((t) => t.price == null).length;
 
-  // ---- Đội xe: đang chạy / trống / bảo dưỡng ----
+  // ---- Đội xe: đang chạy / trống / bảo dưỡng (chỉ xe chưa xóa) ----
+  const liveVehicles = activeOnly(vehicles);
   const runningIds = new Set<string>();
   for (const t of trips) {
     if (t.outbound.date === today && t.outbound.vehicleId) runningIds.add(t.outbound.vehicleId);
     if (t.return?.date === today && t.return.vehicleId) runningIds.add(t.return.vehicleId);
   }
-  const activeVehicles = vehicles.filter((v) => v.status === "active");
-  const maintenance = vehicles.filter((v) => v.status === "maintenance").length;
+  const activeVehicles = liveVehicles.filter((v) => v.status === "active");
+  const maintenance = liveVehicles.filter((v) => v.status === "maintenance").length;
   const running = activeVehicles.filter((v) => runningIds.has(v.id)).length;
   const idle = activeVehicles.length - running;
 
@@ -48,7 +50,7 @@ export default function Overview({
 
   // ---- Cảnh báo đăng kiểm / bảo hiểm sắp hết hạn (≤ 30 ngày hoặc đã quá hạn) ----
   const warnings: Warning[] = [];
-  for (const v of vehicles) {
+  for (const v of liveVehicles) {
     for (const [kind, due] of [
       ["Đăng kiểm", v.inspectionDue],
       ["Bảo hiểm", v.insuranceDue],

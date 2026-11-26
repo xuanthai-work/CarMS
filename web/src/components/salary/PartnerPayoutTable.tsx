@@ -15,6 +15,7 @@ import { useFormState } from "@/hooks/common/useFormState";
 import { fmtDate } from "@/utils/format";
 import { fmtMoney } from "@/utils/trips";
 import { hasLeft } from "@/utils/office";
+import { deletedLabel, pickableOptions } from "@/utils/softDelete";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import type { Driver, PartnerPayout } from "@/types";
 
@@ -39,9 +40,9 @@ function PartnerPayoutForm({
     workDate: payout?.workDate ?? defaultDate,
     paymentStatus: payout?.paymentStatus ?? "unpaid",
   }));
-  const options = drivers
+  const options = pickableOptions(drivers, form.driverId)
     .filter((d) => d.type === "partner" && (!hasLeft(d.endDate, form.workDate || defaultDate) || d.id === form.driverId))
-    .map((d) => ({ value: d.id, label: d.name }));
+    .map((d) => ({ value: d.id, label: deletedLabel(d.name, d.deletedAt) }));
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

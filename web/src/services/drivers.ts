@@ -13,6 +13,7 @@ function toDriver(r: DriverRow): Driver {
     startDate: r.startDate ?? null,
     endDate: r.endDate ?? null,
     note: r.note ?? "",
+    deletedAt: r.deletedAt ? r.deletedAt.toISOString() : null,
   };
 }
 

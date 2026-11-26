@@ -13,6 +13,7 @@ function toVehicle(r: VehicleRow): Vehicle {
     inspectionDue: r.inspectionDue,
     insuranceDue: r.insuranceDue,
     note: r.note ?? "",
+    deletedAt: r.deletedAt ? r.deletedAt.toISOString() : null,
   };
 }
 

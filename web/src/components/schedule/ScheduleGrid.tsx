@@ -11,6 +11,7 @@ import SelectMenu from "@/components/common/SelectMenu";
 import FilterTabs from "@/components/common/FilterTabs";
 import { usePermissions } from "@/states/permissions/PermissionsProvider";
 import { seatLabel } from "@/utils/vehicles";
+import { deletedLabel, pickableOptions } from "@/utils/softDelete";
 import type { Trip, Vehicle, Driver, Leg } from "@/types";
 
 const W = 190; // bề rộng mỗi ngày (view theo tour)
@@ -42,15 +43,33 @@ export default function ScheduleGrid({
   const { canEdit } = usePermissions();
   const [modal, setModal] = useState<{ trip: Trip | null; prefill?: { vehicleId?: string; date?: string } } | null>(null);
   const [view, setView] = useState<"xe" | "tour">("tour"); // theo tour (Gantt) mặc định | theo xe (1 xe, ngày×giờ)
-  const [vid, setVid] = useState(vehicles[0]?.id ?? ""); // xe đang xem ở view "theo xe" (dropdown ở toolbar)
+  const first = days[0];
+  const last = days[days.length - 1];
+  const scheduleVehicles = useMemo(() => {
+    const usedIds = new Set<string>();
+    for (const t of trips) {
+      if (t.outbound.vehicleId && t.outbound.date >= first && t.outbound.date <= last) {
+        usedIds.add(t.outbound.vehicleId);
+      }
+      if (t.return?.vehicleId && t.return.date >= first && t.return.date <= last) {
+        usedIds.add(t.return.vehicleId);
+      }
+    }
+    return pickableOptions(vehicles, Array.from(usedIds));
+  }, [vehicles, trips, first, last]);
+
+  const [vid, setVid] = useState(scheduleVehicles[0]?.id ?? ""); // xe đang xem ở view "theo xe" (dropdown ở toolbar)
+  const effectiveVid = scheduleVehicles.some((v) => v.id === vid) ? vid : (scheduleVehicles[0]?.id ?? "");
   const vehicleOptions = useMemo(
-    () => vehicles.map((v) => ({ value: v.id, label: `${v.plate} · ${seatLabel(v.seats)}` })),
-    [vehicles]
+    () =>
+      scheduleVehicles.map((v) => ({
+        value: v.id,
+        label: `${deletedLabel(v.plate, v.deletedAt)} · ${seatLabel(v.seats)}`,
+      })),
+    [scheduleVehicles]
   );
 
   const trackWidth = days.length * W;
-  const first = days[0];
-  const last = days[days.length - 1];
 
   const dayMeta = useMemo(() => buildDayMeta(days, today), [days, today]);
 
@@ -195,7 +214,7 @@ export default function ScheduleGrid({
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {view === "xe" && (
               <div className="relative z-[60] w-56">
-                <SelectMenu name="scheduleVehicle" value={vid} onChange={setVid} options={vehicleOptions} placeholder="Chọn xe" />
+                <SelectMenu name="scheduleVehicle" value={effectiveVid} onChange={setVid} options={vehicleOptions} placeholder="Chọn xe" />
               </div>
             )}
             <FilterTabs
@@ -227,9 +246,16 @@ export default function ScheduleGrid({
           trips={trips}
           days={days}
           today={today}
-          vid={vid}
+          vid={effectiveVid}
           onOpen={(t) => setModal({ trip: t })}
-          onAdd={canEdit ? () => setModal({ trip: null, prefill: { vehicleId: vid } }) : undefined}
+          onAdd={
+            canEdit
+              ? () => {
+                  const canPrefillVid = effectiveVid && !vehicleMap.get(effectiveVid)?.deletedAt;
+                  setModal({ trip: null, prefill: canPrefillVid ? { vehicleId: effectiveVid } : undefined });
+                }
+              : undefined
+          }
         />
       )}
 

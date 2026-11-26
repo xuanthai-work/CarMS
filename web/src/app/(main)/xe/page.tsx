@@ -1,8 +1,9 @@
 import { getVehicles } from "@/services/vehicles";
+import { activeOnly } from "@/utils/softDelete";
 import VehicleList from "@/components/vehicles/VehicleList";
 
 export default async function QuanLyXePage() {
-  const vehicles = await getVehicles();
+  const vehicles = activeOnly(await getVehicles());
 
   return (
     <div className="space-y-6">

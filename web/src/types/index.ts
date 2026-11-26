@@ -8,6 +8,7 @@ export type Vehicle = {
   inspectionDue: string | null; // YYYY-MM-DD - hạn đăng kiểm
   insuranceDue: string | null; // YYYY-MM-DD - hạn bảo hiểm
   note: string;
+  deletedAt: string | null;
 };
 
 export type Driver = {
@@ -20,6 +21,7 @@ export type Driver = {
   startDate: string | null; // ngày vào làm YYYY-MM-DD
   endDate: string | null; // ngày nghỉ việc YYYY-MM-DD
   note: string;
+  deletedAt: string | null;
 };
 
 export type OfficeStaff = {
@@ -37,6 +39,7 @@ export type OfficeStaff = {
   idNumber: string | null; // CCCD
   socialInsurance: string | null; // số BHXH
   payday: number | null; // ngày nhận lương (trong tháng)
+  deletedAt: string | null;
 };
 
 /** Loại tour (enum) — xem nhãn & số ngày trong lib/trips.ts */

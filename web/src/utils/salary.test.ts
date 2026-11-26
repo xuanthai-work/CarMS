@@ -404,4 +404,23 @@ describe("salaryCostByMonth", () => {
     const breakdown = salaryCostByMonth([], drivers, months, [], ["2026-08"], advances, rates);
     expect(breakdown["2026-08"].monthlyDrivers).toBe(9_300_000);
   });
+
+  it("người đã xóa mềm (có deletedAt và endDate giữa tháng) vẫn có lương tháng trước & tháng đó, không có tháng sau", () => {
+    const office = [
+      {
+        id: "o1",
+        name: "An",
+        position: "Nhân viên",
+        baseSalary: 10_000_000,
+        endDate: "2026-08-15",
+        deletedAt: "2026-08-15T10:00:00.000Z",
+      },
+    ];
+    expect(salariedPeople(office, [], "2026-07")).toHaveLength(1);
+    const aug = buildSalaryRows(salariedPeople(office, [], "2026-08"), [], []);
+    expect(aug).toHaveLength(1);
+    expect(aug[0].workDays).toBe(15);
+    expect(aug[0].earned).toBe(6_000_000);
+    expect(salariedPeople(office, [], "2026-09")).toHaveLength(0);
+  });
 });

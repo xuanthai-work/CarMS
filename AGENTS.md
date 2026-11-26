@@ -38,3 +38,4 @@ Commit history uses short, imperative, lower-case summaries, often with a catego
 - Mức lương cơ bản có ngày hiệu lực ở bảng `SalaryRate`; tháng dùng mức hiệu lực ≤ ngày đầu tháng (tỷ lệ hai mức trong tháng: TASK-069).
 - Lương tháng = lương × min(25, số ngày lịch làm trong tháng) ÷ 25, chia đoạn theo `SalaryRate`; ngày vào/nghỉ là ngày làm đầu/cuối (gồm cả hai đầu).
 - Phiếu lương đã chốt (`SalaryMonth.locked`) dùng snapshot (`baseSalary`, `workDays`, `earned`, `advances`) thay vì tính động; sửa số liệu tháng đó cần "Mở chốt".
+- Xe, lái xe và nhân sự văn phòng xóa mềm bằng `deletedAt`, không bao giờ `delete` thật; đường tính lương và lịch sử không lọc `deletedAt`, chỉ danh sách và ô chọn mới lọc.

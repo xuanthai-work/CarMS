@@ -78,6 +78,7 @@ Tài liệu này được tạo và duy trì bởi **BA Agent** nhằm theo dõi
 | **TASK-071** | 2026-11-26 | Control Tự Thiết Kế Hiển Thị Xám Khi Bị Khóa | UI / Phân quyền |  **Đã xong** | [TASK-071](tasks/TASK-071-disabled-control-style.md) |
 | **TASK-072** | 2026-11-26 | Sửa Thứ Tự Chạy SQL Production Trong README Và Ghi Chú Script | Deploy / Tài liệu |  **Đã xong** | [TASK-072](tasks/TASK-072-sql-order-docs.md) |
 | **TASK-073** | 2026-11-26 | Ô Thuê Đối Tác Nằm Cạnh Ô Xe Trong Form Chuyến | Lịch / Form chuyến |  **Đã xong** | [TASK-073](tasks/TASK-073-partner-cost-beside-vehicle.md) |
+| **TASK-074** | 2026-11-26 | Xóa Mềm Xe, Lái Xe, Nhân Viên; Bỏ Ô Ngày Nghỉ Việc | Xe / Nhân sự / Lương / Schema |  **Đã xong** | [TASK-074](tasks/TASK-074-soft-delete.md) |
 
 ---
 
