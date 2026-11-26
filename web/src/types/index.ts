@@ -141,6 +141,10 @@ export type SalaryMonth = {
   note: string;
   paid: boolean;
   paidDate: string | null;
+  locked: boolean;
+  workDays: number | null;
+  earned: number | null;
+  advances: number | null;
 };
 
 export type SalaryAdvance = {

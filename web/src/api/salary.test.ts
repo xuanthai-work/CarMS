@@ -5,12 +5,12 @@ const { mockRequireEditor, mockRequireManagerEditor, mockRevalidateAll, mockPris
   mockRequireManagerEditor: vi.fn(),
   mockRevalidateAll: vi.fn(),
   mockPrisma: {
-    officeStaff: { findUnique: vi.fn() },
-    driver: { findUnique: vi.fn() },
-    salaryMonth: { upsert: vi.fn() },
+    officeStaff: { findUnique: vi.fn(), findMany: vi.fn() },
+    driver: { findUnique: vi.fn(), findMany: vi.fn() },
+    salaryMonth: { findUnique: vi.fn(), findMany: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
     salaryRate: { findMany: vi.fn() },
     partnerPayout: { create: vi.fn(), update: vi.fn() },
-    salaryAdvance: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    salaryAdvance: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   },
 }));
 
@@ -21,7 +21,14 @@ vi.mock("@/services/auth", () => ({
 vi.mock("./revalidate", () => ({ revalidateAll: mockRevalidateAll }));
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 
-import { saveSalaryMonth, savePartnerPayout, saveSalaryAdvance, deleteSalaryAdvance } from "./salary";
+import {
+  saveSalaryMonth,
+  savePartnerPayout,
+  saveSalaryAdvance,
+  deleteSalaryAdvance,
+  lockSalaryMonth,
+  unlockSalaryMonth,
+} from "./salary";
 
 function makeFd(entries: Record<string, string>): FormData {
   const fd = new FormData();
@@ -34,8 +41,12 @@ describe("saveSalaryMonth", () => {
     vi.clearAllMocks();
     mockPrisma.officeStaff.findUnique.mockResolvedValue({ baseSalary: 10_000_000 });
     mockPrisma.driver.findUnique.mockResolvedValue({ baseSalary: 8_000_000 });
+    mockPrisma.salaryMonth.findUnique.mockResolvedValue(null);
+    mockPrisma.salaryMonth.findMany.mockResolvedValue([]);
     mockPrisma.salaryMonth.upsert.mockResolvedValue({});
+    mockPrisma.salaryMonth.updateMany.mockResolvedValue({ count: 1 });
     mockPrisma.salaryRate.findMany.mockResolvedValue([]);
+    mockPrisma.salaryAdvance.findMany.mockResolvedValue([]);
     mockPrisma.partnerPayout.create.mockResolvedValue({});
     mockPrisma.partnerPayout.update.mockResolvedValue({});
   });
@@ -200,12 +211,110 @@ describe("deleteSalaryAdvance", () => {
   });
 
   it("áp đúng guard office/driver và xóa thành công", async () => {
-    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce({ personType: "office" });
+    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce({
+      personType: "office",
+      personId: "o1",
+      date: "2026-11-10",
+    });
     const r = await deleteSalaryAdvance(makeFd({ id: "sa1" }));
     expect(mockRequireManagerEditor).toHaveBeenCalledTimes(1);
     expect(mockPrisma.salaryAdvance.delete).toHaveBeenCalledWith({ where: { id: "sa1" } });
     expect(mockRevalidateAll).toHaveBeenCalledTimes(1);
     expect(r).toEqual({ ok: true });
+  });
+});
+
+describe("lock/unlock & bảo vệ dòng đã chốt", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.officeStaff.findUnique.mockResolvedValue({ id: "o1", name: "An", position: "COO", baseSalary: 10_000_000 });
+    mockPrisma.driver.findUnique.mockResolvedValue({ id: "d1", name: "Ba", type: "own", baseSalary: 8_000_000 });
+    mockPrisma.salaryRate.findMany.mockResolvedValue([]);
+    mockPrisma.salaryAdvance.findMany.mockResolvedValue([]);
+    mockPrisma.salaryMonth.findUnique.mockResolvedValue(null);
+    mockPrisma.salaryMonth.findMany.mockResolvedValue([]);
+    mockPrisma.salaryMonth.upsert.mockResolvedValue({});
+    mockPrisma.salaryMonth.updateMany.mockResolvedValue({ count: 1 });
+    mockPrisma.salaryAdvance.create.mockResolvedValue({});
+    mockPrisma.salaryAdvance.update.mockResolvedValue({});
+  });
+
+  it("saveSalaryMonth trên dòng đã chốt không ghi additions/deductions nhưng đổi được paid", async () => {
+    mockPrisma.salaryMonth.findUnique.mockResolvedValueOnce({ locked: true });
+    const r = await saveSalaryMonth(
+      makeFd({
+        personType: "driver",
+        personId: "d1",
+        monthKey: "2026-11",
+        additions: "999.000",
+        deductions: "888.000",
+        paymentStatus: "paid",
+        paidDate: "2026-11-25",
+        note: "Đã chuyển",
+      })
+    );
+    expect(r).toEqual({ ok: true });
+    expect(mockPrisma.salaryMonth.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: {
+          note: "Đã chuyển",
+          paid: true,
+          paidDate: "2026-11-25",
+        },
+      })
+    );
+  });
+
+  it("saveSalaryAdvance bị chặn khi tạo mới hoặc đổi ngày sang tháng đã chốt", async () => {
+    mockPrisma.salaryMonth.findMany.mockResolvedValueOnce([{ monthKey: "2026-11" }]);
+    const r1 = await saveSalaryAdvance(
+      makeFd({ personType: "driver", personId: "d1", date: "2026-11-10", amount: "500000" })
+    );
+    expect(r1).toEqual({
+      ok: false,
+      error: "Phiếu lương tháng này đã chốt. Vui lòng Mở chốt trước khi sửa tạm ứng.",
+    });
+
+    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce({ date: "2026-10-10" });
+    mockPrisma.salaryMonth.findMany.mockResolvedValueOnce([{ monthKey: "2026-11" }]);
+    const r2 = await saveSalaryAdvance(
+      makeFd({ id: "sa1", personType: "driver", personId: "d1", date: "2026-11-10", amount: "500000" })
+    );
+    expect(r2).toEqual({
+      ok: false,
+      error: "Phiếu lương tháng này đã chốt. Vui lòng Mở chốt trước khi sửa tạm ứng.",
+    });
+    expect(mockPrisma.salaryAdvance.update).not.toHaveBeenCalled();
+  });
+
+  it("lockSalaryMonth ghi snapshot đúng và unlockSalaryMonth bỏ cờ chốt", async () => {
+    mockPrisma.salaryAdvance.findMany.mockResolvedValueOnce([
+      { personType: "driver", personId: "d1", amount: 1_500_000 },
+    ]);
+    const r1 = await lockSalaryMonth(
+      makeFd({ personType: "driver", personId: "d1", monthKey: "2026-11" })
+    );
+    expect(r1).toEqual({ ok: true });
+    expect(mockPrisma.salaryMonth.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({
+          locked: true,
+          baseSalary: 8_000_000,
+          workDays: 30,
+          earned: 8_000_000,
+          advances: 1_500_000,
+        }),
+      })
+    );
+
+    const r2 = await unlockSalaryMonth(
+      makeFd({ personType: "driver", personId: "d1", monthKey: "2026-11" })
+    );
+    expect(r2).toEqual({ ok: true });
+    expect(mockPrisma.salaryMonth.updateMany).toHaveBeenCalledWith({
+      where: { personType: "driver", personId: "d1", monthKey: "2026-11" },
+      data: { locked: false, lockedAt: null },
+    });
   });
 });
 
@@ -365,11 +474,109 @@ describe("deleteSalaryAdvance", () => {
   });
 
   it("áp đúng guard office/driver và xóa thành công", async () => {
-    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce({ personType: "office" });
+    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce({
+      personType: "office",
+      personId: "o1",
+      date: "2026-11-10",
+    });
     const r = await deleteSalaryAdvance(makeFd({ id: "sa1" }));
     expect(mockRequireManagerEditor).toHaveBeenCalledTimes(1);
     expect(mockPrisma.salaryAdvance.delete).toHaveBeenCalledWith({ where: { id: "sa1" } });
     expect(mockRevalidateAll).toHaveBeenCalledTimes(1);
     expect(r).toEqual({ ok: true });
+  });
+});
+
+describe("lock/unlock & bảo vệ dòng đã chốt", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPrisma.officeStaff.findUnique.mockResolvedValue({ id: "o1", name: "An", position: "COO", baseSalary: 10_000_000 });
+    mockPrisma.driver.findUnique.mockResolvedValue({ id: "d1", name: "Ba", type: "own", baseSalary: 8_000_000 });
+    mockPrisma.salaryRate.findMany.mockResolvedValue([]);
+    mockPrisma.salaryAdvance.findMany.mockResolvedValue([]);
+    mockPrisma.salaryMonth.findUnique.mockResolvedValue(null);
+    mockPrisma.salaryMonth.findMany.mockResolvedValue([]);
+    mockPrisma.salaryMonth.upsert.mockResolvedValue({});
+    mockPrisma.salaryMonth.updateMany.mockResolvedValue({ count: 1 });
+    mockPrisma.salaryAdvance.create.mockResolvedValue({});
+    mockPrisma.salaryAdvance.update.mockResolvedValue({});
+  });
+
+  it("saveSalaryMonth trên dòng đã chốt không ghi additions/deductions nhưng đổi được paid", async () => {
+    mockPrisma.salaryMonth.findUnique.mockResolvedValueOnce({ locked: true });
+    const r = await saveSalaryMonth(
+      makeFd({
+        personType: "driver",
+        personId: "d1",
+        monthKey: "2026-11",
+        additions: "999.000",
+        deductions: "888.000",
+        paymentStatus: "paid",
+        paidDate: "2026-11-25",
+        note: "Đã chuyển",
+      })
+    );
+    expect(r).toEqual({ ok: true });
+    expect(mockPrisma.salaryMonth.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: {
+          note: "Đã chuyển",
+          paid: true,
+          paidDate: "2026-11-25",
+        },
+      })
+    );
+  });
+
+  it("saveSalaryAdvance bị chặn khi tạo mới hoặc đổi ngày sang tháng đã chốt", async () => {
+    mockPrisma.salaryMonth.findMany.mockResolvedValueOnce([{ monthKey: "2026-11" }]);
+    const r1 = await saveSalaryAdvance(
+      makeFd({ personType: "driver", personId: "d1", date: "2026-11-10", amount: "500000" })
+    );
+    expect(r1).toEqual({
+      ok: false,
+      error: "Phiếu lương tháng này đã chốt. Vui lòng Mở chốt trước khi sửa tạm ứng.",
+    });
+
+    mockPrisma.salaryAdvance.findUnique.mockResolvedValueOnce({ date: "2026-10-10" });
+    mockPrisma.salaryMonth.findMany.mockResolvedValueOnce([{ monthKey: "2026-11" }]);
+    const r2 = await saveSalaryAdvance(
+      makeFd({ id: "sa1", personType: "driver", personId: "d1", date: "2026-11-10", amount: "500000" })
+    );
+    expect(r2).toEqual({
+      ok: false,
+      error: "Phiếu lương tháng này đã chốt. Vui lòng Mở chốt trước khi sửa tạm ứng.",
+    });
+    expect(mockPrisma.salaryAdvance.update).not.toHaveBeenCalled();
+  });
+
+  it("lockSalaryMonth ghi snapshot đúng và unlockSalaryMonth bỏ cờ chốt", async () => {
+    mockPrisma.salaryAdvance.findMany.mockResolvedValueOnce([
+      { personType: "driver", personId: "d1", amount: 1_500_000 },
+    ]);
+    const r1 = await lockSalaryMonth(
+      makeFd({ personType: "driver", personId: "d1", monthKey: "2026-11" })
+    );
+    expect(r1).toEqual({ ok: true });
+    expect(mockPrisma.salaryMonth.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({
+          locked: true,
+          baseSalary: 8_000_000,
+          workDays: 30,
+          earned: 8_000_000,
+          advances: 1_500_000,
+        }),
+      })
+    );
+
+    const r2 = await unlockSalaryMonth(
+      makeFd({ personType: "driver", personId: "d1", monthKey: "2026-11" })
+    );
+    expect(r2).toEqual({ ok: true });
+    expect(mockPrisma.salaryMonth.updateMany).toHaveBeenCalledWith({
+      where: { personType: "driver", personId: "d1", monthKey: "2026-11" },
+      data: { locked: false, lockedAt: null },
+    });
   });
 });

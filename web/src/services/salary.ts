@@ -21,6 +21,10 @@ function toSalaryMonth(r: SalaryMonthRow): SalaryMonth {
     note: r.note ?? "",
     paid: r.paid,
     paidDate: r.paidDate,
+    locked: r.locked,
+    workDays: r.workDays ?? null,
+    earned: r.earned ?? null,
+    advances: r.advances ?? null,
   };
 }
 

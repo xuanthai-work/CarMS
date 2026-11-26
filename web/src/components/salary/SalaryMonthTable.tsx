@@ -2,7 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { saveSalaryMonth, saveSalaryAdvance, deleteSalaryAdvance } from "@/api/salary";
+import {
+  saveSalaryMonth,
+  saveSalaryAdvance,
+  deleteSalaryAdvance,
+  lockSalaryMonth,
+  unlockSalaryMonth,
+} from "@/api/salary";
 import Button from "@/components/common/Button";
 import SideDrawer from "@/components/common/SideDrawer";
 import { DetailCell, PaymentStatusBadge, Field, FormError, inputCls } from "@/components/common/ui";
@@ -33,6 +39,7 @@ function SalaryEditForm({
   const formId = "salary-edit-form";
   const [isPending, start] = useTransition();
   const [isAdvPending, startAdv] = useTransition();
+  const [isLockPending, startLock] = useTransition();
   const [paidDate, setPaidDate] = useState(row.paidDate ?? "");
   const [paymentStatus, setPaymentStatus] = useState<"paid" | "unpaid">(row.paid ? "paid" : "unpaid");
   const [err, setErr] = useState<string | null>(null);
@@ -93,6 +100,23 @@ function SalaryEditForm({
     });
   }
 
+  function handleToggleLock() {
+    if (isLockPending) return;
+    const fd = new FormData();
+    fd.set("personType", row.personType);
+    fd.set("personId", row.personId);
+    fd.set("monthKey", monthKey);
+    setErr(null);
+    startLock(async () => {
+      const r = row.locked ? await unlockSalaryMonth(fd) : await lockSalaryMonth(fd);
+      if (!r.ok) {
+        setErr(r.error);
+        return;
+      }
+      router.refresh();
+    });
+  }
+
   const advTotal = advances.reduce((s, a) => s + a.amount, 0);
 
   return (
@@ -100,9 +124,19 @@ function SalaryEditForm({
       title={`Sửa lương — ${row.name}`}
       onClose={onCancel}
       footer={
-        <Button type="submit" form={formId} disabled={isPending}>
-          {isPending ? "Đang lưu…" : "Lưu"}
-        </Button>
+        <div className="flex w-full items-center justify-between gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleToggleLock}
+            disabled={isLockPending || isPending}
+          >
+            {isLockPending ? "Đang xử lý…" : row.locked ? "Mở chốt" : "Chốt phiếu"}
+          </Button>
+          <Button type="submit" form={formId} disabled={isPending || isLockPending}>
+            {isPending ? "Đang lưu…" : "Lưu"}
+          </Button>
+        </div>
       }
     >
       <FormError message={err} />
@@ -123,16 +157,18 @@ function SalaryEditForm({
           </div>
         )}
         <div className="grid gap-2 rounded-2xl border border-hairline bg-canvas/60 p-2">
-          <DetailCell>
-            <Field label="Thưởng / phụ cấp (cộng)">
-              <MoneyInput name="additions" defaultValue={row.additions || null} placeholder="0" />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Khấu trừ khác (trừ)">
-              <MoneyInput name="deductions" defaultValue={row.deductions || null} placeholder="0" />
-            </Field>
-          </DetailCell>
+          <fieldset disabled={row.locked} className={`contents ${row.locked ? "opacity-60" : ""}`}>
+            <DetailCell>
+              <Field label="Thưởng / phụ cấp (cộng)">
+                <MoneyInput name="additions" defaultValue={row.additions || null} placeholder="0" />
+              </Field>
+            </DetailCell>
+            <DetailCell>
+              <Field label="Khấu trừ khác (trừ)">
+                <MoneyInput name="deductions" defaultValue={row.deductions || null} placeholder="0" />
+              </Field>
+            </DetailCell>
+          </fieldset>
           <DetailCell>
             <Field label="Ngày trả lương">
               <DatePicker name="paidDate" value={paidDate} onChange={setPaidDate} />
@@ -172,15 +208,17 @@ function SalaryEditForm({
                   </div>
                   {a.note && <div className="truncate text-xs text-muted">{a.note}</div>}
                 </div>
-                <button
-                  type="button"
-                  disabled={isAdvPending}
-                  onClick={() => handleDeleteAdvance(a.id)}
-                  aria-label={`Xóa tạm ứng ${fmtMoney(a.amount)}`}
-                  className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                >
-                  Xóa
-                </button>
+                {!row.locked && (
+                  <button
+                    type="button"
+                    disabled={isAdvPending}
+                    onClick={() => handleDeleteAdvance(a.id)}
+                    aria-label={`Xóa tạm ứng ${fmtMoney(a.amount)}`}
+                    className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                  >
+                    Xóa
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -188,36 +226,42 @@ function SalaryEditForm({
           <p className="text-xs text-muted">Chưa có lần tạm ứng nào trong tháng.</p>
         )}
 
-        <FormError message={advErr} />
-        <form
-          noValidate
-          onSubmit={handleAddAdvance}
-          onInput={() => advErr && setAdvErr(null)}
-          className="space-y-2 rounded-2xl border border-hairline bg-canvas/60 p-2.5"
-        >
-          <input type="hidden" name="personType" value={row.personType} />
-          <input type="hidden" name="personId" value={row.personId} />
-          <DetailCell>
-            <Field label="Ngày ứng">
-              <DatePicker name="date" value={advDate} onChange={setAdvDate} />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Số tiền">
-              <MoneyInput key={advFormKey} name="amount" placeholder="0" />
-            </Field>
-          </DetailCell>
-          <DetailCell>
-            <Field label="Ghi chú">
-              <input key={`note-${advFormKey}`} name="note" placeholder="Ghi chú (tùy chọn)" className={inputCls} />
-            </Field>
-          </DetailCell>
-          <div className="flex justify-end pt-1">
-            <Button type="submit" variant="secondary" disabled={isAdvPending}>
-              {isAdvPending ? "Đang thêm…" : "Thêm tạm ứng"}
-            </Button>
-          </div>
-        </form>
+        {row.locked ? (
+          <p className="text-xs font-medium text-muted">Phiếu đã chốt — Mở chốt để sửa số liệu.</p>
+        ) : (
+          <>
+            <FormError message={advErr} />
+            <form
+              noValidate
+              onSubmit={handleAddAdvance}
+              onInput={() => advErr && setAdvErr(null)}
+              className="space-y-2 rounded-2xl border border-hairline bg-canvas/60 p-2.5"
+            >
+              <input type="hidden" name="personType" value={row.personType} />
+              <input type="hidden" name="personId" value={row.personId} />
+              <DetailCell>
+                <Field label="Ngày ứng">
+                  <DatePicker name="date" value={advDate} onChange={setAdvDate} />
+                </Field>
+              </DetailCell>
+              <DetailCell>
+                <Field label="Số tiền">
+                  <MoneyInput key={advFormKey} name="amount" placeholder="0" />
+                </Field>
+              </DetailCell>
+              <DetailCell>
+                <Field label="Ghi chú">
+                  <input key={`note-${advFormKey}`} name="note" placeholder="Ghi chú (tùy chọn)" className={inputCls} />
+                </Field>
+              </DetailCell>
+              <div className="flex justify-end pt-1">
+                <Button type="submit" variant="secondary" disabled={isAdvPending}>
+                  {isAdvPending ? "Đang thêm…" : "Thêm tạm ứng"}
+                </Button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
     </SideDrawer>
   );
@@ -295,7 +339,10 @@ export default function SalaryMonthTable({
                 >
                   <td className="sticky left-0 z-10 bg-surface px-3 py-2.5 group-hover:bg-canvas/60">
                     <div className="font-semibold text-ink">{r.name}</div>
-                    <div className="text-xs text-muted">{r.role}</div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted">
+                      <span>{r.role}</span>
+                      {r.locked && <span title="Phiếu lương đã chốt">· 🔒 Đã chốt</span>}
+                    </div>
                   </td>
                   <td className="px-3 py-2.5 text-right text-muted tabular-nums">
                     <div>{fmtMoney(r.baseSalary)}</div>

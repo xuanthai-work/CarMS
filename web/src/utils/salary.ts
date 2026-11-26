@@ -19,6 +19,7 @@ export type SalaryRow = SalariedPerson & {
   advances: number;
   workDays: number;
   earned: number;
+  locked: boolean;
   note: string;
   paid: boolean;
   paidDate?: string | null;
@@ -51,6 +52,10 @@ type MonthLike = {
   note: string;
   paid: boolean;
   paidDate?: string | null;
+  locked?: boolean;
+  workDays?: number | null;
+  earned?: number | null;
+  advances?: number | null;
 };
 type PayoutLike = { workDate: string; amount: number };
 type AdvanceLike = { personType: string; personId: string; amount: number };
@@ -265,25 +270,38 @@ export function buildSalaryRows(
   return people.map((p) => {
     const k = `${p.personType}:${p.personId}`;
     const m = byKey.get(k);
-    const pRates = p.rates ?? [];
-    // Người không có rate: giữ snapshot `m?.baseSalary` của dòng tháng để không đổi số tháng cũ.
-    const baseSalary = pRates.length > 0 ? p.baseSalary : (m?.baseSalary ?? p.baseSalary);
     const additions = m?.additions ?? 0;
     const deductions = m?.deductions ?? 0;
-    const personAdvances = advByKey.get(k) ?? 0;
+    const isLocked = Boolean(m?.locked && m.earned != null);
 
-    let workDays = 25;
-    let earned = baseSalary;
-    if (p.monthKey) {
-      const calc = computeEarned({
-        monthKey: p.monthKey,
-        startDate: p.startDate,
-        endDate: p.endDate,
-        rates: pRates,
-        fallbackBase: baseSalary,
-      });
-      workDays = calc.workDays;
-      earned = calc.earned;
+    let baseSalary: number;
+    let personAdvances: number;
+    let workDays: number;
+    let earned: number;
+
+    if (isLocked && m && m.earned != null) {
+      baseSalary = m.baseSalary;
+      workDays = m.workDays ?? 25;
+      earned = m.earned;
+      personAdvances = m.advances ?? 0;
+    } else {
+      const pRates = p.rates ?? [];
+      // Người không có rate: giữ snapshot `m?.baseSalary` của dòng tháng để không đổi số tháng cũ.
+      baseSalary = pRates.length > 0 ? p.baseSalary : (m?.baseSalary ?? p.baseSalary);
+      personAdvances = advByKey.get(k) ?? 0;
+      workDays = 25;
+      earned = baseSalary;
+      if (p.monthKey) {
+        const calc = computeEarned({
+          monthKey: p.monthKey,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          rates: pRates,
+          fallbackBase: baseSalary,
+        });
+        workDays = calc.workDays;
+        earned = calc.earned;
+      }
     }
 
     return {
@@ -294,6 +312,7 @@ export function buildSalaryRows(
       advances: personAdvances,
       workDays,
       earned,
+      locked: isLocked,
       note: m?.note ?? "",
       paid: m?.paid ?? false,
       paidDate: m?.paidDate ?? null,

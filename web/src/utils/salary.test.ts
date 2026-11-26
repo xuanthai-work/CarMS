@@ -100,8 +100,8 @@ describe("partnerPayoutMonthTotal", () => {
 describe("salaryCostForMonth", () => {
   it("tổng = Σ thực nhận + Σ phiếu đối tác trong tháng", () => {
     const rows: SalaryRow[] = [
-      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 20_000_000, note: "", paid: false, net: 20_000_000 },
-      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 12_000_000, note: "", paid: false, net: 12_000_000 },
+      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 20_000_000, locked: false, note: "", paid: false, net: 20_000_000 },
+      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 12_000_000, locked: false, note: "", paid: false, net: 12_000_000 },
     ];
     const payouts = [{ workDate: "2026-07-10", amount: 1_500_000 }];
     expect(salaryCostForMonth(rows, payouts, "2026-07")).toBe(33_500_000);
@@ -109,8 +109,8 @@ describe("salaryCostForMonth", () => {
 
   it("tách đúng lương nhân viên, lái xe tháng và lái xe ngày", () => {
     const rows: SalaryRow[] = [
-      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 20_000_000, note: "", paid: false, net: 20_000_000 },
-      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 12_000_000, note: "", paid: false, net: 12_000_000 },
+      { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 20_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 20_000_000, locked: false, note: "", paid: false, net: 20_000_000 },
+      { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 12_000_000, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 12_000_000, locked: false, note: "", paid: false, net: 12_000_000 },
     ];
     const payouts = [
       { workDate: "2026-07-10", amount: 1_500_000 },
@@ -128,8 +128,8 @@ describe("salaryCostForMonth", () => {
 
 describe("visibleSalaryRows", () => {
   const rows: SalaryRow[] = [
-    { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 0, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 0, note: "", paid: false, net: 0 },
-    { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 0, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 0, note: "", paid: false, net: 0 },
+    { personType: "office", personId: "o1", name: "An", role: "COO", baseSalary: 0, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 0, locked: false, note: "", paid: false, net: 0 },
+    { personType: "driver", personId: "d1", name: "Ba", role: "Lái xe", baseSalary: 0, additions: 0, deductions: 0, advances: 0, workDays: 25, earned: 0, locked: false, note: "", paid: false, net: 0 },
   ];
   it("quản lý thấy tất cả", () => {
     expect(visibleSalaryRows(rows, true)).toHaveLength(2);
@@ -359,5 +359,49 @@ describe("salaryCostByMonth", () => {
     const breakdown = salaryCostByMonth([], drivers, months, [], ["2026-09"], advances);
     // earned = 8.400.000 + 1.000.000 - 200.000 - 500.000 = 8.700.000
     expect(breakdown["2026-09"].monthlyDrivers).toBe(8_700_000);
+  });
+
+  it("chốt phiếu lương (locked): giữ snapshot earned/workDays/advances dù dữ liệu gốc đổi", () => {
+    const drivers = [
+      { id: "d1", name: "Ba", type: "own", baseSalary: 20_000_000, endDate: "2026-08-10" },
+    ];
+    const months = [
+      {
+        personType: "driver",
+        personId: "d1",
+        monthKey: "2026-08",
+        baseSalary: 10_000_000,
+        additions: 500_000,
+        deductions: 200_000,
+        note: "",
+        paid: true,
+        locked: true,
+        workDays: 25,
+        earned: 10_000_000,
+        advances: 1_000_000,
+      },
+    ];
+    const rates = [{ personType: "driver", personId: "d1", effectiveFrom: "2026-08-01", amount: 20_000_000 }];
+    const advances = [{ personType: "driver", personId: "d1", date: "2026-08-20", amount: 5_000_000 }];
+
+    // (a) dòng locked dùng snapshot → net = 10M + 500k - 200k - 1M = 9.3M
+    const people = salariedPeople([], drivers, "2026-08", rates);
+    const [lockedRow] = buildSalaryRows(people, months, advances);
+    expect(lockedRow.locked).toBe(true);
+    expect(lockedRow.baseSalary).toBe(10_000_000);
+    expect(lockedRow.workDays).toBe(25);
+    expect(lockedRow.earned).toBe(10_000_000);
+    expect(lockedRow.advances).toBe(1_000_000);
+    expect(lockedRow.net).toBe(9_300_000);
+
+    // (b) dòng chưa chốt vẫn tính động (10 ngày công từ 20M = 8M, trừ 5M tạm ứng)
+    const [unlockedRow] = buildSalaryRows(people, [{ ...months[0], locked: false }], advances);
+    expect(unlockedRow.locked).toBe(false);
+    expect(unlockedRow.earned).toBe(8_000_000);
+    expect(unlockedRow.net).toBe(3_300_000);
+
+    // (c) salaryCostByMonth dùng số đã chốt
+    const breakdown = salaryCostByMonth([], drivers, months, [], ["2026-08"], advances, rates);
+    expect(breakdown["2026-08"].monthlyDrivers).toBe(9_300_000);
   });
 });

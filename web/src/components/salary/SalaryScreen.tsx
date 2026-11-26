@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { lockSalaryMonthAll } from "@/api/salary";
 import FilterTabs from "@/components/common/FilterTabs";
 import SalaryMonthTable from "@/components/salary/SalaryMonthTable";
 import PartnerPayoutTable from "@/components/salary/PartnerPayoutTable";
@@ -40,10 +42,25 @@ export default function SalaryScreen({
   isManager: boolean;
   payoutTotal: number;
 }) {
+  const router = useRouter();
   const { canEdit } = usePermissions();
+  const [isLockingAll, startLockAll] = useTransition();
   const [tab, setTab] = useState<"month" | "partner">("month");
   const [query, setQuery] = useState("");
   const [addingPartnerPayout, setAddingPartnerPayout] = useState(false);
+
+  const hasUnlocked = rows.some((r) => !r.locked);
+
+  function handleLockAll() {
+    if (isLockingAll) return;
+    if (!window.confirm("Chốt tất cả phiếu lương chưa chốt của tháng này?")) return;
+    const fd = new FormData();
+    fd.set("monthKey", monthKey);
+    startLockAll(async () => {
+      const r = await lockSalaryMonthAll(fd);
+      if (r.ok) router.refresh();
+    });
+  }
 
   const totalNet = rows.reduce((s, r) => s + r.net, 0);
   const paidNet = rows.filter((r) => r.paid).reduce((s, r) => s + r.net, 0);
@@ -87,6 +104,11 @@ export default function SalaryScreen({
           ] as const}
         />
         <SearchInput value={query} onChange={setQuery} placeholder="Tìm tên nhân sự, chức vụ..." />
+        {tab === "month" && canEdit && hasUnlocked && (
+          <Button size="toolbar" variant="secondary" onClick={handleLockAll} disabled={isLockingAll}>
+            {isLockingAll ? "Đang chốt…" : "Chốt tất cả"}
+          </Button>
+        )}
         {tab === "partner" && canEdit && (
           <Button size="toolbar" onClick={() => setAddingPartnerPayout(true)}>
             ＋ Thêm phiếu trả công

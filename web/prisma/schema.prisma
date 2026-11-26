@@ -132,9 +132,14 @@ model SalaryMonth {
   additions  Float    @default(0) // thưởng/phụ cấp (cộng)
   deductions Float    @default(0) // tạm ứng/khấu trừ (trừ)
   note       String?  @default("")
-  paid       Boolean  @default(false)
-  paidDate   String?  // YYYY-MM-DD
-  createdAt  DateTime @default(now())
+  paid       Boolean   @default(false)
+  paidDate   String?   // YYYY-MM-DD
+  locked     Boolean   @default(false)
+  lockedAt   DateTime?
+  workDays   Int?
+  earned     Float?
+  advances   Float?
+  createdAt  DateTime  @default(now())
   updatedAt  DateTime @updatedAt
 
   @@unique([personType, personId, monthKey])
